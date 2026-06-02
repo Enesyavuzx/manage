@@ -10,7 +10,7 @@ export function generateId(): string {
 }
 
 export function formatXP(xp: number): string {
-  if (xp >= 1000) return `${(xp / 1000).toFixed(1)}k`
-  return xp.toString()
+  if (xp >= 1_000_000) return `${(xp / 1_000_000).toFixed(1)}M`
+  if (xp >= 1000) return `${(xp / 1000).toFixed(1)}K`
+  return Math.round(xp).toString()
 }
-

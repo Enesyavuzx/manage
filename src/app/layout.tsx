@@ -3,13 +3,13 @@ import './globals.css'
 import { ClientLayout } from './client-layout'
 
 export const metadata: Metadata = {
-  title: 'Manage - Habit Tracker',
-  description: 'Track habits, build streaks, earn rewards.',
+  title: 'Manage - Alışkanlık & Ödül Oyunu',
+  description: 'Alışkanlık takip et, streak yap, XP kazan, seviye atla, rütbe yükselt.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="tr" data-theme="aurora">
       <body>
         <ClientLayout>{children}</ClientLayout>
       </body>

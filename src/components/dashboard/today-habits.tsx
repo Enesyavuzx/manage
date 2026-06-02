@@ -6,7 +6,8 @@ import { HabitCard } from '@/components/habits/habit-card'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { HabitForm } from '@/components/habits/habit-form'
-import { Progress } from '@/components/ui/progress'
+import { Ring } from '@/components/ui/ring'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function TodayHabits() {
   const { habitsToday, todayCompletedIds, addHabit } = useStore()
@@ -15,56 +16,47 @@ export function TodayHabits() {
   const completed = habitsToday.filter(h => todayCompletedIds.has(h.id)).length
   const total = habitsToday.length
   const allDone = total > 0 && completed === total
+  const progress = total > 0 ? completed / total : 0
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
-            <h2 className="text-sm font-semibold text-white">Today</h2>
-            <p className="text-xs text-muted mt-0.5">{completed} of {total} completed</p>
-          </div>
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
-            {total > 0 && (
-              <div className="w-32">
-                <Progress value={completed} max={total} color="success" size="sm" />
-              </div>
-            )}
-            <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
-              <Plus size={14} /> New habit
-            </Button>
+            <Ring progress={progress} size={48} stroke={5} color="rgb(var(--c-success))" glow={false}>
+              <span className="text-xs font-bold text-fg font-display">{completed}/{total}</span>
+            </Ring>
+            <div>
+              <CardTitle>Bugün</CardTitle>
+              <p className="mt-0.5 text-xs text-muted">{completed} / {total} tamamlandı</p>
+            </div>
           </div>
-        </div>
+          <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
+            <Plus size={14} /> Yeni
+          </Button>
+        </CardHeader>
 
-        <div className="p-4 space-y-2">
+        <div className="space-y-2 p-4">
           {total === 0 && (
             <div className="py-10 text-center">
-              <p className="text-muted text-sm">No habits scheduled for today.</p>
-              <button
-                onClick={() => setAddOpen(true)}
-                className="mt-2 text-xs text-accent-light hover:underline"
-              >
-                Add your first habit
+              <p className="text-sm text-muted">Bugün için planlanmış alışkanlık yok.</p>
+              <button onClick={() => setAddOpen(true)} className="mt-2 text-xs text-primary hover:underline">
+                İlk alışkanlığını ekle
               </button>
             </div>
           )}
-          {allDone && total > 0 && (
-            <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/5 px-4 py-3 mb-2">
-              <CheckCircle2 size={16} className="text-success-light" />
-              <span className="text-sm font-medium text-success-light">All done for today! Great work.</span>
+          {allDone && (
+            <div className="mb-2 flex items-center gap-2 rounded-lg border border-success/30 bg-success/5 px-4 py-3">
+              <CheckCircle2 size={16} className="text-success" />
+              <span className="text-sm font-medium text-success font-display">Bugün her şey tamam! Harikasın.</span>
             </div>
           )}
-          {habitsToday.map(h => (
-            <HabitCard key={h.id} habit={h} showCheck />
-          ))}
+          {habitsToday.map(h => <HabitCard key={h.id} habit={h} showCheck />)}
         </div>
-      </div>
+      </Card>
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="New habit">
-        <HabitForm
-          onSubmit={(d) => { addHabit(d); setAddOpen(false) }}
-          onCancel={() => setAddOpen(false)}
-        />
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Yeni alışkanlık">
+        <HabitForm onSubmit={d => { addHabit(d); setAddOpen(false) }} onCancel={() => setAddOpen(false)} />
       </Modal>
     </>
   )

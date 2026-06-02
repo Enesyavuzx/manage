@@ -1,47 +1,71 @@
 'use client'
+import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
+import { ACHIEVEMENTS, TIER_META } from '@/lib/achievements'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import type { AchievementDef } from '@/lib/types'
+
+type Filter = 'all' | 'unlocked' | 'locked'
 
 export function AchievementGrid() {
   const { data } = useStore()
+  const [filter, setFilter] = useState<Filter>('all')
 
-  const unlocked = data.achievements.filter(a => a.unlockedAt).length
-  const total = data.achievements.length
+  const unlockedCount = Object.keys(data.unlockedAchievements).length
+  const total = ACHIEVEMENTS.length
+
+  const isUnlocked = (a: AchievementDef) => Boolean(data.unlockedAchievements[a.id])
+  const list = ACHIEVEMENTS.filter(a =>
+    filter === 'all' ? true : filter === 'unlocked' ? isUnlocked(a) : !isUnlocked(a)
+  )
+
+  const filters: { id: Filter; label: string }[] = [
+    { id: 'all', label: `Tümü ${total}` },
+    { id: 'unlocked', label: `Açık ${unlockedCount}` },
+    { id: 'locked', label: `Kilitli ${total - unlockedCount}` },
+  ]
 
   return (
-    <div className="rounded-xl border border-border bg-surface">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <h2 className="text-sm font-semibold text-white">Achievements</h2>
-        <span className="text-xs text-muted">{unlocked} / {total}</span>
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Başarımlar</CardTitle>
+        <div className="flex gap-1 rounded-lg border border-border bg-surface-2 p-1">
+          {filters.map(f => (
+            <button key={f.id} onClick={() => setFilter(f.id)}
+              className={cn('rounded-md px-2.5 py-1 text-xs font-medium transition-all',
+                filter === f.id ? 'bg-primary text-bg' : 'text-muted hover:text-fg')}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </CardHeader>
       <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
-        {data.achievements.map(a => (
-          <div
-            key={a.id}
-            className={cn(
+        {list.map(a => {
+          const unlocked = isUnlocked(a)
+          const tier = TIER_META[a.tier]
+          return (
+            <div key={a.id} className={cn(
               'relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all',
-              a.unlockedAt
-                ? 'border-accent/20 bg-accent/5'
-                : 'border-border bg-surface-2 opacity-50',
-            )}
-          >
-            <div className={cn(
-              'flex h-12 w-12 items-center justify-center rounded-xl text-2xl',
-              a.unlockedAt ? 'bg-accent/10' : 'bg-surface grayscale',
-            )}>
-              {a.unlockedAt ? a.emoji : <Lock size={20} className="text-muted-2" />}
+              unlocked ? 'bg-surface-2' : 'border-border bg-surface opacity-55',
+            )} style={unlocked ? { borderColor: tier.color + '66', boxShadow: `0 0 18px -6px ${tier.ring}` } : undefined}>
+              <span className="absolute right-2 top-2 text-[10px] font-medium uppercase" style={{ color: unlocked ? tier.color : 'rgb(var(--c-muted2))' }}>
+                {tier.label}
+              </span>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
+                style={{ backgroundColor: unlocked ? tier.ring : 'rgb(var(--c-surface2))' }}>
+                {unlocked ? a.emoji : <Lock size={18} className="text-muted-2" />}
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-fg">{a.name}</p>
+                <p className="mt-0.5 text-xs text-muted leading-snug">{a.description}</p>
+              </div>
+              <span className="text-xs font-medium text-xp">+{a.xpBonus} XP</span>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-white">{a.name}</p>
-              <p className="text-xs text-muted mt-0.5">{a.description}</p>
-            </div>
-            {a.unlockedAt && (
-              <span className="text-xs text-xp font-medium">+{a.xpBonus} XP</span>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
-    </div>
+    </Card>
   )
 }

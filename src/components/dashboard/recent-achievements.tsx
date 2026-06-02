@@ -1,35 +1,45 @@
 'use client'
+import Link from 'next/link'
+import { Trophy, ChevronRight } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
+import { ACHIEVEMENTS, TIER_META } from '@/lib/achievements'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function RecentAchievements() {
   const { data } = useStore()
+  const recent = Object.entries(data.unlockedAchievements)
+    .sort((a, b) => new Date(b[1]).getTime() - new Date(a[1]).getTime())
+    .slice(0, 4)
+    .map(([id]) => ACHIEVEMENTS.find(a => a.id === id))
+    .filter(Boolean)
 
-  const recent = data.achievements
-    .filter(a => a.unlockedAt)
-    .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())
-    .slice(0, 3)
-
-  if (recent.length === 0) return null
+  const total = ACHIEVEMENTS.length
+  const unlocked = Object.keys(data.unlockedAchievements).length
 
   return (
-    <div className="rounded-xl border border-border bg-surface">
-      <div className="border-b border-border px-5 py-4">
-        <h2 className="text-sm font-semibold text-white">Recent Achievements</h2>
-      </div>
-      <div className="p-4 space-y-3">
-        {recent.map(a => (
+    <Card>
+      <CardHeader>
+        <CardTitle><span className="inline-flex items-center gap-2"><Trophy size={15} className="text-xp" /> Başarımlar</span></CardTitle>
+        <Link href="/achievements" className="flex items-center gap-0.5 text-xs text-muted hover:text-fg">
+          {unlocked}/{total} <ChevronRight size={13} />
+        </Link>
+      </CardHeader>
+      <div className="space-y-3 p-4">
+        {recent.length === 0 && <p className="py-4 text-center text-sm text-muted">Henüz başarım yok. İlk görevini tamamla!</p>}
+        {recent.map(a => a && (
           <div key={a.id} className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-xl">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xl"
+              style={{ backgroundColor: TIER_META[a.tier].ring }}>
               {a.emoji}
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-white">{a.name}</p>
-              <p className="text-xs text-muted">{a.description}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-fg">{a.name}</p>
+              <p className="truncate text-xs text-muted">{a.description}</p>
             </div>
-            <span className="text-xs text-xp font-medium shrink-0">+{a.xpBonus} XP</span>
+            <span className="shrink-0 text-xs font-medium text-xp">+{a.xpBonus}</span>
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   )
 }

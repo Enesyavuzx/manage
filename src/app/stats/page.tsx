@@ -1,11 +1,12 @@
+'use client'
 import { StatsGrid } from '@/components/stats/stats-grid'
 
 export default function StatsPage() {
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Stats</h1>
-        <p className="text-sm text-muted mt-0.5">Your progress over time</p>
+        <h1 className="text-2xl font-bold text-fg text-gradient">İstatistik</h1>
+        <p className="mt-0.5 text-sm text-muted">İlerlemenin zaman içindeki görünümü</p>
       </div>
       <StatsGrid />
     </div>

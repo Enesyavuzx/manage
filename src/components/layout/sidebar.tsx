@@ -1,67 +1,83 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, BarChart3, Zap } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
-import { getLevel } from '@/lib/constants'
+import { getLevelInfo, getRank } from '@/lib/gamification'
 import { formatXP } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
+import { ThemeSwitcher } from './theme-switcher'
 
 const NAV = [
-  { href: '/',         icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/habits',   icon: ListChecks,      label: 'Habits'    },
-  { href: '/rewards',  icon: Gift,            label: 'Rewards'   },
-  { href: '/stats',    icon: BarChart3,       label: 'Stats'     },
+  { href: '/',             icon: LayoutDashboard, label: 'Panel' },
+  { href: '/habits',       icon: ListChecks,      label: 'Alışkanlıklar' },
+  { href: '/rewards',      icon: Gift,            label: 'Ödüller' },
+  { href: '/achievements', icon: Trophy,          label: 'Başarımlar' },
+  { href: '/stats',        icon: BarChart3,       label: 'İstatistik' },
+  { href: '/profile',      icon: User,            label: 'Profil' },
 ]
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
-  const { data } = useStore()
-  const { level, progress, xpInLevel, xpNeeded } = getLevel(data.profile.totalXP)
+  const { data, cloud } = useStore()
+  const info = getLevelInfo(data.profile.totalXP)
+  const { rank } = getRank(info.level)
   const available = data.profile.totalXP - data.profile.redeemedXP
 
   return (
-    <aside className="flex h-full w-56 flex-col border-r border-border bg-surface">
+    <aside className="flex h-full w-60 flex-col border-r border-border bg-surface">
       {/* Logo */}
-      <div className="flex items-center gap-2 border-b border-border px-5 py-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
-          <Zap size={14} className="text-white" fill="white" />
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-glow">
+            <Zap size={16} className="text-bg" fill="currentColor" />
+          </div>
+          <span className="text-base font-bold tracking-tight text-fg font-display">MANAGE</span>
         </div>
-        <span className="text-sm font-bold tracking-tight text-white">Manage</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5 p-2">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
         {NAV.map(({ href, icon: Icon, label }) => {
           const active = pathname === href
           return (
             <Link
               key={href}
               href={href}
+              onClick={onNavigate}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all',
                 active
-                  ? 'bg-accent/10 text-accent-light font-medium'
-                  : 'text-muted hover:text-white hover:bg-surface-2',
+                  ? 'bg-primary/12 text-primary font-medium'
+                  : 'text-muted hover:text-fg hover:bg-surface-2',
               )}
             >
-              <Icon size={16} />
+              <Icon size={17} />
               {label}
+              {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-glow-pulse" />}
             </Link>
           )
         })}
       </nav>
 
-      {/* XP Card */}
-      <div className="border-t border-border p-4">
+      {/* XP / Level card */}
+      <div className="space-y-3 border-t border-border p-3">
         <div className="rounded-lg border border-border bg-surface-2 p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-white">Level {level}</span>
+            <span className="text-xs font-semibold text-fg font-display flex items-center gap-1">
+              <span style={{ color: rank.color }}>{rank.emoji}</span> Lv {info.level}
+            </span>
             <span className="text-xs text-xp font-medium">{formatXP(available)} XP</span>
           </div>
-          <Progress value={xpInLevel} max={xpNeeded} color="xp" size="sm" />
-          <p className="text-xs text-muted">{xpInLevel} / {xpNeeded} to level {level + 1}</p>
+          <Progress value={info.xpInLevel} max={info.xpNeeded} color="xp" size="sm" />
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <ThemeSwitcher compact />
+          <span className="flex items-center gap-1 text-xs text-muted" title={cloud ? 'Buluta senkron' : 'Yerel kayıt'}>
+            {cloud ? <Cloud size={13} /> : <HardDrive size={13} />}
+          </span>
         </div>
       </div>
     </aside>
