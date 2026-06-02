@@ -1,5 +1,8 @@
 'use client'
 import { StatsGrid } from '@/components/stats/stats-grid'
+import { WeekComparison } from '@/components/stats/week-comparison'
+import { HourAnalysis } from '@/components/stats/hour-analysis'
+import { WeeklySummaryCard } from '@/components/stats/weekly-summary-card'
 
 export default function StatsPage() {
   return (
@@ -8,7 +11,10 @@ export default function StatsPage() {
         <h1 className="text-2xl font-bold text-fg text-gradient">İstatistik</h1>
         <p className="mt-0.5 text-sm text-muted">İlerlemenin zaman içindeki görünümü</p>
       </div>
+      <WeeklySummaryCard />
+      <WeekComparison />
       <StatsGrid />
+      <HourAnalysis />
     </div>
   )
 }

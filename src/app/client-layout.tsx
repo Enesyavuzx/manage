@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import { StoreProvider, useStore } from '@/hooks/useStore'
 import { Sidebar } from '@/components/layout/sidebar'
@@ -12,6 +12,12 @@ import { NotificationManager } from '@/components/layout/notification-manager'
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
   const { ready } = useStore()
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
+  }, [])
 
   return (
     <>
