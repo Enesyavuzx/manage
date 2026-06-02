@@ -7,6 +7,7 @@ import { StreakOverview } from '@/components/dashboard/streak-overview'
 import { RecentAchievements } from '@/components/dashboard/recent-achievements'
 import { CategoryBars } from '@/components/dashboard/category-bars'
 import { WaterWidget } from '@/components/dashboard/water-widget'
+import { DopamineSprites } from '@/components/dashboard/dopamine-sprites'
 
 export default function DashboardPage() {
   const today = format(new Date(), 'd MMMM EEEE', { locale: tr })
@@ -26,6 +27,7 @@ export default function DashboardPage() {
         <RecentAchievements />
         <CategoryBars />
       </div>
+      <DopamineSprites />
     </div>
   )
 }

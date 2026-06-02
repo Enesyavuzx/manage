@@ -1,5 +1,5 @@
 import type { StoreData, Habit, Completion } from './types'
-import { DEFAULT_REWARDS, WATER_GOAL } from './constants'
+import { DEFAULT_REWARDS, EXTRA_REWARDS, WATER_GOAL } from './constants'
 import { ACHIEVEMENTS } from './achievements'
 import { getLevelInfo } from './gamification'
 import { format } from 'date-fns'
@@ -11,10 +11,12 @@ export function defaultData(): StoreData {
     habits: [],
     completions: [],
     profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'aurora' },
-    rewards: DEFAULT_REWARDS.map(r => ({ ...r })),
+    rewards: [...DEFAULT_REWARDS, ...EXTRA_REWARDS].map(r => ({ ...r })),
     moods: [],
     focusSessions: [],
     water: [],
+    budgetAccounts: [],
+    budgetTransactions: [],
     subtaskDone: {},
     unlockedAchievements: {},
     unlockedTitles: {},
@@ -43,6 +45,8 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     moods: parsed.moods ?? def.moods,
     focusSessions: parsed.focusSessions ?? def.focusSessions,
     water: parsed.water ?? def.water,
+    budgetAccounts: parsed.budgetAccounts ?? def.budgetAccounts,
+    budgetTransactions: parsed.budgetTransactions ?? def.budgetTransactions,
     subtaskDone: parsed.subtaskDone ?? def.subtaskDone,
     unlockedAchievements: parsed.unlockedAchievements ?? {},
     unlockedTitles: parsed.unlockedTitles ?? {},
@@ -202,6 +206,45 @@ export function waterGoalDays(data: StoreData, goal: number): number {
 
 export function subtaskKey(date: string, habitId: string): string {
   return `${date}:${habitId}`
+}
+
+// ---- Budget helpers ----
+export function accountBalance(data: StoreData, accountId: string): number {
+  const acc = data.budgetAccounts.find(a => a.id === accountId)
+  if (!acc) return 0
+  return data.budgetTransactions.reduce((sum, t) => {
+    if (t.accountId !== accountId) return sum
+    return sum + (t.type === 'income' ? t.amount : -t.amount)
+  }, acc.openingBalance)
+}
+
+export function netWorth(data: StoreData): number {
+  return data.budgetAccounts.reduce((sum, a) => sum + accountBalance(data, a.id), 0)
+}
+
+// Income/expense totals for a given yyyy-MM prefix (defaults to current month).
+export function monthTotals(data: StoreData, monthPrefix: string): { income: number; expense: number } {
+  let income = 0, expense = 0
+  for (const t of data.budgetTransactions) {
+    if (!t.date.startsWith(monthPrefix)) continue
+    if (t.type === 'income') income += t.amount
+    else expense += t.amount
+  }
+  return { income, expense }
+}
+
+// Expense total per category for a given month prefix.
+export function expenseByCategory(data: StoreData, monthPrefix: string): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const t of data.budgetTransactions) {
+    if (t.type !== 'expense' || !t.date.startsWith(monthPrefix)) continue
+    out[t.categoryId] = (out[t.categoryId] ?? 0) + t.amount
+  }
+  return out
+}
+
+export function currentMonthPrefix(): string {
+  return format(new Date(), 'yyyy-MM')
 }
 
 // Returns { newlyUnlocked achievementIds, newTitles, bonusXP }

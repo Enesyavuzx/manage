@@ -1,9 +1,10 @@
 'use client'
 import { useState } from 'react'
-import { Plus, Archive } from 'lucide-react'
+import { Plus, Archive, Sparkles } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { HabitCard } from '@/components/habits/habit-card'
 import { HabitForm } from '@/components/habits/habit-form'
+import { TemplateGallery } from '@/components/habits/template-gallery'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -11,6 +12,7 @@ import { Card } from '@/components/ui/card'
 export default function HabitsPage() {
   const { data, addHabit } = useStore()
   const [addOpen, setAddOpen] = useState(false)
+  const [tplOpen, setTplOpen] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
 
   const active = data.habits.filter(h => !h.archived)
@@ -19,18 +21,25 @@ export default function HabitsPage() {
   return (
     <>
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-2">
           <div>
             <h1 className="text-2xl font-bold text-fg text-gradient">Alışkanlıklar</h1>
             <p className="mt-0.5 text-sm text-muted">{active.length} aktif</p>
           </div>
-          <Button variant="primary" onClick={() => setAddOpen(true)}><Plus size={15} /> Yeni</Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setTplOpen(true)}><Sparkles size={15} /> Şablonlar</Button>
+            <Button variant="primary" onClick={() => setAddOpen(true)}><Plus size={15} /> Yeni</Button>
+          </div>
         </div>
 
         {active.length === 0 && (
           <Card className="py-16 text-center">
             <p className="text-sm text-muted">Henüz alışkanlık yok.</p>
-            <button onClick={() => setAddOpen(true)} className="mt-2 text-sm text-primary hover:underline">İlk alışkanlığını ekle</button>
+            <div className="mt-2 flex items-center justify-center gap-3">
+              <button onClick={() => setAddOpen(true)} className="text-sm text-primary hover:underline">Tek tek ekle</button>
+              <span className="text-muted-2">·</span>
+              <button onClick={() => setTplOpen(true)} className="text-sm text-primary hover:underline">Hazır paketten başla</button>
+            </div>
           </Card>
         )}
 
@@ -48,6 +57,10 @@ export default function HabitsPage() {
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Yeni alışkanlık">
         <HabitForm onSubmit={d => { addHabit(d); setAddOpen(false) }} onCancel={() => setAddOpen(false)} />
+      </Modal>
+
+      <Modal open={tplOpen} onClose={() => setTplOpen(false)} title="Hazır alışkanlık paketleri">
+        <TemplateGallery onDone={() => setTplOpen(false)} />
       </Modal>
     </>
   )

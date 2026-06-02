@@ -26,6 +26,24 @@ export interface Habit {
   reminderTime?: string | null   // "HH:mm" or null
 }
 
+export interface HabitTemplate {
+  name: string
+  description: string
+  emoji: string
+  category: Category
+  difficulty: Difficulty
+  color: string
+  steps?: string[]
+}
+
+export interface TemplatePack {
+  id: string
+  name: string
+  emoji: string
+  description: string
+  habits: HabitTemplate[]
+}
+
 export interface Completion {
   id: string
   habitId: string
@@ -77,6 +95,31 @@ export interface FocusSession {
   minutes: number
   completedAt: string   // ISO
   xpAwarded: number
+}
+
+// ---- Budget ----
+export type AccountType = 'cash' | 'bank' | 'card'
+
+export interface BudgetAccount {
+  id: string
+  name: string
+  type: AccountType
+  openingBalance: number
+  color: string
+  createdAt: string
+}
+
+export type TxType = 'income' | 'expense'
+
+export interface BudgetTransaction {
+  id: string
+  accountId: string
+  type: TxType
+  amount: number
+  categoryId: string
+  note?: string
+  date: string          // yyyy-MM-dd
+  createdAt: string     // ISO
 }
 
 export type AchievementType =
@@ -133,6 +176,8 @@ export interface StoreData {
   moods: MoodLog[]
   focusSessions: FocusSession[]
   water: WaterLog[]
+  budgetAccounts: BudgetAccount[]
+  budgetTransactions: BudgetTransaction[]
   subtaskDone: Record<string, string[]>          // `${date}:${habitId}` -> done stepIds
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO

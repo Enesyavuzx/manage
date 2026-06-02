@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession, WaterLog } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday,
   getStreak, evaluateAchievements, subtaskKey,
@@ -31,6 +31,7 @@ interface StoreContextType {
   dismissNotification: (id: string) => void
   toggleHabit: (habitId: string) => void
   addHabit: (h: Omit<Habit, 'id' | 'createdAt' | 'archived'>) => void
+  addTemplatePack: (pack: TemplatePack) => number
   updateHabit: (id: string, updates: Partial<Habit>) => void
   archiveHabit: (id: string) => void
   unarchiveHabit: (id: string) => void
@@ -45,6 +46,10 @@ interface StoreContextType {
   removeWater: () => void
   toggleSubtask: (habitId: string, stepId: string) => void
   setNotificationsEnabled: (enabled: boolean) => void
+  addAccount: (a: Omit<BudgetAccount, 'id' | 'createdAt'>) => void
+  deleteAccount: (id: string) => void
+  addTransaction: (t: Omit<BudgetTransaction, 'id' | 'createdAt'>) => void
+  deleteTransaction: (id: string) => void
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
@@ -246,6 +251,39 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  // Add every habit in a template pack at once. Returns how many were added.
+  const addTemplatePack = useCallback((pack: TemplatePack): number => {
+    const now = new Date().toISOString()
+    const newHabits: Habit[] = pack.habits.map(t => ({
+      id: generateId(),
+      name: t.name,
+      description: t.description,
+      category: t.category,
+      difficulty: t.difficulty,
+      frequency: 'daily',
+      emoji: t.emoji,
+      color: t.color,
+      createdAt: now,
+      archived: false,
+      subtasks: t.steps?.map(text => ({ id: generateId(), text })) ?? [],
+      reminderTime: null,
+    }))
+    setData(d => {
+      const next = { ...d, habits: [...d.habits, ...newHabits] }
+      const { newAchievements, newTitles, bonusXP } = evaluateAchievements(next)
+      if (newAchievements.length) {
+        const ua = { ...next.unlockedAchievements }, ut = { ...next.unlockedTitles }
+        const ts = new Date().toISOString()
+        newAchievements.forEach(id => { ua[id] = ts })
+        newTitles.forEach(id => { ut[id] = ts })
+        return { ...next, unlockedAchievements: ua, unlockedTitles: ut, profile: { ...next.profile, totalXP: next.profile.totalXP + bonusXP } }
+      }
+      return next
+    })
+    pushNotifications([{ id: generateId(), kind: 'reward', emoji: pack.emoji, title: `${pack.name} eklendi`, subtitle: `${newHabits.length} alışkanlık` }])
+    return newHabits.length
+  }, [pushNotifications])
+
   const updateHabit = useCallback((id: string, updates: Partial<Habit>) => {
     setData(d => ({ ...d, habits: d.habits.map(h => h.id === id ? { ...h, ...updates } : h) }))
   }, [])
@@ -423,6 +461,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, notificationsEnabled: enabled } }))
   }, [])
 
+  const addAccount = useCallback((a: Omit<BudgetAccount, 'id' | 'createdAt'>) => {
+    const account: BudgetAccount = { ...a, id: generateId(), createdAt: new Date().toISOString() }
+    setData(d => ({ ...d, budgetAccounts: [...d.budgetAccounts, account] }))
+  }, [])
+
+  const deleteAccount = useCallback((id: string) => {
+    setData(d => ({
+      ...d,
+      budgetAccounts: d.budgetAccounts.filter(a => a.id !== id),
+      budgetTransactions: d.budgetTransactions.filter(t => t.accountId !== id),
+    }))
+  }, [])
+
+  const addTransaction = useCallback((t: Omit<BudgetTransaction, 'id' | 'createdAt'>) => {
+    const tx: BudgetTransaction = { ...t, id: generateId(), createdAt: new Date().toISOString() }
+    setData(d => ({ ...d, budgetTransactions: [...d.budgetTransactions, tx] }))
+  }, [])
+
+  const deleteTransaction = useCallback((id: string) => {
+    setData(d => ({ ...d, budgetTransactions: d.budgetTransactions.filter(t => t.id !== id) }))
+  }, [])
+
   const setProfileName = useCallback((name: string) => {
     setData(d => ({ ...d, profile: { ...d.profile, name } }))
   }, [])
@@ -438,10 +498,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value: StoreContextType = {
     data, ready, cloud: isSupabaseConfigured,
     todayCompletedIds, habitsToday, notifications, dismissNotification,
-    toggleHabit, addHabit, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
+    toggleHabit, addHabit, addTemplatePack, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
     openMysteryBox, logMood, addFocusSession,
     addWater, removeWater, toggleSubtask, setNotificationsEnabled,
+    addAccount, deleteAccount, addTransaction, deleteTransaction,
     setProfileName, setActiveTitle, setTheme,
   }
 

@@ -26,44 +26,44 @@
   --radius: 0.9rem;
 }
 
-/* ============ THEME: NEON (warm, candy, uplifting) ============ */
+/* ============ THEME: EMBER (bold red / near-black, high energy) ============ */
 [data-theme='neon'] {
-  --c-bg: 22 11 34;
-  --c-surface: 38 20 54;
-  --c-surface2: 54 30 74;
-  --c-border: 84 46 108;
-  --c-border-hover: 196 96 196;
-  --c-text: 255 245 253;
-  --c-muted: 220 178 218;
-  --c-muted2: 158 116 158;
-  --c-primary: 255 92 168;
-  --c-primary2: 255 168 72;
-  --c-accent: 120 220 255;
-  --c-xp: 255 224 84;
-  --c-success: 64 232 162;
-  --c-danger: 255 80 104;
+  --c-bg: 14 8 9;
+  --c-surface: 26 14 15;
+  --c-surface2: 42 21 23;
+  --c-border: 88 34 38;
+  --c-border-hover: 236 64 72;
+  --c-text: 255 240 240;
+  --c-muted: 214 158 160;
+  --c-muted2: 150 102 104;
+  --c-primary: 244 52 62;
+  --c-primary2: 255 124 78;
+  --c-accent: 255 86 86;
+  --c-xp: 255 196 64;
+  --c-success: 70 220 140;
+  --c-danger: 255 110 116;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Inter', system-ui, sans-serif;
   --radius: 1rem;
 }
 
-/* ============ THEME: PIXEL (vivid 8-bit arcade) ============ */
+/* ============ THEME: PIXEL (turquoise / mint 8-bit arcade) ============ */
 [data-theme='pixel'] {
-  --c-bg: 16 14 38;
-  --c-surface: 31 27 62;
-  --c-surface2: 46 40 88;
-  --c-border: 92 74 154;
-  --c-border-hover: 156 124 236;
-  --c-text: 242 242 255;
-  --c-muted: 182 172 224;
-  --c-muted2: 134 122 180;
-  --c-primary: 255 96 182;
-  --c-primary2: 84 222 255;
-  --c-accent: 124 252 132;
+  --c-bg: 8 22 24;
+  --c-surface: 13 34 37;
+  --c-surface2: 20 50 54;
+  --c-border: 34 86 88;
+  --c-border-hover: 64 224 200;
+  --c-text: 226 255 250;
+  --c-muted: 158 214 206;
+  --c-muted2: 104 158 152;
+  --c-primary: 45 226 196;
+  --c-primary2: 120 255 214;
+  --c-accent: 116 248 178;
   --c-xp: 255 216 66;
-  --c-success: 100 240 144;
-  --c-danger: 255 96 112;
+  --c-success: 80 240 168;
+  --c-danger: 255 110 116;
 
   --font-body: 'VT323', monospace;
   --font-display: 'Press Start 2P', monospace;
@@ -98,16 +98,28 @@ html, body {
   pointer-events: none;
 }
 
-/* Neon ambient background glow */
+/* Ember ambient background glow */
 [data-theme='neon'] body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(55% 45% at 10% 0%, rgb(var(--c-primary) / 0.24), transparent 60%),
-    radial-gradient(50% 45% at 92% 6%, rgb(var(--c-primary2) / 0.20), transparent 58%),
-    radial-gradient(60% 60% at 80% 100%, rgb(var(--c-accent) / 0.16), transparent 60%);
+    radial-gradient(55% 40% at 5% 0%, rgb(var(--c-primary) / 0.28), transparent 55%),
+    radial-gradient(50% 45% at 95% 5%, rgb(var(--c-primary2) / 0.22), transparent 58%),
+    radial-gradient(60% 55% at 50% 100%, rgb(var(--c-primary) / 0.14), transparent 60%);
+  pointer-events: none;
+}
+
+/* Pixel/Mint ambient glow */
+[data-theme='pixel'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(55% 40% at 15% 0%, rgb(var(--c-primary) / 0.18), transparent 55%),
+    radial-gradient(45% 40% at 88% 8%, rgb(var(--c-primary2) / 0.14), transparent 55%);
   pointer-events: none;
 }
 

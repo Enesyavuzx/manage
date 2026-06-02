@@ -1,13 +1,13 @@
 'use client'
-import { Sparkles, Sun, Gamepad2 } from 'lucide-react'
+import { Sparkles, Flame, Gamepad2 } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import type { ThemeName } from '@/lib/types'
 
 const OPTIONS: { id: ThemeName; label: string; icon: React.ElementType }[] = [
   { id: 'aurora', label: 'Aurora', icon: Sparkles },
-  { id: 'neon',   label: 'Neon',   icon: Sun },
-  { id: 'pixel',  label: 'Pixel',  icon: Gamepad2 },
+  { id: 'neon',   label: 'Ember',  icon: Flame },
+  { id: 'pixel',  label: 'Mint',   icon: Gamepad2 },
 ]
 
 export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {

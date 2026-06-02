@@ -14,3 +14,11 @@ export function formatXP(xp: number): string {
   if (xp >= 1000) return `${(xp / 1000).toFixed(1)}K`
   return Math.round(xp).toString()
 }
+
+export function formatMoney(amount: number, symbol = '₺'): string {
+  const formatted = new Intl.NumberFormat('tr-TR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)
+  return `${formatted} ${symbol}`
+}

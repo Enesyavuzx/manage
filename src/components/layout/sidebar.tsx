@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
 import { getLevelInfo, getRank } from '@/lib/gamification'
@@ -16,7 +16,10 @@ const NAV = [
   { href: '/habits',       icon: ListChecks,      label: 'Alışkanlıklar' },
   { href: '/focus',        icon: Target,          label: 'Odak' },
   { href: '/mood',         icon: Smile,           label: 'Ruh Hali' },
+  { href: '/budget',       icon: Wallet,          label: 'Bütçe' },
   { href: '/rewards',      icon: Gift,            label: 'Ödüller' },
+  { href: '/arcade',       icon: Gamepad2,        label: 'Mini Oyun' },
+  { href: '/coach',        icon: MessageCircle,   label: 'Koç' },
   { href: '/achievements', icon: Trophy,          label: 'Başarımlar' },
   { href: '/stats',        icon: BarChart3,       label: 'İstatistik' },
   { href: '/profile',      icon: User,            label: 'Profil' },

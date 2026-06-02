@@ -31,6 +31,19 @@ export const TITLES: TitleDef[] = [
   { id: 'godmode',      label: 'Tanrı Modu',         emoji: '⚡' },
   { id: 'focused',      label: 'Odak Ustası',        emoji: '🎯' },
   { id: 'zen',          label: 'Zen Bilgesi',        emoji: '🧘' },
+  // New titles
+  { id: 'sprinter',     label: 'Sprinter',           emoji: '💨' },
+  { id: 'hydrated',     label: 'Su Savaşçısı',       emoji: '💧' },
+  { id: 'reader',       label: 'Kitap Kurdu',        emoji: '📖' },
+  { id: 'taskmaster',   label: 'Görev Ustası',       emoji: '📋' },
+  { id: 'iron_will',    label: 'Demir İrade',        emoji: '⚙️' },
+  { id: 'phoenix',      label: 'Anka Kuşu',          emoji: '🦅' },
+  { id: 'mindful',      label: 'Farkındalık Ustası', emoji: '🌸' },
+  { id: 'champion',     label: 'Şampiyonum',         emoji: '🏅' },
+  { id: 'titan',        label: 'Titan Ruhu',         emoji: '🌋' },
+  { id: 'cosmic',       label: 'Kozmik Güç',         emoji: '🌌' },
+  { id: 'adhd_master',  label: 'DEHB Ustası',        emoji: '🧩' },
+  { id: 'habit_king',   label: 'Alışkanlık Kralı',   emoji: '👑' },
 ]
 
 const CATEGORY_LABELS: Partial<Record<Category, string>> = {

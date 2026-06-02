@@ -11,16 +11,35 @@ import { format, subDays } from 'date-fns'
 
 const LEVELS: MoodLevel[] = [1, 2, 3, 4, 5]
 
+const LOW_MOOD_TIPS: { emoji: string; text: string }[] = [
+  { emoji: '💧', text: 'Bir bardak soğuk su iç. Gerçekten işe yarar.' },
+  { emoji: '🚶', text: '5 dakika yürü. En küçük hareket bile kimyayı değiştirir.' },
+  { emoji: '🌬️', text: '4 saniye nefes al, 7 tut, 8\'de bırak. Üç kez tekrarla.' },
+  { emoji: '📱', text: 'Bir arkadaşına "nasılsın" mesajı at. Bağlantı dopamin verir.' },
+  { emoji: '☀️', text: 'Varsa bir pencereye git, 2 dakika güneş ışığına bak.' },
+  { emoji: '🎵', text: 'Favori şarkını aç, 1 dakika sadece dinle.' },
+  { emoji: '🍎', text: 'Ne yedin? Karbonhidrat düşüklüğü ruh halini direkt etkiler.' },
+  { emoji: '🛏️', text: 'Zor günler olur. Küçük bir görev bile sayılır.' },
+  { emoji: '🎯', text: 'Bugün tek bir şey yap. Sadece bir. Hepsi bu.' },
+  { emoji: '🧘', text: 'Hisler geçici, sen kalıcısın. Şu an olduğun yer yeterli.' },
+]
+
+function pickThree(): { emoji: string; text: string }[] {
+  return [...LOW_MOOD_TIPS].sort(() => Math.random() - 0.5).slice(0, 3)
+}
+
 export function MoodTracker() {
   const { data, logMood } = useStore()
   const current = todayMood(data)
   const [note, setNote] = useState(current?.note ?? '')
+  const [tips] = useState(() => pickThree())
 
   function pick(level: MoodLevel) {
     logMood(level, note.trim() || undefined)
   }
 
-  // last 14 days as colored squares
+  const isLowMood = current && current.level <= 2
+
   const days = Array.from({ length: 14 }, (_, i) => {
     const d = subDays(new Date(), 13 - i)
     const key = format(d, 'yyyy-MM-dd')
@@ -77,6 +96,23 @@ export function MoodTracker() {
           )}
         </div>
       </Card>
+
+      {isLowMood && (
+        <Card className="border-primary/30">
+          <div className="px-4 pt-4">
+            <p className="text-sm font-semibold text-fg font-display">Zor günler için öneriler</p>
+          </div>
+          <div className="space-y-2 p-4">
+            {tips.map((tip, i) => (
+              <div key={i} className="flex items-start gap-3 rounded-lg border border-border bg-surface-2 p-3">
+                <span className="text-xl">{tip.emoji}</span>
+                <p className="text-sm text-muted">{tip.text}</p>
+              </div>
+            ))}
+          </div>
+          <p className="pb-4 text-center text-xs text-muted-2">Bunlardan birini denemen bile yeterli.</p>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
