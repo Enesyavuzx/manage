@@ -59,6 +59,18 @@ export interface UserProfile {
   activeTitleId: string | null
   theme: ThemeName
   notificationsEnabled?: boolean
+  onboarded?: boolean
+  lastLoginDate?: string        // yyyy-MM-dd of last counted visit
+  loginStreak?: number          // consecutive daily-visit count
+  dailyClaimedDate?: string     // yyyy-MM-dd the daily login bonus was claimed
+  challengeClaimedDate?: string // yyyy-MM-dd the daily challenge was claimed
+}
+
+export interface BrainDumpItem {
+  id: string
+  text: string
+  done: boolean
+  createdAt: string             // ISO
 }
 
 export interface WaterLog {
@@ -178,6 +190,7 @@ export interface StoreData {
   water: WaterLog[]
   budgetAccounts: BudgetAccount[]
   budgetTransactions: BudgetTransaction[]
+  brainDump: BrainDumpItem[]
   subtaskDone: Record<string, string[]>          // `${date}:${habitId}` -> done stepIds
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO

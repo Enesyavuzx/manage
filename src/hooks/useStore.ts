@@ -6,12 +6,14 @@ import {
   loadStore, saveStore, todayKey, isHabitDueToday,
   getStreak, evaluateAchievements, subtaskKey,
 } from '@/lib/store'
+import { loginBonusXP, challengeForToday } from '@/lib/daily'
 import { getLevelInfo, getRank, xpForDifficulty, streakBonus } from '@/lib/gamification'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { TITLES } from '@/lib/achievements'
 import { MOOD_META, MOOD_XP, FOCUS_XP_PER_MIN, MYSTERY_BOX_COST, WATER_GOAL, WATER_XP } from '@/lib/constants'
 import { isSupabaseConfigured, cloudLoad, cloudSaveDebounced } from '@/lib/supabase'
 import { generateId } from '@/lib/utils'
+import { format } from 'date-fns'
 
 export interface GameNotification {
   id: string
@@ -50,6 +52,13 @@ interface StoreContextType {
   deleteAccount: (id: string) => void
   addTransaction: (t: Omit<BudgetTransaction, 'id' | 'createdAt'>) => void
   deleteTransaction: (id: string) => void
+  addBrainDumpItem: (text: string) => void
+  toggleBrainDumpItem: (id: string) => void
+  deleteBrainDumpItem: (id: string) => void
+  clearDoneBrainDump: () => void
+  claimDailyBonus: () => void
+  claimChallenge: () => boolean
+  completeOnboarding: () => void
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
@@ -138,6 +147,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     saveStore(data)
     cloudSaveDebounced(data)
   }, [data])
+
+  // Update the daily-visit streak once per calendar day (first render of the day).
+  useEffect(() => {
+    setData(d => {
+      const today = todayKey()
+      if (d.profile.lastLoginDate === today) return d
+      const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd')
+      const streak = d.profile.lastLoginDate === yesterday ? (d.profile.loginStreak ?? 0) + 1 : 1
+      return { ...d, profile: { ...d.profile, lastLoginDate: today, loginStreak: streak } }
+    })
+  }, [])
 
   const pushNotifications = useCallback((items: GameNotification[]) => {
     if (items.length === 0) return
@@ -483,6 +503,68 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, budgetTransactions: d.budgetTransactions.filter(t => t.id !== id) }))
   }, [])
 
+  const addBrainDumpItem = useCallback((text: string) => {
+    const t = text.trim()
+    if (!t) return
+    setData(d => ({
+      ...d,
+      brainDump: [{ id: generateId(), text: t, done: false, createdAt: new Date().toISOString() }, ...d.brainDump],
+    }))
+  }, [])
+
+  const toggleBrainDumpItem = useCallback((id: string) => {
+    setData(d => ({ ...d, brainDump: d.brainDump.map(b => b.id === id ? { ...b, done: !b.done } : b) }))
+  }, [])
+
+  const deleteBrainDumpItem = useCallback((id: string) => {
+    setData(d => ({ ...d, brainDump: d.brainDump.filter(b => b.id !== id) }))
+  }, [])
+
+  const clearDoneBrainDump = useCallback(() => {
+    setData(d => ({ ...d, brainDump: d.brainDump.filter(b => !b.done) }))
+  }, [])
+
+  const claimDailyBonus = useCallback(() => {
+    const cur = dataRef.current
+    if (cur.profile.dailyClaimedDate === todayKey()) return
+    const streak = cur.profile.loginStreak ?? 1
+    const xp = loginBonusXP(streak)
+    const base: StoreData = {
+      ...cur,
+      profile: { ...cur.profile, dailyClaimedDate: todayKey(), totalXP: cur.profile.totalXP + xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'reward', emoji: '🎁',
+      title: `+${xp} XP`, subtitle: `${streak} günlük giriş serisi`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+  }, [pushNotifications])
+
+  const claimChallenge = useCallback((): boolean => {
+    const cur = dataRef.current
+    if (cur.profile.challengeClaimedDate === todayKey()) return false
+    const ch = challengeForToday()
+    if (ch.progress(cur) < ch.target) return false
+    const base: StoreData = {
+      ...cur,
+      profile: { ...cur.profile, challengeClaimedDate: todayKey(), totalXP: cur.profile.totalXP + ch.xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'reward', emoji: ch.emoji,
+      title: `+${ch.xp} XP`, subtitle: 'Günlük görev tamamlandı!',
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+    return true
+  }, [pushNotifications])
+
+  const completeOnboarding = useCallback(() => {
+    setData(d => ({ ...d, profile: { ...d.profile, onboarded: true } }))
+  }, [])
+
   const setProfileName = useCallback((name: string) => {
     setData(d => ({ ...d, profile: { ...d.profile, name } }))
   }, [])
@@ -503,6 +585,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     openMysteryBox, logMood, addFocusSession,
     addWater, removeWater, toggleSubtask, setNotificationsEnabled,
     addAccount, deleteAccount, addTransaction, deleteTransaction,
+    addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
+    claimDailyBonus, claimChallenge, completeOnboarding,
     setProfileName, setActiveTitle, setTheme,
   }
 

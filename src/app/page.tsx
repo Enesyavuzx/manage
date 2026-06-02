@@ -8,6 +8,7 @@ import { RecentAchievements } from '@/components/dashboard/recent-achievements'
 import { CategoryBars } from '@/components/dashboard/category-bars'
 import { WaterWidget } from '@/components/dashboard/water-widget'
 import { DopamineSprites } from '@/components/dashboard/dopamine-sprites'
+import { DailyRewards } from '@/components/dashboard/daily-rewards'
 
 export default function DashboardPage() {
   const today = format(new Date(), 'd MMMM EEEE', { locale: tr })
@@ -18,6 +19,7 @@ export default function DashboardPage() {
         <p className="mt-0.5 text-sm text-muted">{today}</p>
       </div>
       <LevelHero />
+      <DailyRewards />
       <TodayHabits />
       <div className="grid gap-4 sm:grid-cols-2">
         <WaterWidget />

@@ -8,10 +8,13 @@ import { ToastHost } from '@/components/layout/toast-host'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
 import { SideDecor } from '@/components/decor/side-decor'
 import { NotificationManager } from '@/components/layout/notification-manager'
+import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
-  const { ready } = useStore()
+  const { ready, data } = useStore()
+  // Show only to genuinely fresh installs: not yet onboarded and no habits/XP yet.
+  const showOnboarding = ready && !data.profile.onboarded && data.habits.length === 0 && data.profile.totalXP === 0
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -48,6 +51,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <ToastHost />
+      {showOnboarding && <OnboardingWizard />}
     </>
   )
 }
