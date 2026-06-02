@@ -194,12 +194,24 @@ function build(): AchievementDef[] {
     })
   })
 
+  // 12) Water goal days (4)
+  const water = [1, 7, 30, 100]
+  const waterNames = ['İlk Gün', 'Bir Hafta', 'Bir Ay', 'Yüz Gün']
+  water.forEach((v, i) => {
+    const tier = tierFor(i, water.length)
+    list.push({
+      id: `water_${v}`, name: `Su: ${waterNames[i]}`, emoji: '💧',
+      description: `${v} gün su hedefine ulaş`, xpBonus: TIER_BONUS[tier], tier,
+      requirement: { type: 'water_days', value: v },
+    })
+  })
+
   return list
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = build()
 
-// Final count guard (90 total: 80 core + 5 focus + 5 mood)
+// Final count guard (94 total: 80 core + 5 focus + 5 mood + 4 water)
 export const ACHIEVEMENT_COUNT = ACHIEVEMENTS.length
 
 export const TIER_META: Record<Tier, { label: string; color: string; ring: string }> = {

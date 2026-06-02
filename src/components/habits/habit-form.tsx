@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
-import type { Habit, Category, Difficulty } from '@/lib/types'
+import { Plus, X } from 'lucide-react'
+import type { Habit, Category, Difficulty, HabitStep } from '@/lib/types'
 import { CATEGORY_META, HABIT_COLORS, HABIT_EMOJIS } from '@/lib/constants'
 import { DIFFICULTY_META } from '@/lib/gamification'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, generateId } from '@/lib/utils'
 
 const DAYS = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
 
@@ -25,6 +26,18 @@ export function HabitForm({ initial, onSubmit, onCancel }: HabitFormProps) {
   const [selectedDays, setDays] = useState<number[]>(
     Array.isArray(initial?.frequency) ? (initial.frequency as number[]) : [1, 2, 3, 4, 5]
   )
+  const [subtasks, setSubtasks] = useState<HabitStep[]>(initial?.subtasks ?? [])
+  const [reminderTime, setReminderTime] = useState<string>(initial?.reminderTime ?? '')
+
+  function addSubtask() {
+    setSubtasks(prev => [...prev, { id: generateId(), text: '' }])
+  }
+  function updateSubtask(id: string, text: string) {
+    setSubtasks(prev => prev.map(s => s.id === id ? { ...s, text } : s))
+  }
+  function removeSubtask(id: string) {
+    setSubtasks(prev => prev.filter(s => s.id !== id))
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,6 +46,8 @@ export function HabitForm({ initial, onSubmit, onCancel }: HabitFormProps) {
       name: name.trim(), description: description.trim(),
       category, emoji, color, difficulty,
       frequency: freqDaily ? 'daily' : selectedDays.sort(),
+      subtasks: subtasks.map(s => ({ ...s, text: s.text.trim() })).filter(s => s.text),
+      reminderTime: reminderTime || null,
     })
   }
 
@@ -135,6 +150,42 @@ export function HabitForm({ initial, onSubmit, onCancel }: HabitFormProps) {
             ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label className="block text-xs font-medium text-muted font-display">Adımlar (parçalara böl)</label>
+          <button type="button" onClick={addSubtask} className="flex items-center gap-1 text-xs text-primary hover:underline">
+            <Plus size={12} /> Adım ekle
+          </button>
+        </div>
+        {subtasks.length === 0 && (
+          <p className="text-xs text-muted-2">Büyük bir işi küçük adımlara bölmek başlamayı kolaylaştırır.</p>
+        )}
+        <div className="space-y-2">
+          {subtasks.map((s, i) => (
+            <div key={s.id} className="flex items-center gap-2">
+              <span className="text-xs text-muted-2 w-4 text-center">{i + 1}</span>
+              <input value={s.text} onChange={e => updateSubtask(s.id, e.target.value)} placeholder="örn. spor kıyafetini giy"
+                className="h-9 flex-1 rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg placeholder:text-muted-2 focus:border-primary focus:outline-none" />
+              <button type="button" onClick={() => removeSubtask(s.id)} className="text-muted hover:text-danger">
+                <X size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-muted font-display">Hatırlatıcı saati (opsiyonel)</label>
+        <div className="flex items-center gap-2">
+          <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
+            className="h-10 rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg focus:border-primary focus:outline-none" />
+          {reminderTime && (
+            <button type="button" onClick={() => setReminderTime('')} className="text-xs text-muted hover:text-fg">Temizle</button>
+          )}
+        </div>
+        <p className="mt-1 text-xs text-muted-2">Uygulama açıkken bu saatte tarayıcı bildirimi gönderir.</p>
       </div>
 
       <div>

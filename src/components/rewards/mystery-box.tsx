@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { MYSTERY_BOX_COST } from '@/lib/constants'
 import { formatXP } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { fireConfetti, haptic } from '@/lib/confetti'
 
 export function MysteryBox() {
   const { data, openMysteryBox } = useStore()
@@ -24,6 +25,11 @@ export function MysteryBox() {
       const outcome = openMysteryBox()
       setResult(outcome)
       setSpinning(false)
+      if (outcome) {
+        const big = outcome.label === 'JACKPOT!'
+        fireConfetti({ count: big ? 180 : 70, power: big ? 1.5 : 0.9 })
+        haptic(big ? [40, 60, 40, 60, 80] : 30)
+      }
     }, 900)
   }
 

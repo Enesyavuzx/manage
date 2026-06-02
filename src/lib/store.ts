@@ -1,5 +1,5 @@
 import type { StoreData, Habit, Completion } from './types'
-import { DEFAULT_REWARDS } from './constants'
+import { DEFAULT_REWARDS, WATER_GOAL } from './constants'
 import { ACHIEVEMENTS } from './achievements'
 import { getLevelInfo } from './gamification'
 import { format } from 'date-fns'
@@ -14,6 +14,8 @@ export function defaultData(): StoreData {
     rewards: DEFAULT_REWARDS.map(r => ({ ...r })),
     moods: [],
     focusSessions: [],
+    water: [],
+    subtaskDone: {},
     unlockedAchievements: {},
     unlockedTitles: {},
   }
@@ -40,6 +42,8 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     rewards: parsed.rewards ?? def.rewards,
     moods: parsed.moods ?? def.moods,
     focusSessions: parsed.focusSessions ?? def.focusSessions,
+    water: parsed.water ?? def.water,
+    subtaskDone: parsed.subtaskDone ?? def.subtaskDone,
     unlockedAchievements: parsed.unlockedAchievements ?? {},
     unlockedTitles: parsed.unlockedTitles ?? {},
   }
@@ -182,6 +186,24 @@ export function todayMood(data: StoreData) {
   return data.moods.find(m => m.date === todayKey()) ?? null
 }
 
+export function todayWaterCount(data: StoreData): number {
+  const t = todayKey()
+  return data.water.filter(w => w.date === t).length
+}
+
+// Number of distinct days where the daily water goal was reached.
+export function waterGoalDays(data: StoreData, goal: number): number {
+  const byDate = new Map<string, number>()
+  for (const w of data.water) byDate.set(w.date, (byDate.get(w.date) ?? 0) + 1)
+  let days = 0
+  for (const count of byDate.values()) if (count >= goal) days++
+  return days
+}
+
+export function subtaskKey(date: string, habitId: string): string {
+  return `${date}:${habitId}`
+}
+
 // Returns { newlyUnlocked achievementIds, newTitles, bonusXP }
 export function evaluateAchievements(data: StoreData): {
   newAchievements: string[]
@@ -199,6 +221,7 @@ export function evaluateAchievements(data: StoreData): {
   const weekend = weekendCount(data)
   const focusMin = focusMinutesTotal(data)
   const moodLogs = data.moods.length
+  const waterDays = waterGoalDays(data, WATER_GOAL)
 
   const newAchievements: string[] = []
   const newTitles: string[] = []
@@ -221,6 +244,7 @@ export function evaluateAchievements(data: StoreData): {
       case 'weekend':              val = weekend; break
       case 'focus_minutes':        val = focusMin; break
       case 'mood_logs':            val = moodLogs; break
+      case 'water_days':           val = waterDays; break
     }
     if (val >= a.requirement.value) {
       newAchievements.push(a.id)

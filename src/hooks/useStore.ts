@@ -1,15 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession, WaterLog } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday,
-  getStreak, evaluateAchievements,
+  getStreak, evaluateAchievements, subtaskKey,
 } from '@/lib/store'
 import { getLevelInfo, getRank, xpForDifficulty, streakBonus } from '@/lib/gamification'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { TITLES } from '@/lib/achievements'
-import { MOOD_META, MOOD_XP, FOCUS_XP_PER_MIN, MYSTERY_BOX_COST } from '@/lib/constants'
+import { MOOD_META, MOOD_XP, FOCUS_XP_PER_MIN, MYSTERY_BOX_COST, WATER_GOAL, WATER_XP } from '@/lib/constants'
 import { isSupabaseConfigured, cloudLoad, cloudSaveDebounced } from '@/lib/supabase'
 import { generateId } from '@/lib/utils'
 
@@ -41,6 +41,10 @@ interface StoreContextType {
   openMysteryBox: () => { reward: number; label: string } | null
   logMood: (level: MoodLevel, note?: string) => void
   addFocusSession: (minutes: number) => void
+  addWater: () => void
+  removeWater: () => void
+  toggleSubtask: (habitId: string, stepId: string) => void
+  setNotificationsEnabled: (enabled: boolean) => void
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
@@ -370,6 +374,55 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     pushNotifications(notes)
   }, [pushNotifications])
 
+  const addWater = useCallback(() => {
+    const cur = dataRef.current
+    const today = todayKey()
+    const before = cur.water.filter(w => w.date === today).length
+    const crossed = before < WATER_GOAL && before + 1 >= WATER_GOAL
+    const entry: WaterLog = { id: generateId(), date: today, createdAt: new Date().toISOString() }
+    const base: StoreData = {
+      ...cur,
+      water: [...cur.water, entry],
+      profile: { ...cur.profile, totalXP: cur.profile.totalXP + (crossed ? WATER_XP : 0) },
+    }
+    if (crossed) {
+      const baseNotes: GameNotification[] = [{
+        id: generateId(), kind: 'xp', emoji: '💧',
+        title: `+${WATER_XP} XP`, subtitle: 'Günlük su hedefi tamam!',
+      }]
+      const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+      setData(next)
+      pushNotifications(notes)
+    } else {
+      setData(base)
+    }
+  }, [pushNotifications])
+
+  const removeWater = useCallback(() => {
+    setData(d => {
+      const today = todayKey()
+      let realIdx = -1
+      for (let i = d.water.length - 1; i >= 0; i--) {
+        if (d.water[i].date === today) { realIdx = i; break }
+      }
+      if (realIdx === -1) return d
+      return { ...d, water: d.water.filter((_, i) => i !== realIdx) }
+    })
+  }, [])
+
+  const toggleSubtask = useCallback((habitId: string, stepId: string) => {
+    setData(d => {
+      const key = subtaskKey(todayKey(), habitId)
+      const cur = d.subtaskDone[key] ?? []
+      const next = cur.includes(stepId) ? cur.filter(s => s !== stepId) : [...cur, stepId]
+      return { ...d, subtaskDone: { ...d.subtaskDone, [key]: next } }
+    })
+  }, [])
+
+  const setNotificationsEnabled = useCallback((enabled: boolean) => {
+    setData(d => ({ ...d, profile: { ...d.profile, notificationsEnabled: enabled } }))
+  }, [])
+
   const setProfileName = useCallback((name: string) => {
     setData(d => ({ ...d, profile: { ...d.profile, name } }))
   }, [])
@@ -388,6 +441,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     toggleHabit, addHabit, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
     openMysteryBox, logMood, addFocusSession,
+    addWater, removeWater, toggleSubtask, setNotificationsEnabled,
     setProfileName, setActiveTitle, setTheme,
   }
 

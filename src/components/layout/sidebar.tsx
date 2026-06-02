@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
 import { getLevelInfo, getRank } from '@/lib/gamification'
@@ -12,6 +12,7 @@ import { PixelSprite } from '@/components/decor/pixel-sprite'
 
 const NAV = [
   { href: '/',             icon: LayoutDashboard, label: 'Panel' },
+  { href: '/one',          icon: Crosshair,       label: 'Tek Şey' },
   { href: '/habits',       icon: ListChecks,      label: 'Alışkanlıklar' },
   { href: '/focus',        icon: Target,          label: 'Odak' },
   { href: '/mood',         icon: Smile,           label: 'Ruh Hali' },

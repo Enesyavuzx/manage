@@ -79,3 +79,7 @@ export const FOCUS_XP_PER_MIN = 1                       // XP per focused minute
 
 // ---- Mystery box ----
 export const MYSTERY_BOX_COST = 300
+
+// ---- Water ----
+export const WATER_GOAL = 8        // glasses per day
+export const WATER_XP = 12         // XP when daily goal is reached

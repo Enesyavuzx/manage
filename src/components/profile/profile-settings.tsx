@@ -1,18 +1,32 @@
 'use client'
 import { useState } from 'react'
-import { Cloud, HardDrive, Check } from 'lucide-react'
+import { Cloud, HardDrive, Check, Bell, BellOff } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
+import { cn } from '@/lib/utils'
 
 export function ProfileSettings() {
-  const { data, setProfileName, cloud } = useStore()
+  const { data, setProfileName, setNotificationsEnabled, cloud } = useStore()
   const [name, setName] = useState(data.profile.name)
   const [saved, setSaved] = useState(false)
 
+  const notifEnabled = !!data.profile.notificationsEnabled
+
   function save() {
     if (name.trim()) { setProfileName(name.trim()); setSaved(true); setTimeout(() => setSaved(false), 1500) }
+  }
+
+  async function toggleNotifs() {
+    if (notifEnabled) { setNotificationsEnabled(false); return }
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    let perm = Notification.permission
+    if (perm === 'default') perm = await Notification.requestPermission()
+    if (perm === 'granted') {
+      setNotificationsEnabled(true)
+      new Notification('Bildirimler açık', { body: 'Hatırlatıcıların artık burada görünecek.' })
+    }
   }
 
   return (
@@ -31,6 +45,18 @@ export function ProfileSettings() {
         <div>
           <label className="mb-1.5 block text-xs font-medium text-muted font-display">Tema</label>
           <ThemeSwitcher />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-muted font-display">Hatırlatıcı bildirimleri</label>
+          <button onClick={toggleNotifs}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition-all',
+              notifEnabled ? 'border-success/40 bg-success/5 text-fg' : 'border-border bg-surface-2 text-muted hover:text-fg',
+            )}>
+            {notifEnabled ? <Bell size={16} className="text-success" /> : <BellOff size={16} />}
+            {notifEnabled ? 'Açık (uygulama açıkken hatırlatır)' : 'Kapalı, açmak için dokun'}
+          </button>
         </div>
 
         <div>

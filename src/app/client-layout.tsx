@@ -7,6 +7,7 @@ import { ThemeApplier } from '@/components/layout/theme-applier'
 import { ToastHost } from '@/components/layout/toast-host'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
 import { SideDecor } from '@/components/decor/side-decor'
+import { NotificationManager } from '@/components/layout/notification-manager'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
@@ -15,6 +16,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ThemeApplier />
+      <NotificationManager />
       <SideDecor />
       <div className="relative z-10 flex h-screen overflow-hidden">
         {sideOpen && <div className="fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setSideOpen(false)} />}

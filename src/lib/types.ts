@@ -6,6 +6,11 @@ export type Difficulty = 'trivial' | 'easy' | 'medium' | 'hard' | 'epic'
 
 export type ThemeName = 'aurora' | 'neon' | 'pixel'
 
+export interface HabitStep {
+  id: string
+  text: string
+}
+
 export interface Habit {
   id: string
   name: string
@@ -17,6 +22,8 @@ export interface Habit {
   color: string
   createdAt: string
   archived: boolean
+  subtasks?: HabitStep[]
+  reminderTime?: string | null   // "HH:mm" or null
 }
 
 export interface Completion {
@@ -33,6 +40,13 @@ export interface UserProfile {
   redeemedXP: number
   activeTitleId: string | null
   theme: ThemeName
+  notificationsEnabled?: boolean
+}
+
+export interface WaterLog {
+  id: string
+  date: string          // yyyy-MM-dd
+  createdAt: string     // ISO
 }
 
 export type RewardTier = 'small' | 'medium' | 'large' | 'legendary' | 'mythic'
@@ -79,6 +93,7 @@ export type AchievementType =
   | 'weekend'
   | 'focus_minutes'
   | 'mood_logs'
+  | 'water_days'
 
 export interface AchievementDef {
   id: string
@@ -117,6 +132,8 @@ export interface StoreData {
   rewards: CustomReward[]
   moods: MoodLog[]
   focusSessions: FocusSession[]
+  water: WaterLog[]
+  subtaskDone: Record<string, string[]>          // `${date}:${habitId}` -> done stepIds
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO
 }

@@ -6,6 +6,7 @@ import { TodayHabits } from '@/components/dashboard/today-habits'
 import { StreakOverview } from '@/components/dashboard/streak-overview'
 import { RecentAchievements } from '@/components/dashboard/recent-achievements'
 import { CategoryBars } from '@/components/dashboard/category-bars'
+import { WaterWidget } from '@/components/dashboard/water-widget'
 
 export default function DashboardPage() {
   const today = format(new Date(), 'd MMMM EEEE', { locale: tr })
@@ -18,10 +19,13 @@ export default function DashboardPage() {
       <LevelHero />
       <TodayHabits />
       <div className="grid gap-4 sm:grid-cols-2">
+        <WaterWidget />
         <StreakOverview />
-        <RecentAchievements />
       </div>
-      <CategoryBars />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <RecentAchievements />
+        <CategoryBars />
+      </div>
     </div>
   )
 }

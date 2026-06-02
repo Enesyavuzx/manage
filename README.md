@@ -11,6 +11,11 @@ DEHB zihni için tasarlanmış, oyunlaştırılmış alışkanlık takipçisi. A
 - **Genişletilmiş ödül mağazası:** 5 seviyeli (Küçük → Mitik) ödüller, kilitli ödüllerde ilerleme barı.
 - **Sürpriz Kutu:** XP karşılığı rastgele ödül (jackpot şansı).
 - **Kartlar ve barlar:** kategori dağılımı ve istatistik barları.
+- **Su takibi:** günlük bardak sayacı, hedefe ulaşınca XP (panelde widget).
+- **Görev parçalama:** her alışkanlığı küçük adımlara böl, günlük checklist olarak işaretle.
+- **Tarayıcı bildirimleri:** sunucusuz hatırlatıcı saatleri (uygulama açıkken).
+- **Konfeti & haptik:** tamamlamada kutlama efekti, dış paket yok.
+- **Tek Şey modu:** her seferinde tek göreve odaklanan sade ekran.
 
 ## Çalıştırma
 
