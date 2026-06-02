@@ -5,6 +5,7 @@ import { LevelHero } from '@/components/profile/level-hero'
 import { TodayHabits } from '@/components/dashboard/today-habits'
 import { StreakOverview } from '@/components/dashboard/streak-overview'
 import { RecentAchievements } from '@/components/dashboard/recent-achievements'
+import { CategoryBars } from '@/components/dashboard/category-bars'
 
 export default function DashboardPage() {
   const today = format(new Date(), 'd MMMM EEEE', { locale: tr })
@@ -20,6 +21,7 @@ export default function DashboardPage() {
         <StreakOverview />
         <RecentAchievements />
       </div>
+      <CategoryBars />
     </div>
   )
 }

@@ -1,17 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
 import { getLevelInfo, getRank } from '@/lib/gamification'
 import { formatXP } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { ThemeSwitcher } from './theme-switcher'
+import { PixelSprite } from '@/components/decor/pixel-sprite'
 
 const NAV = [
   { href: '/',             icon: LayoutDashboard, label: 'Panel' },
   { href: '/habits',       icon: ListChecks,      label: 'Alışkanlıklar' },
+  { href: '/focus',        icon: Target,          label: 'Odak' },
+  { href: '/mood',         icon: Smile,           label: 'Ruh Hali' },
   { href: '/rewards',      icon: Gift,            label: 'Ödüller' },
   { href: '/achievements', icon: Trophy,          label: 'Başarımlar' },
   { href: '/stats',        icon: BarChart3,       label: 'İstatistik' },
@@ -35,6 +38,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <span className="text-base font-bold tracking-tight text-fg font-display">MANAGE</span>
         </div>
+        <PixelSprite name="star" pixel={3} className="pixelated animate-float opacity-90" />
       </div>
 
       {/* Nav */}
@@ -71,6 +75,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <span className="text-xs text-xp font-medium">{formatXP(available)} XP</span>
           </div>
           <Progress value={info.xpInLevel} max={info.xpNeeded} color="xp" size="sm" />
+        </div>
+
+        {/* pixel mascots */}
+        <div className="flex items-center justify-center gap-3 py-1 opacity-90">
+          <PixelSprite name="heart" pixel={3} className="pixelated animate-float" style={{ animationDelay: '0.2s' }} />
+          <PixelSprite name="coin" pixel={3} className="pixelated animate-float" style={{ animationDelay: '0.9s' }} />
+          <PixelSprite name="gem" pixel={3} className="pixelated animate-float" style={{ animationDelay: '1.4s' }} />
+          <PixelSprite name="potion" pixel={3} className="pixelated animate-float" style={{ animationDelay: '0.5s' }} />
         </div>
 
         <div className="flex items-center justify-between gap-2">

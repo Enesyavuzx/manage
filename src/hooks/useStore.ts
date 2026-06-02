@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday,
   getStreak, evaluateAchievements,
@@ -9,6 +9,7 @@ import {
 import { getLevelInfo, getRank, xpForDifficulty, streakBonus } from '@/lib/gamification'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { TITLES } from '@/lib/achievements'
+import { MOOD_META, MOOD_XP, FOCUS_XP_PER_MIN, MYSTERY_BOX_COST } from '@/lib/constants'
 import { isSupabaseConfigured, cloudLoad, cloudSaveDebounced } from '@/lib/supabase'
 import { generateId } from '@/lib/utils'
 
@@ -37,9 +38,68 @@ interface StoreContextType {
   addReward: (r: Omit<CustomReward, 'id'>) => void
   deleteReward: (id: string) => void
   redeemReward: (id: string) => boolean
+  openMysteryBox: () => { reward: number; label: string } | null
+  logMood: (level: MoodLevel, note?: string) => void
+  addFocusSession: (minutes: number) => void
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
+}
+
+// Roll a weighted random Mystery Box outcome (slightly +EV vs cost to stay fun).
+function rollMystery(): { reward: number; label: string } {
+  const roll = Math.random()
+  if (roll < 0.04) return { reward: 1500, label: 'JACKPOT!' }
+  if (roll < 0.10) return { reward: 600,  label: 'Büyük vurgun' }
+  if (roll < 0.30) return { reward: 380,  label: 'Güzel kâr' }
+  if (roll < 0.60) return { reward: 280,  label: 'Ufak kâr' }
+  return { reward: 150, label: 'Teselli ödülü' }
+}
+
+// Apply achievement unlocks + level/rank notifications onto a freshly built next state.
+function withRewardsAndLevels(
+  prev: StoreData,
+  nextBase: StoreData,
+  baseNotes: GameNotification[],
+): { data: StoreData; notes: GameNotification[] } {
+  const beforeLevel = getLevelInfo(prev.profile.totalXP).level
+  const beforeRank = getRank(beforeLevel).rank.id
+  let next = nextBase
+  const notes = [...baseNotes]
+
+  const { newAchievements, newTitles, bonusXP } = evaluateAchievements(next)
+  if (newAchievements.length || newTitles.length) {
+    const ua = { ...next.unlockedAchievements }
+    const ut = { ...next.unlockedTitles }
+    const now = new Date().toISOString()
+    newAchievements.forEach(id => { ua[id] = now })
+    newTitles.forEach(id => { ut[id] = now })
+    next = {
+      ...next,
+      unlockedAchievements: ua,
+      unlockedTitles: ut,
+      profile: { ...next.profile, totalXP: next.profile.totalXP + bonusXP },
+    }
+    newAchievements.forEach(id => {
+      const a = ACHIEVEMENTS.find(x => x.id === id)
+      if (a) notes.push({ id: generateId(), kind: 'achievement', emoji: a.emoji, title: 'Başarım açıldı!', subtitle: `${a.name} · +${a.xpBonus} XP` })
+    })
+    newTitles.forEach(id => {
+      const t = TITLES.find(x => x.id === id)
+      if (t) notes.push({ id: generateId(), kind: 'title', emoji: t.emoji, title: 'Yeni ünvan!', subtitle: t.label })
+    })
+  }
+
+  const afterLevel = getLevelInfo(next.profile.totalXP).level
+  if (afterLevel > beforeLevel) {
+    notes.push({ id: generateId(), kind: 'levelup', emoji: '🆙', title: `Seviye ${afterLevel}!`, subtitle: 'Yeni seviyeye ulaştın' })
+    const afterRank = getRank(afterLevel).rank
+    if (afterRank.id !== beforeRank) {
+      notes.push({ id: generateId(), kind: 'rank', emoji: afterRank.emoji, title: 'Rütbe yükseldi!', subtitle: afterRank.label })
+    }
+  }
+
+  return { data: next, notes }
 }
 
 const Ctx = createContext<StoreContextType | null>(null)
@@ -239,6 +299,77 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true
   }, [pushNotifications])
 
+  const openMysteryBox = useCallback((): { reward: number; label: string } | null => {
+    const cur = dataRef.current
+    const available = cur.profile.totalXP - cur.profile.redeemedXP
+    if (available < MYSTERY_BOX_COST) return null
+    const outcome = rollMystery()
+    const base: StoreData = {
+      ...cur,
+      profile: {
+        ...cur.profile,
+        redeemedXP: cur.profile.redeemedXP + MYSTERY_BOX_COST,
+        totalXP: cur.profile.totalXP + outcome.reward,
+      },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'reward', emoji: '🎁',
+      title: outcome.label === 'JACKPOT!' ? '🎉 JACKPOT!' : 'Sürpriz Kutu!',
+      subtitle: `${outcome.label} · +${outcome.reward} XP`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+    return outcome
+  }, [pushNotifications])
+
+  const logMood = useCallback((level: MoodLevel, note?: string) => {
+    const cur = dataRef.current
+    const today = todayKey()
+    const existing = cur.moods.find(m => m.date === today)
+    const firstToday = !existing
+    const xp = firstToday ? MOOD_XP : 0
+    const entry: MoodLog = {
+      id: existing?.id ?? generateId(),
+      date: today, level, note,
+      createdAt: new Date().toISOString(),
+      xpAwarded: existing?.xpAwarded ?? xp,
+    }
+    const moods = existing
+      ? cur.moods.map(m => m.date === today ? entry : m)
+      : [...cur.moods, entry]
+    const base: StoreData = { ...cur, moods, profile: { ...cur.profile, totalXP: cur.profile.totalXP + xp } }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'xp', emoji: MOOD_META[level].emoji,
+      title: firstToday ? `+${xp} XP` : 'Ruh hali güncellendi',
+      subtitle: MOOD_META[level].label,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+  }, [pushNotifications])
+
+  const addFocusSession = useCallback((minutes: number) => {
+    const cur = dataRef.current
+    const xp = Math.round(minutes * FOCUS_XP_PER_MIN)
+    const session: FocusSession = {
+      id: generateId(), minutes,
+      completedAt: new Date().toISOString(), xpAwarded: xp,
+    }
+    const base: StoreData = {
+      ...cur,
+      focusSessions: [...cur.focusSessions, session],
+      profile: { ...cur.profile, totalXP: cur.profile.totalXP + xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'xp', emoji: '🎯',
+      title: `+${xp} XP`, subtitle: `${minutes} dk odak tamamlandı`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+  }, [pushNotifications])
+
   const setProfileName = useCallback((name: string) => {
     setData(d => ({ ...d, profile: { ...d.profile, name } }))
   }, [])
@@ -256,6 +387,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     todayCompletedIds, habitsToday, notifications, dismissNotification,
     toggleHabit, addHabit, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
+    openMysteryBox, logMood, addFocusSession,
     setProfileName, setActiveTitle, setTheme,
   }
 

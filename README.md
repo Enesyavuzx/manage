@@ -1,6 +1,16 @@
 # Manage - Alışkanlık & Ödül Oyunu
 
-Alışkanlık takip et, streak yap, XP kazan, seviye atla, rütbe/ünvan yükselt, 80 başarımı topla, ödülleri aç. İki tema: **Aurora** (akışkan/teknolojik) ve **Pixel** (8-bit retro).
+DEHB zihni için tasarlanmış, oyunlaştırılmış alışkanlık takipçisi. Alışkanlık takip et, streak yap, XP kazan, seviye atla, rütbe/ünvan yükselt, 90 başarımı topla, ödülleri aç.
+
+## Öne çıkanlar
+
+- **3 canlı tema:** Aurora (akışkan/teknolojik), Neon (sıcak/iç açıcı), Pixel (8-bit retro arcade).
+- **Yanlarda pixel-art figürler:** geniş ekranlarda yan sütunlarda yüzen 8-bit sprite'lar.
+- **Odak (Pomodoro):** 15/25/45/60 dk seanslar, dakika başına XP, odak istatistiği.
+- **Ruh Hali:** günlük 5 seviyeli ruh hali kaydı, son 14 gün renkli izleme, günlük XP.
+- **Genişletilmiş ödül mağazası:** 5 seviyeli (Küçük → Mitik) ödüller, kilitli ödüllerde ilerleme barı.
+- **Sürpriz Kutu:** XP karşılığı rastgele ödül (jackpot şansı).
+- **Kartlar ve barlar:** kategori dağılımı ve istatistik barları.
 
 ## Çalıştırma
 

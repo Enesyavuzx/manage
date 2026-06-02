@@ -4,42 +4,66 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Press+Start+2P&family=VT323&display=swap');
 
-/* ============ THEME: AURORA (modern, fluid, tech) ============ */
+/* ============ THEME: AURORA (vivid, fluid, tech) ============ */
 :root, [data-theme='aurora'] {
-  --c-bg: 7 8 16;
-  --c-surface: 15 16 28;
-  --c-surface2: 24 26 44;
-  --c-border: 38 40 64;
-  --c-border-hover: 64 68 108;
-  --c-text: 237 238 250;
-  --c-muted: 142 146 178;
-  --c-muted2: 92 96 124;
-  --c-primary: 139 92 246;
-  --c-primary2: 56 189 248;
-  --c-xp: 250 204 21;
-  --c-success: 34 197 94;
-  --c-danger: 244 63 94;
+  --c-bg: 10 11 26;
+  --c-surface: 21 22 44;
+  --c-surface2: 32 33 64;
+  --c-border: 50 50 92;
+  --c-border-hover: 104 96 196;
+  --c-text: 240 241 255;
+  --c-muted: 160 164 200;
+  --c-muted2: 110 114 150;
+  --c-primary: 149 108 255;
+  --c-primary2: 56 202 255;
+  --c-accent: 255 110 196;
+  --c-xp: 255 209 64;
+  --c-success: 46 222 130;
+  --c-danger: 255 86 110;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Inter', system-ui, sans-serif;
-  --radius: 0.85rem;
+  --radius: 0.9rem;
 }
 
-/* ============ THEME: PIXEL (8-bit retro arcade) ============ */
+/* ============ THEME: NEON (warm, candy, uplifting) ============ */
+[data-theme='neon'] {
+  --c-bg: 22 11 34;
+  --c-surface: 38 20 54;
+  --c-surface2: 54 30 74;
+  --c-border: 84 46 108;
+  --c-border-hover: 196 96 196;
+  --c-text: 255 245 253;
+  --c-muted: 220 178 218;
+  --c-muted2: 158 116 158;
+  --c-primary: 255 92 168;
+  --c-primary2: 255 168 72;
+  --c-accent: 120 220 255;
+  --c-xp: 255 224 84;
+  --c-success: 64 232 162;
+  --c-danger: 255 80 104;
+
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 1rem;
+}
+
+/* ============ THEME: PIXEL (vivid 8-bit arcade) ============ */
 [data-theme='pixel'] {
-  --c-bg: 13 12 24;
-  --c-surface: 26 22 46;
-  --c-surface2: 40 32 66;
-  --c-border: 78 62 120;
-  --c-border-hover: 130 104 196;
-  --c-text: 233 233 246;
-  --c-muted: 168 156 206;
-  --c-muted2: 120 108 162;
-  --c-primary: 124 252 120;
-  --c-primary2: 88 200 255;
-  --c-xp: 255 213 74;
-  --c-success: 124 252 120;
-  --c-danger: 255 92 92;
+  --c-bg: 16 14 38;
+  --c-surface: 31 27 62;
+  --c-surface2: 46 40 88;
+  --c-border: 92 74 154;
+  --c-border-hover: 156 124 236;
+  --c-text: 242 242 255;
+  --c-muted: 182 172 224;
+  --c-muted2: 134 122 180;
+  --c-primary: 255 96 182;
+  --c-primary2: 84 222 255;
+  --c-accent: 124 252 132;
+  --c-xp: 255 216 66;
+  --c-success: 100 240 144;
+  --c-danger: 255 96 112;
 
   --font-body: 'VT323', monospace;
   --font-display: 'Press Start 2P', monospace;
@@ -68,9 +92,22 @@ html, body {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(60% 50% at 15% 0%, rgb(var(--c-primary) / 0.16), transparent 60%),
-    radial-gradient(50% 45% at 95% 10%, rgb(var(--c-primary2) / 0.12), transparent 55%),
-    radial-gradient(60% 60% at 80% 100%, rgb(var(--c-primary) / 0.08), transparent 60%);
+    radial-gradient(55% 45% at 12% 0%, rgb(var(--c-primary) / 0.22), transparent 60%),
+    radial-gradient(45% 40% at 95% 8%, rgb(var(--c-primary2) / 0.18), transparent 55%),
+    radial-gradient(55% 55% at 82% 100%, rgb(var(--c-accent) / 0.12), transparent 60%);
+  pointer-events: none;
+}
+
+/* Neon ambient background glow */
+[data-theme='neon'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(55% 45% at 10% 0%, rgb(var(--c-primary) / 0.24), transparent 60%),
+    radial-gradient(50% 45% at 92% 6%, rgb(var(--c-primary2) / 0.20), transparent 58%),
+    radial-gradient(60% 60% at 80% 100%, rgb(var(--c-accent) / 0.16), transparent 60%);
   pointer-events: none;
 }
 
@@ -89,7 +126,7 @@ html, body {
     rgba(0,0,0,0.10) 4px
   );
   mix-blend-mode: multiply;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 /* Pixel theme: flatten radius + hard borders + chunky shadow */
@@ -143,7 +180,7 @@ input[type='range']::-webkit-slider-thumb {
 
 /* Utility helpers */
 .glass {
-  background: rgb(var(--c-surface) / 0.7);
+  background: rgb(var(--c-surface) / 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -158,7 +195,7 @@ input[type='range']::-webkit-slider-thumb {
 [data-theme='pixel'] .text-gradient { color: rgb(var(--c-primary)); -webkit-text-fill-color: rgb(var(--c-primary)); }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent, rgb(var(--c-text) / 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgb(var(--c-text) / 0.10), transparent);
   background-size: 200% 100%;
 }
 
@@ -171,10 +208,19 @@ input[type='range']::-webkit-slider-thumb {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(120deg, rgb(var(--c-primary) / 0.5), rgb(var(--c-primary2) / 0.4), transparent);
+  background: linear-gradient(120deg, rgb(var(--c-primary) / 0.6), rgb(var(--c-primary2) / 0.5), rgb(var(--c-accent) / 0.35), transparent);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
 }
 [data-theme='pixel'] .aurora-border::before { display: none; }
+
+/* Pixel-art rendering for decorative sprites */
+.pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* Decorative side gutter sprites: only show on very wide screens */
+.side-decor { display: none; }
+@media (min-width: 1400px) {
+  .side-decor { display: flex; }
+}

@@ -4,7 +4,7 @@ export type Category =
 
 export type Difficulty = 'trivial' | 'easy' | 'medium' | 'hard' | 'epic'
 
-export type ThemeName = 'aurora' | 'pixel'
+export type ThemeName = 'aurora' | 'neon' | 'pixel'
 
 export interface Habit {
   id: string
@@ -35,13 +35,34 @@ export interface UserProfile {
   theme: ThemeName
 }
 
+export type RewardTier = 'small' | 'medium' | 'large' | 'legendary' | 'mythic'
+
 export interface CustomReward {
   id: string
   name: string
   description: string
   xpCost: number
   emoji: string
+  tier?: RewardTier
   redeemedAt?: string
+}
+
+export type MoodLevel = 1 | 2 | 3 | 4 | 5
+
+export interface MoodLog {
+  id: string
+  date: string          // yyyy-MM-dd (one per day, latest wins)
+  level: MoodLevel
+  note?: string
+  createdAt: string     // ISO
+  xpAwarded: number
+}
+
+export interface FocusSession {
+  id: string
+  minutes: number
+  completedAt: string   // ISO
+  xpAwarded: number
 }
 
 export type AchievementType =
@@ -56,6 +77,8 @@ export type AchievementType =
   | 'early_bird'
   | 'night_owl'
   | 'weekend'
+  | 'focus_minutes'
+  | 'mood_logs'
 
 export interface AchievementDef {
   id: string
@@ -92,6 +115,8 @@ export interface StoreData {
   completions: Completion[]
   profile: UserProfile
   rewards: CustomReward[]
+  moods: MoodLog[]
+  focusSessions: FocusSession[]
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO
 }

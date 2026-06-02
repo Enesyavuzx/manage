@@ -29,6 +29,8 @@ export const TITLES: TitleDef[] = [
   { id: 'machine',      label: 'Disiplin Makinesi',  emoji: '🤖' },
   { id: 'legend_title', label: 'Canlı Efsane',       emoji: '🌟' },
   { id: 'godmode',      label: 'Tanrı Modu',         emoji: '⚡' },
+  { id: 'focused',      label: 'Odak Ustası',        emoji: '🎯' },
+  { id: 'zen',          label: 'Zen Bilgesi',        emoji: '🧘' },
 ]
 
 const CATEGORY_LABELS: Partial<Record<Category, string>> = {
@@ -166,12 +168,38 @@ function build(): AchievementDef[] {
     requirement: { type: 'weekend', value: 20 },
   })
 
+  // 10) Focus minutes (5)
+  const focus = [60, 300, 1000, 3000, 10000]
+  const focusNames = ['İlk Odak Saati', 'Beş Saat Odak', 'Bin Dakika', 'Üç Bin Dakika', 'On Bin Dakika']
+  focus.forEach((v, i) => {
+    const tier = tierFor(i, focus.length)
+    list.push({
+      id: `focus_${v}`, name: focusNames[i], emoji: '🎯',
+      description: `Toplam ${v} dakika odaklan`, xpBonus: TIER_BONUS[tier], tier,
+      requirement: { type: 'focus_minutes', value: v },
+      titleReward: v === 1000 ? 'focused' : undefined,
+    })
+  })
+
+  // 11) Mood logs (5)
+  const moods = [1, 7, 30, 100, 365]
+  const moodNames = ['İlk Kayıt', 'Bir Hafta', 'Bir Ay', 'Yüz Gün', 'Bir Yıl']
+  moods.forEach((v, i) => {
+    const tier = tierFor(i, moods.length)
+    list.push({
+      id: `mood_${v}`, name: `Ruh Hali: ${moodNames[i]}`, emoji: '🧘',
+      description: `${v} gün ruh halini kaydet`, xpBonus: TIER_BONUS[tier], tier,
+      requirement: { type: 'mood_logs', value: v },
+      titleReward: v === 30 ? 'zen' : undefined,
+    })
+  })
+
   return list
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = build()
 
-// Final count guard (should be 80)
+// Final count guard (90 total: 80 core + 5 focus + 5 mood)
 export const ACHIEVEMENT_COUNT = ACHIEVEMENTS.length
 
 export const TIER_META: Record<Tier, { label: string; color: string; ring: string }> = {

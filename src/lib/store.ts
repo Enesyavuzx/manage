@@ -12,6 +12,8 @@ export function defaultData(): StoreData {
     completions: [],
     profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'aurora' },
     rewards: DEFAULT_REWARDS.map(r => ({ ...r })),
+    moods: [],
+    focusSessions: [],
     unlockedAchievements: {},
     unlockedTitles: {},
   }
@@ -36,6 +38,8 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     completions: parsed.completions ?? def.completions,
     profile: { ...def.profile, ...(parsed.profile ?? {}) },
     rewards: parsed.rewards ?? def.rewards,
+    moods: parsed.moods ?? def.moods,
+    focusSessions: parsed.focusSessions ?? def.focusSessions,
     unlockedAchievements: parsed.unlockedAchievements ?? {},
     unlockedTitles: parsed.unlockedTitles ?? {},
   }
@@ -166,6 +170,18 @@ function weekendCount(data: StoreData): number {
   }).length
 }
 
+export function focusMinutesTotal(data: StoreData): number {
+  return data.focusSessions.reduce((sum, s) => sum + s.minutes, 0)
+}
+
+export function moodLoggedToday(data: StoreData): boolean {
+  return data.moods.some(m => m.date === todayKey())
+}
+
+export function todayMood(data: StoreData) {
+  return data.moods.find(m => m.date === todayKey()) ?? null
+}
+
 // Returns { newlyUnlocked achievementIds, newTitles, bonusXP }
 export function evaluateAchievements(data: StoreData): {
   newAchievements: string[]
@@ -181,6 +197,8 @@ export function evaluateAchievements(data: StoreData): {
   const early = timeOfDayCount(data, 'early')
   const night = timeOfDayCount(data, 'night')
   const weekend = weekendCount(data)
+  const focusMin = focusMinutesTotal(data)
+  const moodLogs = data.moods.length
 
   const newAchievements: string[] = []
   const newTitles: string[] = []
@@ -201,6 +219,8 @@ export function evaluateAchievements(data: StoreData): {
       case 'early_bird':           val = early; break
       case 'night_owl':            val = night; break
       case 'weekend':              val = weekend; break
+      case 'focus_minutes':        val = focusMin; break
+      case 'mood_logs':            val = moodLogs; break
     }
     if (val >= a.requirement.value) {
       newAchievements.push(a.id)
