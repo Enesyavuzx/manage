@@ -11,11 +11,13 @@ import { fireConfetti, haptic } from '@/lib/confetti'
 import { Badge } from '@/components/ui/badge'
 import { Modal } from '@/components/ui/modal'
 import { HabitForm } from './habit-form'
+import { HabitDetail } from './habit-detail'
 
 export function HabitCard({ habit, showCheck = false }: { habit: Habit; showCheck?: boolean }) {
   const { data, toggleHabit, updateHabit, archiveHabit, unarchiveHabit, deleteHabit, toggleSubtask, todayCompletedIds } = useStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
   const [burst, setBurst] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
@@ -63,16 +65,18 @@ export function HabitCard({ habit, showCheck = false }: { habit: Habit; showChec
             </button>
           )}
 
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl"
+          <button onClick={() => setDetailOpen(true)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl transition-opacity hover:opacity-80"
             style={{ backgroundColor: habit.color + '22' }}>
             {habit.emoji}
-          </div>
+          </button>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className={cn('truncate text-sm font-medium', done ? 'text-muted line-through' : 'text-fg')}>
+              <button onClick={() => setDetailOpen(true)}
+                className={cn('truncate text-left text-sm font-medium hover:underline', done ? 'text-muted line-through' : 'text-fg')}>
                 {habit.name}
-              </span>
+              </button>
               {streak > 0 && (
                 <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-orange-400">
                   <Flame size={12} fill="currentColor" />{streak}
@@ -157,6 +161,10 @@ export function HabitCard({ habit, showCheck = false }: { habit: Habit; showChec
         <HabitForm initial={habit}
           onSubmit={d => { updateHabit(habit.id, d); setEditOpen(false) }}
           onCancel={() => setEditOpen(false)} />
+      </Modal>
+
+      <Modal open={detailOpen} onClose={() => setDetailOpen(false)} title="Alışkanlık detayı">
+        <HabitDetail habit={habit} />
       </Modal>
     </>
   )

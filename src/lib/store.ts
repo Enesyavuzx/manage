@@ -159,23 +159,43 @@ export function perfectDayCount(data: StoreData): number {
   return perfect
 }
 
-function categoryCompletions(data: StoreData, category: string): number {
+export function categoryCompletions(data: StoreData, category: string): number {
   const ids = new Set(data.habits.filter(h => h.category === category).map(h => h.id))
   return data.completions.filter(c => ids.has(c.habitId)).length
 }
 
-function timeOfDayCount(data: StoreData, mode: 'early' | 'night'): number {
+export function timeOfDayCount(data: StoreData, mode: 'early' | 'night'): number {
   return data.completions.filter(c => {
     const h = new Date(c.completedAt).getHours()
     return mode === 'early' ? h < 8 : h >= 22
   }).length
 }
 
-function weekendCount(data: StoreData): number {
+export function weekendCount(data: StoreData): number {
   return data.completions.filter(c => {
     const d = new Date(c.date + 'T12:00:00').getDay()
     return d === 0 || d === 6
   }).length
+}
+
+export function getProgressValue(data: StoreData, req: { type: string; value: number; category?: string }): number {
+  switch (req.type) {
+    case 'total_completions':    return data.completions.length
+    case 'streak':               return maxCurrentStreak(data)
+    case 'xp_earned':            return data.profile.totalXP
+    case 'level':                return getLevelInfo(data.profile.totalXP).level
+    case 'habits_created':       return data.habits.filter(h => !h.archived).length
+    case 'rewards_redeemed':     return data.rewards.filter(r => r.redeemedAt).length
+    case 'perfect_days':         return perfectDayCount(data)
+    case 'category_completions': return categoryCompletions(data, req.category!)
+    case 'early_bird':           return timeOfDayCount(data, 'early')
+    case 'night_owl':            return timeOfDayCount(data, 'night')
+    case 'weekend':              return weekendCount(data)
+    case 'focus_minutes':        return focusMinutesTotal(data)
+    case 'mood_logs':            return data.moods.length
+    case 'water_days':           return waterGoalDays(data, WATER_GOAL)
+    default:                     return 0
+  }
 }
 
 export function focusMinutesTotal(data: StoreData): number {

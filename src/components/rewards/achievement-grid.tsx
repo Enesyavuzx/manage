@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { ACHIEVEMENTS, TIER_META } from '@/lib/achievements'
+import { getProgressValue } from '@/lib/store'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { AchievementDef } from '@/lib/types'
@@ -45,10 +46,13 @@ export function AchievementGrid() {
         {list.map(a => {
           const unlocked = isUnlocked(a)
           const tier = TIER_META[a.tier]
+          const current = unlocked ? a.requirement.value : Math.min(getProgressValue(data, a.requirement), a.requirement.value)
+          const pct = Math.min(100, Math.round((current / a.requirement.value) * 100))
+
           return (
             <div key={a.id} className={cn(
               'relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all',
-              unlocked ? 'bg-surface-2' : 'border-border bg-surface opacity-55',
+              unlocked ? 'bg-surface-2' : 'border-border bg-surface opacity-70',
             )} style={unlocked ? { borderColor: tier.color + '66', boxShadow: `0 0 18px -6px ${tier.ring}` } : undefined}>
               <span className="absolute right-2 top-2 text-[10px] font-medium uppercase" style={{ color: unlocked ? tier.color : 'rgb(var(--c-muted2))' }}>
                 {tier.label}
@@ -62,6 +66,21 @@ export function AchievementGrid() {
                 <p className="mt-0.5 text-xs text-muted leading-snug">{a.description}</p>
               </div>
               <span className="text-xs font-medium text-xp">+{a.xpBonus} XP</span>
+
+              {/* Progress bar for locked achievements */}
+              {!unlocked && (
+                <div className="w-full space-y-1">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${pct}%`, backgroundColor: tier.color }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-2">
+                    {current.toLocaleString('tr-TR')} / {a.requirement.value.toLocaleString('tr-TR')}
+                  </p>
+                </div>
+              )}
             </div>
           )
         })}
