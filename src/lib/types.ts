@@ -104,6 +104,28 @@ export interface MoodLog {
   xpAwarded: number
 }
 
+export interface EnergyLog {
+  id: string
+  date: string          // yyyy-MM-dd (one per day, latest wins)
+  level: MoodLevel      // 1-5 enerji seviyesi
+  createdAt: string     // ISO
+}
+
+export interface Medication {
+  id: string
+  name: string
+  emoji: string
+  time?: string | null  // "HH:mm" opsiyonel hatırlatma referansı
+  createdAt: string
+}
+
+export interface MedicationDose {
+  id: string
+  medId: string
+  date: string          // yyyy-MM-dd
+  takenAt: string       // ISO
+}
+
 export interface FocusSession {
   id: string
   minutes: number
@@ -206,6 +228,9 @@ export interface StoreData {
   profile: UserProfile
   rewards: CustomReward[]
   moods: MoodLog[]
+  energyLogs: EnergyLog[]
+  medications: Medication[]
+  medicationLog: MedicationDose[]
   focusSessions: FocusSession[]
   water: WaterLog[]
   budgetAccounts: BudgetAccount[]

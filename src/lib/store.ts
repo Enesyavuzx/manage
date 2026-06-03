@@ -13,6 +13,9 @@ export function defaultData(): StoreData {
     profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'aurora' },
     rewards: [...DEFAULT_REWARDS, ...EXTRA_REWARDS].map(r => ({ ...r })),
     moods: [],
+    energyLogs: [],
+    medications: [],
+    medicationLog: [],
     focusSessions: [],
     water: [],
     budgetAccounts: [],
@@ -50,6 +53,9 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     profile: { ...def.profile, ...(parsed.profile ?? {}) },
     rewards: parsed.rewards ?? def.rewards,
     moods: parsed.moods ?? def.moods,
+    energyLogs: parsed.energyLogs ?? def.energyLogs,
+    medications: parsed.medications ?? def.medications,
+    medicationLog: parsed.medicationLog ?? def.medicationLog,
     focusSessions: parsed.focusSessions ?? def.focusSessions,
     water: parsed.water ?? def.water,
     budgetAccounts: parsed.budgetAccounts ?? def.budgetAccounts,
@@ -224,6 +230,14 @@ export function moodLoggedToday(data: StoreData): boolean {
 
 export function todayMood(data: StoreData) {
   return data.moods.find(m => m.date === todayKey()) ?? null
+}
+
+export function todayEnergy(data: StoreData) {
+  return data.energyLogs.find(e => e.date === todayKey()) ?? null
+}
+
+export function medTakenOn(data: StoreData, medId: string, date: string): boolean {
+  return data.medicationLog.some(d => d.medId === medId && d.date === date)
 }
 
 export function todayWaterCount(data: StoreData): number {

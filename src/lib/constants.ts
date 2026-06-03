@@ -73,6 +73,15 @@ export const MOOD_META: Record<MoodLevel, { label: string; emoji: string; color:
 
 export const MOOD_XP = 15
 
+// ---- Energy (spoon) ----
+export const ENERGY_META: Record<MoodLevel, { label: string; emoji: string; color: string }> = {
+  1: { label: 'Tükenmiş', emoji: '🪫', color: '#ef4444' },
+  2: { label: 'Düşük',    emoji: '🔋', color: '#f97316' },
+  3: { label: 'Orta',     emoji: '🔋', color: '#facc15' },
+  4: { label: 'Yüksek',   emoji: '🔋', color: '#22c55e' },
+  5: { label: 'Dolu',     emoji: '⚡', color: '#06b6d4' },
+}
+
 // ---- Focus / Pomodoro ----
 export const FOCUS_PRESETS = [15, 25, 45, 60]          // minutes
 export const FOCUS_XP_PER_MIN = 1                       // XP per focused minute

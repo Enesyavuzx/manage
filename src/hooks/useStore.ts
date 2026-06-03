@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday,
   getStreak, evaluateAchievements, subtaskKey,
@@ -44,6 +44,10 @@ interface StoreContextType {
   redeemReward: (id: string) => boolean
   openMysteryBox: () => { reward: number; label: string } | null
   logMood: (level: MoodLevel, note?: string) => void
+  logEnergy: (level: MoodLevel) => void
+  addMedication: (name: string, emoji: string, time?: string | null) => void
+  deleteMedication: (id: string) => void
+  toggleMedicationDose: (medId: string) => void
   addFocusSession: (minutes: number) => void
   addWater: () => void
   removeWater: () => void
@@ -528,6 +532,48 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, budgetTransactions: d.budgetTransactions.filter(t => t.id !== id) }))
   }, [])
 
+  const logEnergy = useCallback((level: MoodLevel) => {
+    setData(d => {
+      const today = todayKey()
+      const existing = d.energyLogs.find(e => e.date === today)
+      const entry: EnergyLog = {
+        id: existing?.id ?? generateId(),
+        date: today, level,
+        createdAt: new Date().toISOString(),
+      }
+      const energyLogs = existing
+        ? d.energyLogs.map(e => e.date === today ? entry : e)
+        : [...d.energyLogs, entry]
+      return { ...d, energyLogs }
+    })
+  }, [])
+
+  const addMedication = useCallback((name: string, emoji: string, time?: string | null) => {
+    const n = name.trim()
+    if (!n) return
+    const med: Medication = { id: generateId(), name: n, emoji: emoji || '💊', time: time ?? null, createdAt: new Date().toISOString() }
+    setData(d => ({ ...d, medications: [...d.medications, med] }))
+  }, [])
+
+  const deleteMedication = useCallback((id: string) => {
+    setData(d => ({
+      ...d,
+      medications: d.medications.filter(m => m.id !== id),
+      medicationLog: d.medicationLog.filter(dose => dose.medId !== id),
+    }))
+  }, [])
+
+  const toggleMedicationDose = useCallback((medId: string) => {
+    setData(d => {
+      const today = todayKey()
+      const taken = d.medicationLog.some(dose => dose.medId === medId && dose.date === today)
+      const medicationLog = taken
+        ? d.medicationLog.filter(dose => !(dose.medId === medId && dose.date === today))
+        : [...d.medicationLog, { id: generateId(), medId, date: today, takenAt: new Date().toISOString() }]
+      return { ...d, medicationLog }
+    })
+  }, [])
+
   const addBrainDumpItem = useCallback((text: string) => {
     const t = text.trim()
     if (!t) return
@@ -694,7 +740,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     todayCompletedIds, habitsToday, notifications, dismissNotification,
     toggleHabit, addHabit, addTemplatePack, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
-    openMysteryBox, logMood, addFocusSession,
+    openMysteryBox, logMood, logEnergy, addMedication, deleteMedication, toggleMedicationDose, addFocusSession,
     addWater, removeWater, toggleSubtask, setNotificationsEnabled, setMorningReminder, setEveningReminder,
     addAccount, deleteAccount, addTransaction, deleteTransaction,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
