@@ -26,6 +26,21 @@ npm run dev      # http://localhost:3000
 
 > Not: Bu sürümde yeni bir paket (`@supabase/supabase-js`) eklendi. Kodu güncelledikten sonra **bir kez** `npm install` çalıştırman gerekir.
 
+## Mobil (iOS) / App Store
+
+Web uygulaması Capacitor ile native iOS uygulamasına paketlenir. Tüm adımlar ve
+App Store metadata'sı `docs/app-store.md` ve `docs/app-store-metadata.md`
+dosyalarındadır. Kısaca (Mac + Xcode gerekir):
+
+```bash
+npm run build:mobile   # statik web çıktısı -> out/
+npx cap add ios        # tek sefer: ios/ projesini üretir
+npm run ios            # cap sync + Xcode'da aç
+```
+
+Native modda hatırlatıcılar OS'a zamanlanır, uygulama kapalıyken de bildirim gelir.
+`MOBILE_EXPORT=1` olmadan normal web/SSR build'i (`npm run build`) değişmez.
+
 ## Veri kaydı
 
 - **Varsayılan:** Tüm veriler tarayıcının `localStorage`'ında tutulur. Hiçbir kurulum gerekmez, hemen çalışır. Veri o cihazda/tarayıcıda kalır.

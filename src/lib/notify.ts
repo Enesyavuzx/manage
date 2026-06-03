@@ -79,3 +79,72 @@ export async function showAppNotification(title: string, body: string, tag: stri
     /* ignore */
   }
 }
+
+// ─── Native (Capacitor) köprüsü ────────────────────────────────────────────────
+// Web bundle'a yeni paket eklemeden, yalnızca native WebView içinde enjekte edilen
+// global `window.Capacitor` üzerinden LocalNotifications plugin'ine erişilir.
+// Bu sayede uygulama TAMAMEN KAPALIYKEN bile OS zamanlı bildirim gönderir.
+// Web'de `window.Capacitor` tanımsızdır; tüm fonksiyonlar sessizce no-op olur.
+
+interface NativeScheduleNotif {
+  id: number
+  title: string
+  body: string
+  schedule?: { on?: { hour: number; minute: number }; allowWhileIdle?: boolean }
+}
+
+interface LocalNotificationsPlugin {
+  requestPermissions: () => Promise<unknown>
+  schedule: (opts: { notifications: NativeScheduleNotif[] }) => Promise<unknown>
+  cancel: (opts: { notifications: { id: number }[] }) => Promise<unknown>
+  getPending: () => Promise<{ notifications: { id: number }[] }>
+}
+
+interface CapacitorGlobal {
+  isNativePlatform?: () => boolean
+  Plugins?: { LocalNotifications?: LocalNotificationsPlugin }
+}
+
+function getCapacitor(): CapacitorGlobal | undefined {
+  if (typeof window === 'undefined') return undefined
+  return (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor
+}
+
+export function isNativePlatform(): boolean {
+  return !!getCapacitor()?.isNativePlatform?.()
+}
+
+export interface NativeReminder {
+  id: number
+  title: string
+  body: string
+  hour: number
+  minute: number
+}
+
+// Tüm günlük hatırlatıcıları native tarafta yeniden zamanlar (eskileri iptal eder).
+// Native değilse veya plugin yoksa false döner; web akışı (interval) devreye girer.
+export async function syncNativeReminders(items: NativeReminder[]): Promise<boolean> {
+  const ln = getCapacitor()?.Plugins?.LocalNotifications
+  if (!ln) return false
+  try {
+    await ln.requestPermissions()
+    const pending = await ln.getPending()
+    if (pending.notifications.length > 0) {
+      await ln.cancel({ notifications: pending.notifications.map(n => ({ id: n.id })) })
+    }
+    if (items.length > 0) {
+      await ln.schedule({
+        notifications: items.map(it => ({
+          id: it.id,
+          title: it.title,
+          body: it.body,
+          schedule: { on: { hour: it.hour, minute: it.minute }, allowWhileIdle: true },
+        })),
+      })
+    }
+    return true
+  } catch {
+    return false
+  }
+}

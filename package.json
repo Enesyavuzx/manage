@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:mobile": "MOBILE_EXPORT=1 next build",
+    "cap:sync": "MOBILE_EXPORT=1 next build && npx cap sync",
+    "ios": "npm run cap:sync && npx cap open ios"
   },
   "dependencies": {
     "next": "14.2.18",
@@ -28,5 +31,11 @@
     "autoprefixer": "^10.4.20",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/local-notifications": "^6.1.0"
   }
 }
