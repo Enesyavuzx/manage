@@ -3,6 +3,7 @@ import { BudgetOverview } from '@/components/budget/budget-overview'
 import { AccountManager } from '@/components/budget/account-manager'
 import { TransactionForm } from '@/components/budget/transaction-form'
 import { TransactionList } from '@/components/budget/transaction-list'
+import { BudgetCharts } from '@/components/budget/budget-charts'
 
 export default function BudgetPage() {
   return (
@@ -13,6 +14,7 @@ export default function BudgetPage() {
       </div>
 
       <BudgetOverview />
+      <BudgetCharts />
       <AccountManager />
 
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
