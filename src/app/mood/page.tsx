@@ -1,5 +1,7 @@
 'use client'
 import { MoodTracker } from '@/components/mood/mood-tracker'
+import { MoodHabitInsight } from '@/components/mood/mood-habit-insight'
+import { MoodJournal } from '@/components/mood/mood-journal'
 
 export default function MoodPage() {
   return (
@@ -9,6 +11,8 @@ export default function MoodPage() {
         <p className="mt-0.5 text-sm text-muted">Gününü işaretle, kendini tanı</p>
       </div>
       <MoodTracker />
+      <MoodHabitInsight />
+      <MoodJournal />
     </div>
   )
 }

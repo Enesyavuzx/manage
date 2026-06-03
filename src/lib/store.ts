@@ -230,6 +230,75 @@ export function subtaskKey(date: string, habitId: string): string {
   return `${date}:${habitId}`
 }
 
+// ---- Mood <-> habit correlation ----
+export interface HabitMoodLift {
+  habitId: string
+  completedAvg: number   // avg mood (1-5) on days this habit was done
+  missedAvg: number      // avg mood on mood-logged days it was not done
+  lift: number           // completedAvg - missedAvg
+  sample: number         // smaller of the two day counts
+}
+
+export interface MoodBucket {
+  label: string
+  avgMood: number
+  days: number
+}
+
+export interface MoodInsights {
+  buckets: MoodBucket[]
+  habits: HabitMoodLift[]
+  hasEnoughData: boolean
+}
+
+export function moodInsights(data: StoreData): MoodInsights {
+  const moodByDate = new Map<string, number>()
+  for (const m of data.moods) moodByDate.set(m.date, m.level)
+
+  const completedByDate = new Map<string, Set<string>>()
+  for (const c of data.completions) {
+    if (!completedByDate.has(c.date)) completedByDate.set(c.date, new Set())
+    completedByDate.get(c.date)!.add(c.habitId)
+  }
+
+  // Buckets: average mood grouped by how many habits were completed that day.
+  const bucketDefs: { label: string; test: (n: number) => boolean }[] = [
+    { label: '0 görev', test: n => n === 0 },
+    { label: '1-2 görev', test: n => n >= 1 && n <= 2 },
+    { label: '3-4 görev', test: n => n >= 3 && n <= 4 },
+    { label: '5+ görev', test: n => n >= 5 },
+  ]
+  const buckets: MoodBucket[] = bucketDefs.map(b => {
+    let sum = 0, days = 0
+    for (const [date, mood] of moodByDate) {
+      const n = completedByDate.get(date)?.size ?? 0
+      if (b.test(n)) { sum += mood; days++ }
+    }
+    return { label: b.label, avgMood: days ? sum / days : 0, days }
+  })
+
+  // Per-habit mood lift.
+  const habits: HabitMoodLift[] = []
+  for (const h of data.habits.filter(x => !x.archived)) {
+    let cSum = 0, cN = 0, mSum = 0, mN = 0
+    for (const [date, mood] of moodByDate) {
+      const done = completedByDate.get(date)?.has(h.id)
+      if (done) { cSum += mood; cN++ } else { mSum += mood; mN++ }
+    }
+    if (cN < 3 || mN < 3) continue
+    const completedAvg = cSum / cN
+    const missedAvg = mSum / mN
+    habits.push({
+      habitId: h.id, completedAvg, missedAvg,
+      lift: completedAvg - missedAvg, sample: Math.min(cN, mN),
+    })
+  }
+  habits.sort((a, b) => b.lift - a.lift)
+
+  const moodDays = moodByDate.size
+  return { buckets, habits, hasEnoughData: moodDays >= 5 }
+}
+
 // ---- Budget helpers ----
 export function accountBalance(data: StoreData, accountId: string): number {
   const acc = data.budgetAccounts.find(a => a.id === accountId)
