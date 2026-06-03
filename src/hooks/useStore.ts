@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday,
   getStreak, evaluateAchievements, subtaskKey,
@@ -66,6 +66,11 @@ interface StoreContextType {
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
+  saveWeeklyReview: (review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>) => WeeklyReview
+  saveRoutine: (routine: Omit<Routine, 'id' | 'createdAt'>) => void
+  deleteRoutine: (id: string) => void
+  reorderRoutineHabits: (routineId: string, habitIds: string[]) => void
+  toggleSaveQuote: (text: string) => void
 }
 
 // Roll a weighted random Mystery Box outcome (slightly +EV vs cost to stay fun).
@@ -625,6 +630,55 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, theme: t } }))
   }, [])
 
+  const saveWeeklyReview = useCallback((review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>): WeeklyReview => {
+    const REVIEW_XP = 50
+    const saved: WeeklyReview = {
+      ...review,
+      id: crypto.randomUUID(),
+      xpEarned: REVIEW_XP,
+      createdAt: new Date().toISOString(),
+    }
+    setData(d => ({
+      ...d,
+      weeklyReviews: [...d.weeklyReviews, saved],
+      profile: { ...d.profile, totalXP: d.profile.totalXP + REVIEW_XP },
+    }))
+    pushNotifications([{ id: generateId(), kind: 'xp', emoji: '📋', title: `+${REVIEW_XP} XP`, subtitle: 'Haftalık retrospektif tamamlandı' }])
+    return saved
+  }, [pushNotifications])
+
+  const saveRoutine = useCallback((routine: Omit<Routine, 'id' | 'createdAt'>) => {
+    const newRoutine: Routine = {
+      ...routine,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
+    setData(d => ({ ...d, routines: [...d.routines, newRoutine] }))
+  }, [])
+
+  const deleteRoutine = useCallback((id: string) => {
+    setData(d => ({ ...d, routines: d.routines.filter(r => r.id !== id) }))
+  }, [])
+
+  const reorderRoutineHabits = useCallback((routineId: string, habitIds: string[]) => {
+    setData(d => ({
+      ...d,
+      routines: d.routines.map(r => r.id === routineId ? { ...r, habitIds } : r),
+    }))
+  }, [])
+
+  const toggleSaveQuote = useCallback((text: string) => {
+    setData(d => {
+      const already = d.savedQuotes.includes(text)
+      return {
+        ...d,
+        savedQuotes: already
+          ? d.savedQuotes.filter(q => q !== text)
+          : [...d.savedQuotes, text],
+      }
+    })
+  }, [])
+
   const value: StoreContextType = {
     data, ready, cloud: isSupabaseConfigured,
     todayCompletedIds, habitsToday, notifications, dismissNotification,
@@ -637,6 +691,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
     setProfileName, setActiveTitle, setTheme,
+    saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
+    toggleSaveQuote,
   }
 
   return React.createElement(Ctx.Provider, { value }, children)

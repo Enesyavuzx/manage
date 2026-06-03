@@ -180,6 +180,24 @@ export interface RankDef {
   glow: string
 }
 
+export interface WeeklyReview {
+  id: string
+  weekStart: string  // YYYY-MM-DD (Monday)
+  wentWell: string
+  toImprove: string
+  nextWeekGoal: string
+  xpEarned: number
+  createdAt: string
+}
+
+export interface Routine {
+  id: string
+  name: string  // "Sabah Rutini" | "Akşam Rutini" | custom
+  emoji: string
+  habitIds: string[]  // ordered list of habit IDs in this routine
+  createdAt: string
+}
+
 export interface StoreData {
   habits: Habit[]
   completions: Completion[]
@@ -197,4 +215,7 @@ export interface StoreData {
   subtaskDone: Record<string, string[]>          // `${date}:${habitId}` -> done stepIds
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO
+  weeklyReviews: WeeklyReview[]
+  routines: Routine[]
+  savedQuotes: string[]  // quote texts that user saved
 }
