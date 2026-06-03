@@ -5,6 +5,7 @@ import { useStore } from '@/hooks/useStore'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
+import { showAppNotification } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 
@@ -61,8 +62,12 @@ export function ProfileSettings() {
     if (perm === 'default') perm = await Notification.requestPermission()
     if (perm === 'granted') {
       setNotificationsEnabled(true)
-      new Notification('Bildirimler açık', { body: 'Hatırlatıcıların artık burada görünecek.' })
+      void showAppNotification('Bildirimler açık', 'Hatırlatıcıların artık burada görünecek.', 'notif-enabled')
     }
+  }
+
+  function sendTest() {
+    void showAppNotification('Test bildirimi', 'Bildirimler çalışıyor! 🎉', 'notif-test')
   }
 
   return (
@@ -93,6 +98,11 @@ export function ProfileSettings() {
             {notifEnabled ? <Bell size={16} className="text-success" /> : <BellOff size={16} />}
             {notifEnabled ? 'Açık (uygulama açıkken hatırlatır)' : 'Kapalı, açmak için dokun'}
           </button>
+          {notifEnabled && (
+            <button onClick={sendTest} className="mt-2 text-xs text-muted underline-offset-2 hover:text-fg hover:underline">
+              Test bildirimi gönder
+            </button>
+          )}
         </div>
 
         {notifEnabled && (

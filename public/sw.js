@@ -1,5 +1,5 @@
 // Minimal service worker for PWA offline support
-const CACHE = 'manage-v1'
+const CACHE = 'manage-v2'
 const PRECACHE = ['/', '/habits', '/rewards', '/stats', '/profile']
 
 self.addEventListener('install', e => {
@@ -28,5 +28,18 @@ self.addEventListener('fetch', e => {
         return res
       })
       .catch(() => caches.match(e.request))
+  )
+})
+
+// Bildirime tıklanınca: açık bir pencere varsa odakla, yoksa uygulamayı aç.
+self.addEventListener('notificationclick', e => {
+  e.notification.close()
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if ('focus' in client) return client.focus()
+      }
+      if (self.clients.openWindow) return self.clients.openWindow('/')
+    })
   )
 })
