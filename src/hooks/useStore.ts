@@ -59,6 +59,8 @@ interface StoreContextType {
   claimDailyBonus: () => void
   claimChallenge: () => boolean
   completeOnboarding: () => void
+  useFreezeToken: (date: string) => boolean
+  reorderHabit: (id: string, direction: 'up' | 'down') => void
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
@@ -149,13 +151,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [data])
 
   // Update the daily-visit streak once per calendar day (first render of the day).
+  // Every 7th consecutive day also grants a streak-freeze token.
   useEffect(() => {
     setData(d => {
       const today = todayKey()
       if (d.profile.lastLoginDate === today) return d
       const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd')
       const streak = d.profile.lastLoginDate === yesterday ? (d.profile.loginStreak ?? 0) + 1 : 1
-      return { ...d, profile: { ...d.profile, lastLoginDate: today, loginStreak: streak } }
+      const earnedToken = streak > 0 && streak % 7 === 0
+      return {
+        ...d,
+        freezeTokens: d.freezeTokens + (earnedToken ? 1 : 0),
+        profile: { ...d.profile, lastLoginDate: today, loginStreak: streak },
+      }
     })
   }, [])
 
@@ -199,7 +207,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const beforeLevel = getLevelInfo(cur.profile.totalXP).level
     const beforeRank = getRank(beforeLevel).rank.id
 
-    const streak = getStreak(cur.completions, habitId)
+    const streak = getStreak(cur.completions, habitId, cur.frozenDates)
     const base = xpForDifficulty(habit.difficulty)
     const bonus = Math.round(base * streakBonus(streak + 1))
     const xp = base + bonus
@@ -565,6 +573,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, onboarded: true } }))
   }, [])
 
+  // Spend one freeze token to protect a given day from breaking streaks.
+  const useFreezeToken = useCallback((date: string): boolean => {
+    const cur = dataRef.current
+    if (cur.freezeTokens <= 0 || cur.frozenDates.includes(date)) return false
+    setData(d => ({
+      ...d,
+      freezeTokens: d.freezeTokens - 1,
+      frozenDates: [...d.frozenDates, date],
+    }))
+    pushNotifications([{ id: generateId(), kind: 'reward', emoji: '🧊', title: 'Seri donduruldu', subtitle: 'O gün serini bozmayacak' }])
+    return true
+  }, [pushNotifications])
+
+  const reorderHabit = useCallback((id: string, direction: 'up' | 'down') => {
+    setData(d => {
+      const active = d.habits.filter(h => !h.archived)
+      const idx = active.findIndex(h => h.id === id)
+      if (idx === -1) return d
+      const swap = direction === 'up' ? idx - 1 : idx + 1
+      if (swap < 0 || swap >= active.length) return d
+      const reordered = [...active]
+      ;[reordered[idx], reordered[swap]] = [reordered[swap], reordered[idx]]
+      // rebuild full list preserving archived habits at the end
+      return { ...d, habits: [...reordered, ...d.habits.filter(h => h.archived)] }
+    })
+  }, [])
+
   const setProfileName = useCallback((name: string) => {
     setData(d => ({ ...d, profile: { ...d.profile, name } }))
   }, [])
@@ -587,6 +622,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addAccount, deleteAccount, addTransaction, deleteTransaction,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
+    useFreezeToken, reorderHabit,
     setProfileName, setActiveTitle, setTheme,
   }
 

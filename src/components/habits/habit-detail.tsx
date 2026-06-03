@@ -20,7 +20,7 @@ export function HabitDetail({ habit }: Props) {
   const completions = data.completions.filter(c => c.habitId === habit.id)
   const completedDates = useMemo(() => new Set(completions.map(c => c.date)), [completions])
   const total = completions.length
-  const streak = getStreak(data.completions, habit.id)
+  const streak = getStreak(data.completions, habit.id, data.frozenDates)
   const best = getLongestStreak(data.completions, habit.id)
   const totalXP = completions.reduce((s, c) => s + (c.xpAwarded ?? xpForDifficulty(habit.difficulty)), 0)
 

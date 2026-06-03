@@ -191,6 +191,8 @@ export interface StoreData {
   budgetAccounts: BudgetAccount[]
   budgetTransactions: BudgetTransaction[]
   brainDump: BrainDumpItem[]
+  freezeTokens: number                           // streak-freeze tokens on hand
+  frozenDates: string[]                          // yyyy-MM-dd days protected from breaking streaks
   subtaskDone: Record<string, string[]>          // `${date}:${habitId}` -> done stepIds
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO

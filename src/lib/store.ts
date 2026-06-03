@@ -18,6 +18,8 @@ export function defaultData(): StoreData {
     budgetAccounts: [],
     budgetTransactions: [],
     brainDump: [],
+    freezeTokens: 2,
+    frozenDates: [],
     subtaskDone: {},
     unlockedAchievements: {},
     unlockedTitles: {},
@@ -49,6 +51,8 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     budgetAccounts: parsed.budgetAccounts ?? def.budgetAccounts,
     budgetTransactions: parsed.budgetTransactions ?? def.budgetTransactions,
     brainDump: parsed.brainDump ?? def.brainDump,
+    freezeTokens: parsed.freezeTokens ?? def.freezeTokens,
+    frozenDates: parsed.frozenDates ?? def.frozenDates,
     subtaskDone: parsed.subtaskDone ?? def.subtaskDone,
     unlockedAchievements: parsed.unlockedAchievements ?? {},
     unlockedTitles: parsed.unlockedTitles ?? {},
@@ -99,29 +103,28 @@ export function isHabitDueToday(habit: Habit): boolean {
   return isHabitDueOnDate(habit, new Date())
 }
 
-export function getStreak(completions: Completion[], habitId: string): number {
-  const dates = completions
-    .filter(c => c.habitId === habitId)
-    .map(c => c.date)
-    .sort()
-    .reverse()
-  if (dates.length === 0) return 0
+// Walk backwards from today. Completed days count; frozen days bridge the
+// chain without counting; any other gap ends the streak. Not completing the
+// current day yet is forgiven (we start from yesterday in that case).
+export function getStreak(completions: Completion[], habitId: string, frozen?: string[]): number {
+  const completed = new Set(completions.filter(c => c.habitId === habitId).map(c => c.date))
+  if (completed.size === 0) return 0
+  const frozenSet = frozen ? new Set(frozen) : null
 
   const today = format(new Date(), 'yyyy-MM-dd')
-  const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd')
-  if (dates[0] !== today && dates[0] !== yesterday) return 0
+  let cursor = new Date(today + 'T12:00:00')
+  // grace for the current day: if today is neither done nor frozen, start at yesterday
+  if (!completed.has(today) && !(frozenSet?.has(today))) {
+    cursor.setDate(cursor.getDate() - 1)
+  }
 
   let streak = 0
-  let check = dates[0] === today ? today : yesterday
-  for (const date of dates) {
-    if (date === check) {
-      streak++
-      const d = new Date(check + 'T12:00:00')
-      d.setDate(d.getDate() - 1)
-      check = format(d, 'yyyy-MM-dd')
-    } else if (date < check) {
-      break
-    }
+  while (true) {
+    const key = format(cursor, 'yyyy-MM-dd')
+    if (completed.has(key)) streak++
+    else if (frozenSet?.has(key)) { /* bridge, no increment */ }
+    else break
+    cursor.setDate(cursor.getDate() - 1)
   }
   return streak
 }
@@ -142,7 +145,7 @@ export function getLongestStreak(completions: Completion[], habitId: string): nu
 }
 
 export function maxCurrentStreak(data: StoreData): number {
-  return Math.max(0, ...data.habits.map(h => getStreak(data.completions, h.id)))
+  return Math.max(0, ...data.habits.map(h => getStreak(data.completions, h.id, data.frozenDates)))
 }
 
 // Count of days where every due habit was completed

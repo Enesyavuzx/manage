@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { MoreHorizontal, Pencil, Archive, Flame, Trash2, RotateCcw, ChevronDown, ListTree } from 'lucide-react'
+import { MoreHorizontal, Pencil, Archive, Flame, Trash2, RotateCcw, ChevronDown, ListTree, ArrowUp, ArrowDown } from 'lucide-react'
 import type { Habit } from '@/lib/types'
 import { useStore, getStreak } from '@/hooks/useStore'
 import { CATEGORY_META } from '@/lib/constants'
@@ -13,8 +13,8 @@ import { Modal } from '@/components/ui/modal'
 import { HabitForm } from './habit-form'
 import { HabitDetail } from './habit-detail'
 
-export function HabitCard({ habit, showCheck = false }: { habit: Habit; showCheck?: boolean }) {
-  const { data, toggleHabit, updateHabit, archiveHabit, unarchiveHabit, deleteHabit, toggleSubtask, todayCompletedIds } = useStore()
+export function HabitCard({ habit, showCheck = false, canReorder = false }: { habit: Habit; showCheck?: boolean; canReorder?: boolean }) {
+  const { data, toggleHabit, updateHabit, archiveHabit, unarchiveHabit, deleteHabit, toggleSubtask, reorderHabit, todayCompletedIds } = useStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -22,7 +22,7 @@ export function HabitCard({ habit, showCheck = false }: { habit: Habit; showChec
   const [expanded, setExpanded] = useState(false)
 
   const done = todayCompletedIds.has(habit.id)
-  const streak = getStreak(data.completions, habit.id)
+  const streak = getStreak(data.completions, habit.id, data.frozenDates)
   const cat = CATEGORY_META[habit.category]
   const diff = DIFFICULTY_META[habit.difficulty]
 
@@ -110,6 +110,18 @@ export function HabitCard({ habit, showCheck = false }: { habit: Habit; showChec
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted hover:bg-surface-2 hover:text-fg">
                     <Pencil size={14} /> Düzenle
                   </button>
+                  {canReorder && !habit.archived && (
+                    <>
+                      <button onClick={() => { setMenuOpen(false); reorderHabit(habit.id, 'up') }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted hover:bg-surface-2 hover:text-fg">
+                        <ArrowUp size={14} /> Yukarı taşı
+                      </button>
+                      <button onClick={() => { setMenuOpen(false); reorderHabit(habit.id, 'down') }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted hover:bg-surface-2 hover:text-fg">
+                        <ArrowDown size={14} /> Aşağı taşı
+                      </button>
+                    </>
+                  )}
                   {habit.archived ? (
                     <button onClick={() => { setMenuOpen(false); unarchiveHabit(habit.id) }}
                       className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted hover:bg-surface-2 hover:text-fg">
