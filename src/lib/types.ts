@@ -59,6 +59,8 @@ export interface UserProfile {
   activeTitleId: string | null
   theme: ThemeName
   notificationsEnabled?: boolean
+  morningReminderTime?: string | null   // "HH:mm" — günlük özet sabah bildirimi
+  eveningReminderTime?: string | null   // "HH:mm" — günlük özet akşam bildirimi
   onboarded?: boolean
   lastLoginDate?: string        // yyyy-MM-dd of last counted visit
   loginStreak?: number          // consecutive daily-visit count

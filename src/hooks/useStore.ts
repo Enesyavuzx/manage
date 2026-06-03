@@ -49,6 +49,8 @@ interface StoreContextType {
   removeWater: () => void
   toggleSubtask: (habitId: string, stepId: string) => void
   setNotificationsEnabled: (enabled: boolean) => void
+  setMorningReminder: (time: string | null) => void
+  setEveningReminder: (time: string | null) => void
   addAccount: (a: Omit<BudgetAccount, 'id' | 'createdAt'>) => void
   deleteAccount: (id: string) => void
   addTransaction: (t: Omit<BudgetTransaction, 'id' | 'createdAt'>) => void
@@ -496,6 +498,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, notificationsEnabled: enabled } }))
   }, [])
 
+  const setMorningReminder = useCallback((time: string | null) => {
+    setData(d => ({ ...d, profile: { ...d.profile, morningReminderTime: time } }))
+  }, [])
+
+  const setEveningReminder = useCallback((time: string | null) => {
+    setData(d => ({ ...d, profile: { ...d.profile, eveningReminderTime: time } }))
+  }, [])
+
   const addAccount = useCallback((a: Omit<BudgetAccount, 'id' | 'createdAt'>) => {
     const account: BudgetAccount = { ...a, id: generateId(), createdAt: new Date().toISOString() }
     setData(d => ({ ...d, budgetAccounts: [...d.budgetAccounts, account] }))
@@ -685,7 +695,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     toggleHabit, addHabit, addTemplatePack, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
     openMysteryBox, logMood, addFocusSession,
-    addWater, removeWater, toggleSubtask, setNotificationsEnabled,
+    addWater, removeWater, toggleSubtask, setNotificationsEnabled, setMorningReminder, setEveningReminder,
     addAccount, deleteAccount, addTransaction, deleteTransaction,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,

@@ -11,7 +11,7 @@ import { format } from 'date-fns'
 const STORAGE_KEY = 'manage_app_data_v2'
 
 export function ProfileSettings() {
-  const { data, setProfileName, setNotificationsEnabled, cloud } = useStore()
+  const { data, setProfileName, setNotificationsEnabled, setMorningReminder, setEveningReminder, cloud } = useStore()
   const [name, setName] = useState(data.profile.name)
   const [saved, setSaved] = useState(false)
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -94,6 +94,41 @@ export function ProfileSettings() {
             {notifEnabled ? 'Açık (uygulama açıkken hatırlatır)' : 'Kapalı, açmak için dokun'}
           </button>
         </div>
+
+        {notifEnabled && (
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted font-display">Sabah özeti saati</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={data.profile.morningReminderTime ?? ''}
+                  onChange={e => setMorningReminder(e.target.value || null)}
+                  className="h-10 flex-1 rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                />
+                {data.profile.morningReminderTime && (
+                  <button onClick={() => setMorningReminder(null)} className="text-xs text-muted hover:text-danger">Kaldır</button>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted">Kaç alışkanlığın olduğunu hatırlatır.</p>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted font-display">Akşam özeti saati</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={data.profile.eveningReminderTime ?? ''}
+                  onChange={e => setEveningReminder(e.target.value || null)}
+                  className="h-10 flex-1 rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                />
+                {data.profile.eveningReminderTime && (
+                  <button onClick={() => setEveningReminder(null)} className="text-xs text-muted hover:text-danger">Kaldır</button>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted">Bugün kaçını tamamladığını gösterir.</p>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="mb-1.5 block text-xs font-medium text-muted font-display">Veri kaydı</label>

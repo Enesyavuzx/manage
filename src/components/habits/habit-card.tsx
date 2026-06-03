@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { MoreHorizontal, Pencil, Archive, Flame, Trash2, RotateCcw, ChevronDown, ListTree, ArrowUp, ArrowDown } from 'lucide-react'
+import { MoreHorizontal, Pencil, Archive, Flame, Trash2, RotateCcw, ChevronDown, ListTree, ArrowUp, ArrowDown, Bell } from 'lucide-react'
 import type { Habit } from '@/lib/types'
 import { useStore, getStreak } from '@/hooks/useStore'
 import { CATEGORY_META } from '@/lib/constants'
@@ -93,6 +93,11 @@ export function HabitCard({ habit, showCheck = false, canReorder = false }: { ha
                   <ListTree size={12} /> {stepProgress}/{subtasks.length} adım
                   <ChevronDown size={12} className={cn('transition-transform', expanded && 'rotate-180')} />
                 </button>
+              )}
+              {habit.reminderTime && (
+                <span className="flex items-center gap-0.5 text-xs text-muted">
+                  <Bell size={11} /> {habit.reminderTime}
+                </span>
               )}
             </div>
           </div>
