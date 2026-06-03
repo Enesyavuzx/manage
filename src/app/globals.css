@@ -111,16 +111,41 @@ html, body {
   pointer-events: none;
 }
 
-/* Pixel/Mint ambient glow */
+/* Pixel/Mint manzara: bulanık ufuk gradyanı (en arka katman, z -2) */
+.pixel-scene { display: none; }
+[data-theme='pixel'] .pixel-scene {
+  display: block;
+  position: fixed;
+  inset: -60px;            /* taşır ki blur kenarları ekran dışında kalsın */
+  z-index: -2;
+  pointer-events: none;
+  filter: blur(3px);
+  background:
+    radial-gradient(95% 55% at 50% 82%, rgb(var(--c-primary) / 0.22), transparent 62%),
+    radial-gradient(60% 40% at 18% 14%, rgb(var(--c-primary2) / 0.12), transparent 58%),
+    linear-gradient(
+      to bottom,
+      rgb(var(--c-bg)) 0%,
+      rgb(7 26 28) 44%,
+      rgb(9 40 40) 66%,
+      rgb(6 20 22) 84%,
+      rgb(var(--c-bg)) 100%
+    );
+}
+
+/* Pixel/Mint üst katman: vinyet + piksel ızgara (net, z -1) */
 [data-theme='pixel'] body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(55% 40% at 15% 0%, rgb(var(--c-primary) / 0.18), transparent 55%),
-    radial-gradient(45% 40% at 88% 8%, rgb(var(--c-primary2) / 0.14), transparent 55%);
   pointer-events: none;
+  background:
+    radial-gradient(135% 120% at 50% 36%, transparent 50%, rgba(0,0,0,0.62) 100%),
+    radial-gradient(55% 40% at 15% 0%, rgb(var(--c-primary) / 0.16), transparent 55%),
+    radial-gradient(45% 40% at 88% 8%, rgb(var(--c-primary2) / 0.12), transparent 55%),
+    repeating-linear-gradient(0deg, rgb(var(--c-primary) / 0.045) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(90deg, rgb(var(--c-primary) / 0.045) 0 1px, transparent 1px 7px);
 }
 
 /* Pixel CRT scanlines */
