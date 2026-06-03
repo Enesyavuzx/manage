@@ -193,6 +193,7 @@ export interface StoreData {
   brainDump: BrainDumpItem[]
   freezeTokens: number                           // streak-freeze tokens on hand
   frozenDates: string[]                          // yyyy-MM-dd days protected from breaking streaks
+  unlockedSkills: string[]                        // skill-tree node ids unlocked
   subtaskDone: Record<string, string[]>          // `${date}:${habitId}` -> done stepIds
   unlockedAchievements: Record<string, string>  // achievementId -> unlockedAt ISO
   unlockedTitles: Record<string, string>        // titleId -> unlockedAt ISO

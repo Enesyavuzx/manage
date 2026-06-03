@@ -7,6 +7,7 @@ import {
   getStreak, evaluateAchievements, subtaskKey,
 } from '@/lib/store'
 import { loginBonusXP, challengeForToday } from '@/lib/daily'
+import { skillXpMultiplier, skillStreakBonus, canUnlockSkill, SKILL_TREE } from '@/lib/skills'
 import { getLevelInfo, getRank, xpForDifficulty, streakBonus } from '@/lib/gamification'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { TITLES } from '@/lib/achievements'
@@ -61,6 +62,7 @@ interface StoreContextType {
   completeOnboarding: () => void
   useFreezeToken: (date: string) => boolean
   reorderHabit: (id: string, direction: 'up' | 'down') => void
+  unlockSkill: (id: string) => boolean
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
   setTheme: (t: ThemeName) => void
@@ -209,8 +211,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const streak = getStreak(cur.completions, habitId, cur.frozenDates)
     const base = xpForDifficulty(habit.difficulty)
-    const bonus = Math.round(base * streakBonus(streak + 1))
-    const xp = base + bonus
+    const bonus = Math.round(base * (streakBonus(streak + 1) + skillStreakBonus(cur.unlockedSkills)))
+    const xp = Math.round((base + bonus) * skillXpMultiplier(cur.unlockedSkills))
 
     const completion = {
       id: generateId(), habitId, date: today,
@@ -586,6 +588,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true
   }, [pushNotifications])
 
+  const unlockSkill = useCallback((id: string): boolean => {
+    const cur = dataRef.current
+    const node = SKILL_TREE.find(n => n.id === id)
+    if (!node) return false
+    const level = getLevelInfo(cur.profile.totalXP).level
+    if (!canUnlockSkill(node, level, cur.unlockedSkills)) return false
+    setData(d => ({ ...d, unlockedSkills: [...d.unlockedSkills, id] }))
+    pushNotifications([{ id: generateId(), kind: 'reward', emoji: node.emoji, title: 'Beceri açıldı!', subtitle: `${node.name} · ${node.description}` }])
+    return true
+  }, [pushNotifications])
+
   const reorderHabit = useCallback((id: string, direction: 'up' | 'down') => {
     setData(d => {
       const active = d.habits.filter(h => !h.archived)
@@ -622,7 +635,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addAccount, deleteAccount, addTransaction, deleteTransaction,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
-    useFreezeToken, reorderHabit,
+    useFreezeToken, reorderHabit, unlockSkill,
     setProfileName, setActiveTitle, setTheme,
   }
 
