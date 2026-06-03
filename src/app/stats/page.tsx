@@ -3,6 +3,8 @@ import { StatsGrid } from '@/components/stats/stats-grid'
 import { WeekComparison } from '@/components/stats/week-comparison'
 import { HourAnalysis } from '@/components/stats/hour-analysis'
 import { WeeklySummaryCard } from '@/components/stats/weekly-summary-card'
+import { YearInPixels } from '@/components/stats/year-in-pixels'
+import { MonthCalendar } from '@/components/stats/month-calendar'
 
 export default function StatsPage() {
   return (
@@ -12,6 +14,8 @@ export default function StatsPage() {
         <p className="mt-0.5 text-sm text-muted">İlerlemenin zaman içindeki görünümü</p>
       </div>
       <WeeklySummaryCard />
+      <YearInPixels />
+      <MonthCalendar />
       <WeekComparison />
       <StatsGrid />
       <HourAnalysis />
