@@ -1,5 +1,5 @@
 import type { StoreData, Habit } from './types'
-import { getStreak, getLongestStreak } from './store'
+import { getStreak, getLongestStreak, wonderProgress } from './store'
 
 // "Diyar" — tutarlılığın görünür hâli. Tamamen saf fonksiyon: StoreData'nın
 // deterministik yansıması. Alışkanlıklar bina olur, tamamlamalar nüfus olur,
@@ -10,7 +10,7 @@ export type RealmStage = 0 | 1 | 2 | 3 | 4 | 5
 export type RealmSprite = 'hut' | 'house' | 'tower' | 'castle'
 export type RealmMonumentSprite =
   | 'fountain' | 'lamppost' | 'bigtree' | 'well' | 'windmill' | 'treasury' | 'clocktower'
-  | 'statue' | 'obelisk' | 'arch'
+  | 'statue' | 'obelisk' | 'arch' | 'cathedral'
 
 export interface RealmStructure {
   habitId: string
@@ -34,6 +34,9 @@ export interface RealmMonument {
   unlockedAt: number
   condition?: (data: StoreData) => boolean
   fromAchievement?: string   // bir başarımdan açıldıysa başarım id'si
+  fromWonder?: boolean        // tamamlanmış bir Harika'dan kalıcı anıt
+  emoji?: string              // özel etiket emojisi (Harika anıtları için)
+  tint?: string               // özel renk (Harika anıtları için)
 }
 
 export type RealmEra = 'dawn' | 'day' | 'dusk' | 'night'
@@ -248,6 +251,17 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
   const monuments = MONUMENT_DEFS.filter(m =>
     population >= m.unlockedAt && (!m.condition || m.condition(data))
   )
+
+  // Tamamlanmış Harikalar kalıcı birer anıt olarak diyara eklenir.
+  const wonderTint = data.profile.realmBanner || '#d9a441'
+  for (const w of data.wonders) {
+    if (wonderProgress(data, w) >= w.target) {
+      monuments.push({
+        id: `wonder:${w.id}`, sprite: 'cathedral', label: w.name, unlockedAt: 0,
+        fromWonder: true, emoji: w.emoji, tint: wonderTint,
+      })
+    }
+  }
 
   const buildingCount = structures.filter(s => s.stage >= 1).length
   const landmarkCount = structures.filter(s => s.isLandmark).length

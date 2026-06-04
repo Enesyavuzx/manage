@@ -7,6 +7,7 @@ import {
   buildRealm, phaseProgress, villagerLine, villagerName,
   type RealmEra, type RealmSeason, type RealmStructure, type RealmMonument,
 } from '@/lib/realm'
+import { philosopherOf, philosopherLine, philosopherLesson, type Philosopher } from '@/lib/advisor'
 import { RealmSprite } from './realm-sprite'
 import { Button } from '@/components/ui/button'
 import { fireConfetti, haptic } from '@/lib/confetti'
@@ -75,6 +76,8 @@ export function RealmView() {
   const petTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [balloonOpen, setBalloonOpen] = useState(false)
   const [merchantOpen, setMerchantOpen] = useState(false)
+  const [wisdomOpen, setWisdomOpen] = useState(false)
+  const philosopher = useMemo(() => philosopherOf(data), [data])
   const [bought, setBought] = useState(false)
   const [editing, setEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState(realmName)
@@ -382,7 +385,14 @@ export function RealmView() {
                 <p className="mt-1 max-w-xs text-xs text-white/75 drop-shadow">İlk alışkanlığını tamamla, bu toprak sana ait olacak.</p>
               </div>
             ) : (
-              sceneItems.map((it, i) => {
+              <>
+              <button onClick={() => setWisdomOpen(true)} title="Bilgelik Akademisi"
+                className="relative z-20 flex shrink-0 flex-col items-center self-end">
+                <span className="mb-0.5 rounded bg-black/30 px-1 text-[11px] leading-tight text-white">📜</span>
+                <RealmSprite name="academy" pixel={5} className="drop-shadow-[0_0_6px_rgba(255,210,74,0.45)]" />
+                <p className="mt-0.5 text-center text-[9px] leading-none text-white/55 drop-shadow">Akademi</p>
+              </button>
+              {sceneItems.map((it, i) => {
                 if (it.kind === 'building') {
                   return <Building key={`b-${it.s.habitId}`} structure={it.s} onSelect={() => setSelectedId(it.s.habitId)} active={selectedId === it.s.habitId} nightGlow={theme.night} />
                 }
@@ -394,7 +404,8 @@ export function RealmView() {
                     <RealmSprite name={it.sprite} pixel={4} />
                   </div>
                 )
-              })
+              })}
+              </>
             )}
           </div>
         </div>
@@ -476,6 +487,11 @@ export function RealmView() {
           <MerchantPanel cost={world.merchant.costXP} available={available} tokens={data.freezeTokens}
             bought={bought} onBuy={buy} onClose={() => setMerchantOpen(false)} />
         )}
+
+        {/* Bilgelik akademisi modalı */}
+        {wisdomOpen && (
+          <WisdomModal philosopher={philosopher} isFixed={!!data.profile.advisorId} onClose={() => setWisdomOpen(false)} />
+        )}
       </div>
 
       {/* Seçili yapı detayı + hızlı tamamla */}
@@ -530,7 +546,7 @@ export function RealmView() {
       <UnlockHints world={world} />
 
       <p className="text-center text-xs text-muted-2">
-        Yapıya dokun, oradan tamamla. Köylülere ve maskota dokun. Ruh halin havayı, mevsim manzarayı, su takibin nehri, bütçen hazineyi, odakların saat kulesini, başarımların anıtları açar.
+        Yapıya dokun, oradan tamamla. Akademiye dokun, günün filozofundan ders al. Köylülere ve maskota dokun. Ruh halin havayı, mevsim manzarayı, su takibin nehri, bütçen hazineyi, odakların saat kulesini, başarımların ve tamamlanan harikaların anıtları açar.
       </p>
     </div>
   )
@@ -585,8 +601,9 @@ function Building({ structure, onSelect, active, nightGlow }: {
 function Monument({ monument, night }: { monument: RealmMonument; night: boolean }) {
   const isLamppost = monument.sprite === 'lamppost'
   const isWindmill = monument.sprite === 'windmill'
-  const fromAch = !!monument.fromAchievement
-  const pxl = monument.sprite === 'bigtree' ? 6
+  const highlight = !!monument.fromAchievement || !!monument.fromWonder
+  const pxl = monument.sprite === 'cathedral' ? 3
+    : monument.sprite === 'bigtree' ? 6
     : monument.sprite === 'arch' ? 4
     : monument.sprite === 'obelisk' || monument.sprite === 'statue' ? 4
     : monument.sprite === 'clocktower' ? 5
@@ -595,12 +612,14 @@ function Monument({ monument, night }: { monument: RealmMonument; night: boolean
     <div className={cn('relative z-20 shrink-0 self-end', isWindmill && 'animate-sway')}
       style={isWindmill ? { transformOrigin: 'bottom center', animationDuration: '8s' } : undefined}
       title={monument.label}>
-      <RealmSprite name={monument.sprite} pixel={pxl}
+      <RealmSprite name={monument.sprite} pixel={pxl} tint={monument.tint}
         className={cn(
           isLamppost && night && 'drop-shadow-[0_0_8px_rgba(255,210,74,0.9)]',
-          fromAch && 'drop-shadow-[0_0_7px_rgba(255,210,74,0.65)]',
+          highlight && 'drop-shadow-[0_0_7px_rgba(255,210,74,0.65)]',
         )} />
-      <p className={cn('mt-0.5 text-center text-[9px] leading-none drop-shadow', fromAch ? 'text-xp/90' : 'text-white/55')}>{monument.label}</p>
+      <p className={cn('mt-0.5 max-w-[64px] truncate text-center text-[9px] leading-none drop-shadow', highlight ? 'text-xp/90' : 'text-white/55')}>
+        {monument.emoji ? `${monument.emoji} ` : ''}{monument.label}
+      </p>
     </div>
   )
 }
@@ -642,6 +661,31 @@ function BalloonSummary({ world, realmName, onClose }: { world: ReturnType<typeo
               <p className="text-sm font-semibold text-fg">{r.value}</p>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function WisdomModal({ philosopher, isFixed, onClose }: { philosopher: Philosopher; isFixed: boolean; onClose: () => void }) {
+  return (
+    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/55 p-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-4 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-bold text-fg font-display">📜 Bilgelik Akademisi</p>
+          <button onClick={onClose} className="text-muted hover:text-fg"><X size={16} /></button>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-3xl">{philosopher.emoji}</span>
+          <div>
+            <p className="text-base font-bold text-fg font-display">{philosopher.name}</p>
+            <p className="text-[11px] text-muted-2">{philosopher.era}{isFixed ? '' : ' · günün filozofu'}</p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm italic leading-snug text-muted">&ldquo;{philosopherLine(philosopher)}&rdquo;</p>
+        <div className="mt-3 rounded-xl border border-border bg-surface-2 p-3">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Günün dersi</p>
+          <p className="text-sm leading-relaxed text-fg">{philosopherLesson(philosopher)}</p>
         </div>
       </div>
     </div>

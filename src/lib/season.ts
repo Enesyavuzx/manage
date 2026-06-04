@@ -77,3 +77,45 @@ export function getSeason(data: StoreData, now: Date = new Date()): SeasonInfo {
     nextTier,
   }
 }
+
+export interface SeasonSummary {
+  index: number
+  label: string
+  completions: number
+  delta: number               // bir önceki sezona göre fark
+  hadBefore: boolean
+  tiersReached: number
+  topTierLabel: string | null
+  justStarted: boolean        // mevcut sezonun ilk 3 günü
+}
+
+// Biten son sezonun özeti (yoksa null). Yeni sezonun ilk günlerinde
+// otomatik olarak öne çıkarılır.
+export function getSeasonSummary(data: StoreData, now: Date = new Date()): SeasonSummary | null {
+  const di = Math.max(0, dayIndexUTC(now))
+  const seasonNo = Math.floor(di / SEASON_DAYS)
+  if (seasonNo === 0) return null // henüz biten sezon yok
+
+  const startIdx = seasonNo * SEASON_DAYS
+  const prevStart = keyFromDayIndex(startIdx - SEASON_DAYS)
+  const prevEnd = keyFromDayIndex(startIdx - 1)
+  const inRange = (d: string, a: string, b: string) => d >= a && d <= b
+  const completions = data.completions.filter(c => inRange(c.date, prevStart, prevEnd)).length
+
+  const hadBefore = seasonNo >= 2
+  const beforeCompletions = hadBefore
+    ? data.completions.filter(c => inRange(c.date, keyFromDayIndex(startIdx - 2 * SEASON_DAYS), keyFromDayIndex(startIdx - SEASON_DAYS - 1))).length
+    : 0
+
+  const reached = TIERS.filter(t => completions >= t.at)
+  return {
+    index: seasonNo,
+    label: `Sezon ${seasonNo}`,
+    completions,
+    delta: completions - beforeCompletions,
+    hadBefore,
+    tiersReached: reached.length,
+    topTierLabel: reached.length ? reached[reached.length - 1].label : null,
+    justStarted: di - startIdx < 3,
+  }
+}

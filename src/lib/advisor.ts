@@ -102,6 +102,22 @@ export function philosopherLine(p: Philosopher, now: Date = new Date()): string 
   return p.lines[dayOfYear(now) % p.lines.length]
 }
 
+// Günün dersi: filozofun alışkanlık/disiplin üzerine kısa bir öğüdü.
+const LESSONS: Record<string, string> = {
+  aristoteles: 'Karakter, tek tek seçimlerin birikimidir. Bugün küçük ve doğru olanı yaparsan, yarın o seçim seni yapar. Mükemmellik bir an değil, tekrar eden bir yöndür.',
+  aurelius: 'Geçmiş gitti, gelecek henüz yok; elinde yalnızca şu an var. Bu anı küçük bir işle dolu tut, gün kendiliğinden iyi geçsin. Engel çıkınca ondan kaçma, içinden geç.',
+  sokrates: 'Kendine dürüst bir soru sor: bugün hangi tek adım beni olmak istediğim kişiye yaklaştırır? Cevabı biliyorsan, gerisi yalnızca onu yapmaktır.',
+  seneca: 'Zaman, farkında olmadan akıp giden tek servetimiz. Onu küçük ve anlamlı işlerle harca; ertelediğin her şey aslında çalınmış bir ömürdür. Bugünü tam yaşa.',
+  epiktetos: 'Bazı şeyler elinde, bazıları değil. Sonucu bırak, yalnızca bugünkü çabaya odaklan. Huzur, yapabildiğini yapıp gerisini bırakmaktan doğar.',
+  platon: 'Düzen, ruhun sağlığıdır. Gününü küçük ve düzenli adımlarla kurarsan kaos dağılır. Kendine hâkim olmak, en büyük özgürlüktür.',
+  diyojen: 'Fazlalığı at. Mutluluk daha çok şeyde değil, daha az ihtiyaçta. Bahaneleri bırak, yalnızca gerekli olanı yap; gerisi gürültüdür.',
+  konfucyus: 'Dağı taşıyan, küçük taşları taşımakla başlar. Hızlı olman gerekmez, durmaman yeter. Her gün bir adım, bir yılda uzun bir yol eder.',
+}
+
+export function philosopherLesson(p: Philosopher): string {
+  return LESSONS[p.id] ?? p.lines[0]
+}
+
 export type AdviceKind = 'habit' | 'mood' | 'water' | 'focus' | 'rest' | 'celebrate'
 
 export interface Advice {

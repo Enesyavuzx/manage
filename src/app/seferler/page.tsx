@@ -1,6 +1,7 @@
 'use client'
 import { EventsCard } from '@/components/seferler/events-card'
 import { SeasonPanel } from '@/components/seferler/season-panel'
+import { SeasonSummary } from '@/components/seferler/season-summary'
 import { WonderPanel } from '@/components/seferler/wonder-panel'
 
 export default function SeferlerPage() {
@@ -11,6 +12,7 @@ export default function SeferlerPage() {
         <p className="mt-0.5 text-sm text-muted">Diyarının olayları, sezon yolculuğu ve uzun vadeli harikaların.</p>
       </div>
       <EventsCard />
+      <SeasonSummary />
       <SeasonPanel />
       <WonderPanel />
     </div>

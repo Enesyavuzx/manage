@@ -329,6 +329,21 @@ export const REALM_SPRITES: Record<string, RealmSpriteDef> = {
       'SSSSS',
     ],
   },
+  // Bilgelik akademisi: klasik tapınak (günün filozofunun dersi burada).
+  academy: {
+    palette: { k: '#1c1626', s: '#cfc7b0', S: '#a59c82', c: '#e6dec6', y: '#ffd24a' },
+    rows: [
+      '.....y.....',
+      '....sss....',
+      '...sssss...',
+      '..sssssss..',
+      '.sssssssss.',
+      'kSSSSSSSSSk',
+      'kc.c.c.c.ck',
+      'kc.c.c.c.ck',
+      'kSSSSSSSSSk',
+    ],
+  },
   // Harika: katedral (uzun vadeli hedef megastructure'ı)
   cathedral: {
     palette: { k: '#1c1626', w: '#cdeeff', g: '#2f4a27', y: '#ffd24a' },
