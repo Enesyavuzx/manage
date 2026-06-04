@@ -256,6 +256,29 @@ export const REALM_SPRITES: Record<string, RealmSpriteDef> = {
       '.k.kk.k.',
     ],
   },
+  // maskot köpek
+  petDog: {
+    palette: { b: '#a9763f', B: '#8a5e30', k: '#3a2a20' },
+    rows: [
+      '......kk',
+      '.....bbb',
+      'b...bbbb',
+      'bbbbbbbb',
+      'bbbbbbbB',
+      '.k.kk.k.',
+    ],
+  },
+  // maskot kuş
+  petBird: {
+    palette: { y: '#f2c14e', o: '#e08a2a', k: '#3a2a20' },
+    rows: [
+      '.yyy..',
+      'yyyyk.',
+      'yyyyyo',
+      '.yyyy.',
+      '.k..k.',
+    ],
+  },
   // gezgin tüccar (sabit renkli; şapka + cüppe + mal sandığı)
   merchant: {
     palette: { k: '#1c1626', f: '#e8b87a', h: '#6b4a2f', r: '#2f7d4f', b: '#b07a3a', y: '#ffd24a' },
@@ -389,12 +412,15 @@ export function RealmSprite({
   tint,
   className,
   style,
+  windowMode,
 }: {
   name: keyof typeof REALM_SPRITES
   pixel?: number
   tint?: string
   className?: string
   style?: React.CSSProperties
+  // Pencere durumu: 'lit' = sıcak ışık (gece, evde biri var), 'off' = karanlık.
+  windowMode?: 'day' | 'lit' | 'off'
 }) {
   const sprite = REALM_SPRITES[name]
   const palette = { ...sprite.palette }
@@ -404,6 +430,15 @@ export function RealmSprite({
     palette[sprite.tintKeys.main] = tint
     palette[sprite.tintKeys.dark] = shade(tint, -0.28)
     palette[sprite.tintKeys.light] = shade(tint, 0.32)
+  }
+
+  // Pencere ('w'/'W') renklerini gece moduna göre değiştir.
+  if (windowMode === 'lit') {
+    if (palette.w) palette.w = '#ffdf91'
+    if (palette.W) palette.W = '#fff2c0'
+  } else if (windowMode === 'off') {
+    if (palette.w) palette.w = '#23202e'
+    if (palette.W) palette.W = '#2c2838'
   }
 
   const h = sprite.rows.length

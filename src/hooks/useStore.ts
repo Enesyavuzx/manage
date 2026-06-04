@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey,
@@ -82,6 +82,7 @@ interface StoreContextType {
   setActiveTitle: (id: string | null) => void
   setRealmName: (name: string) => void
   setRealmBanner: (hex: string) => void
+  setPetType: (pet: PetType) => void
   buyFreezeToken: (cost: number) => boolean
   setTheme: (t: ThemeName) => void
   saveWeeklyReview: (review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>) => WeeklyReview
@@ -790,6 +791,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, realmBanner: hex } }))
   }, [])
 
+  const setPetType = useCallback((pet: PetType) => {
+    setData(d => ({ ...d, profile: { ...d.profile, petType: pet } }))
+  }, [])
+
   // Gezgin tüccardan XP karşılığı dondurma jetonu (freeze token) satın al.
   const buyFreezeToken = useCallback((cost: number): boolean => {
     const cur = dataRef.current
@@ -868,7 +873,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
-    setProfileName, setActiveTitle, setRealmName, setRealmBanner, buyFreezeToken, setTheme,
+    setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, buyFreezeToken, setTheme,
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
   }

@@ -49,14 +49,22 @@ const SEASON_META: Record<RealmSeason, { emoji: string; label: string }> = {
 }
 const FW_COLORS = ['#ffd24a', '#ff6b9a', '#6ad0ff', '#7be08a', '#c08bff']
 
+const PET_META = {
+  cat: { sprite: 'pet' as const, label: 'Kedi', emoji: '🐱', sound: 'Miyav! 🐾' },
+  dog: { sprite: 'petDog' as const, label: 'Köpek', emoji: '🐶', sound: 'Hav hav! 🐾' },
+  bird: { sprite: 'petBird' as const, label: 'Kuş', emoji: '🐦', sound: 'Cik cik! 🐦' },
+}
+
 export function RealmView() {
-  const { data, toggleHabit, setRealmName, setRealmBanner, buyFreezeToken } = useStore()
+  const { data, toggleHabit, setRealmName, setRealmBanner, setPetType, buyFreezeToken } = useStore()
   const world = useMemo(() => buildRealm(data), [data])
   const theme = eraTheme(world.era)
   const prog = phaseProgress(world)
 
   const realmName = data.profile.realmName || 'Diyarın'
   const banner = data.profile.realmBanner || '#e0b341'
+  const petType = data.profile.petType || 'cat'
+  const pet = PET_META[petType]
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = selectedId ? world.structures.find(s => s.habitId === selectedId) ?? null : null
@@ -194,6 +202,15 @@ export function RealmView() {
                   <button key={c} onClick={() => setRealmBanner(c)}
                     className={cn('h-6 w-6 rounded-full transition-all', banner === c && 'ring-2 ring-offset-2 ring-offset-surface ring-fg')}
                     style={{ backgroundColor: c }} aria-label="Bayrak rengi" />
+                ))}
+              </div>
+              <div className="flex gap-1.5">
+                {(Object.keys(PET_META) as (keyof typeof PET_META)[]).map(p => (
+                  <button key={p} onClick={() => setPetType(p)}
+                    className={cn('flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
+                      petType === p ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-surface-2 text-muted hover:text-fg')}>
+                    {PET_META[p].emoji} {PET_META[p].label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -415,10 +432,10 @@ export function RealmView() {
               className="pointer-events-auto absolute bottom-0 cursor-pointer animate-walk-right p-1" style={{ animationDuration: '21s', animationDelay: '-7s' }}>
               {petMeow && (
                 <div className="absolute bottom-full left-1/2 mb-1 -translate-x-1/2">
-                  <div className="rounded-md border border-border bg-surface px-2 py-0.5 text-[10px] text-fg shadow">Miyav! 🐾</div>
+                  <div className="whitespace-nowrap rounded-md border border-border bg-surface px-2 py-0.5 text-[10px] text-fg shadow">{pet.sound}</div>
                 </div>
               )}
-              <RealmSprite name="pet" pixel={4} className={petMeow ? 'drop-shadow-[0_0_5px_rgba(255,255,255,0.7)]' : undefined} />
+              <RealmSprite name={pet.sprite} pixel={4} className={petMeow ? 'drop-shadow-[0_0_5px_rgba(255,255,255,0.7)]' : undefined} />
             </button>
           </div>
         )}
@@ -523,7 +540,12 @@ function Building({ structure, onSelect, active, nightGlow }: {
   structure: RealmStructure; onSelect: () => void; active: boolean; nightGlow: boolean
 }) {
   const smokes = structure.sprite === 'tower' || structure.sprite === 'castle'
-  const baseFilter = nightGlow ? `drop-shadow(0 0 6px ${structure.color}88)` : ''
+  // Gece: bugün yapılan ya da serisi yaşayan binalarda ışık yanar (evde biri var).
+  const lit = nightGlow && (structure.doneToday || structure.streak > 0)
+  const windowMode: 'day' | 'lit' | 'off' = !nightGlow ? 'day' : lit ? 'lit' : 'off'
+  const baseFilter = nightGlow
+    ? (lit ? 'drop-shadow(0 0 7px rgba(255,210,120,0.6))' : 'brightness(0.68)')
+    : ''
   const damagedFilter = structure.damaged ? 'grayscale(0.55) brightness(0.82)' : ''
   const filter = [damagedFilter, baseFilter].filter(Boolean).join(' ') || undefined
   return (
@@ -546,7 +568,7 @@ function Building({ structure, onSelect, active, nightGlow }: {
         {structure.doneToday && <Check size={9} className="text-green-300" />}
       </span>
       <div className="relative">
-        <RealmSprite name={structure.sprite} tint={structure.color} pixel={6}
+        <RealmSprite name={structure.sprite} tint={structure.color} pixel={6} windowMode={windowMode}
           className={active ? 'drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]' : undefined}
           style={filter ? { filter } : undefined} />
         {/* Yıkıntı çatlağı */}

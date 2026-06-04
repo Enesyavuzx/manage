@@ -70,7 +70,10 @@ export interface UserProfile {
   challengeClaimedDate?: string // yyyy-MM-dd the daily challenge was claimed
   realmName?: string            // Diyar için kullanıcı tanımlı isim
   realmBanner?: string          // Diyar bayrağı rengi (hex)
+  petType?: PetType             // Diyar maskotu türü
 }
+
+export type PetType = 'cat' | 'dog' | 'bird'
 
 export interface BrainDumpItem {
   id: string
