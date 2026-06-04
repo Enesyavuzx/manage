@@ -32,7 +32,18 @@ export function defaultData(): StoreData {
     routines: [],
     savedQuotes: [],
     claimedQuests: {},
+    wonders: [],
   }
+}
+
+// Bir Harika'nın ilerlemesi: oluşturulma tarihinden bu yana ilgili tamamlamalar.
+export function wonderProgress(data: StoreData, wonder: { habitId: string | null; createdAt: string }): number {
+  const since = wonder.createdAt.slice(0, 10)
+  return data.completions.filter(c => {
+    if (c.date < since) return false
+    if (wonder.habitId && c.habitId !== wonder.habitId) return false
+    return true
+  }).length
 }
 
 export function loadStore(): StoreData {
@@ -74,6 +85,7 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     routines: parsed.routines ?? [],
     savedQuotes: parsed.savedQuotes ?? [],
     claimedQuests: parsed.claimedQuests ?? {},
+    wonders: parsed.wonders ?? [],
   }
 }
 

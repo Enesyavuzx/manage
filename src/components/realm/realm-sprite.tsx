@@ -329,6 +329,28 @@ export const REALM_SPRITES: Record<string, RealmSpriteDef> = {
       'SSSSS',
     ],
   },
+  // Harika: katedral (uzun vadeli hedef megastructure'ı)
+  cathedral: {
+    palette: { k: '#1c1626', w: '#cdeeff', g: '#2f4a27', y: '#ffd24a' },
+    tintKeys: { main: 'M', dark: 'm', light: 'h' },
+    rows: [
+      '......y......',
+      '......M......',
+      '.....mMm.....',
+      '.....MMM.....',
+      '....kMMMk....',
+      '...kMwMwMk...',
+      '..kMMMMMMMk..',
+      '..kMwMMMwMk..',
+      '..kMMMMMMMk..',
+      '.kMMwMMMwMMk.',
+      '.kMMMMMMMMMk.',
+      '.kMwMMMMMwMk.',
+      '.kMMMkwkMMMk.',
+      '.kMMMkwkMMMk.',
+      'ggggggggggggg',
+    ],
+  },
   // başarım anıtı: zafer takı
   arch: {
     palette: { s: '#b8b2a0', S: '#8a8474' },
@@ -413,6 +435,7 @@ export function RealmSprite({
   className,
   style,
   windowMode,
+  reveal,
 }: {
   name: keyof typeof REALM_SPRITES
   pixel?: number
@@ -421,6 +444,8 @@ export function RealmSprite({
   style?: React.CSSProperties
   // Pencere durumu: 'lit' = sıcak ışık (gece, evde biri var), 'off' = karanlık.
   windowMode?: 'day' | 'lit' | 'off'
+  // 0-1: yapının yalnızca alttan bu orana kadarki kısmını çiz (zeminden yükselir).
+  reveal?: number
 }) {
   const sprite = REALM_SPRITES[name]
   const palette = { ...sprite.palette }
@@ -443,8 +468,11 @@ export function RealmSprite({
 
   const h = sprite.rows.length
   const w = sprite.rows[0]?.length ?? 0
+  // reveal verilmişse yapının yalnızca alt kısmı çizilir (zeminden yükseliyormuş gibi).
+  const minY = reveal != null ? Math.floor(h * (1 - Math.max(0, Math.min(1, reveal)))) : 0
   const rects: React.ReactNode[] = []
   sprite.rows.forEach((row, y) => {
+    if (y < minY) return
     for (let x = 0; x < row.length; x++) {
       const ch = row[x]
       if (ch === '.') continue

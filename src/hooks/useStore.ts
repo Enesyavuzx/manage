@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey,
@@ -86,6 +86,8 @@ interface StoreContextType {
   setPetType: (pet: PetType) => void
   setAdvisor: (id: string | null) => void
   claimQuest: (id: string) => boolean
+  addWonder: (w: Omit<Wonder, 'id' | 'createdAt'>) => void
+  deleteWonder: (id: string) => void
   buyFreezeToken: (cost: number) => boolean
   setTheme: (t: ThemeName) => void
   saveWeeklyReview: (review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>) => WeeklyReview
@@ -802,6 +804,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, advisorId: id ?? undefined } }))
   }, [])
 
+  const addWonder = useCallback((w: Omit<Wonder, 'id' | 'createdAt'>) => {
+    const wonder: Wonder = { ...w, id: generateId(), createdAt: new Date().toISOString() }
+    setData(d => ({ ...d, wonders: [...d.wonders, wonder] }))
+  }, [])
+
+  const deleteWonder = useCallback((id: string) => {
+    setData(d => ({ ...d, wonders: d.wonders.filter(w => w.id !== id) }))
+  }, [])
+
   // Görev ödülünü topla (bir kez). Yalnızca tamamlanmış görev talep edilebilir.
   const claimQuest = useCallback((id: string): boolean => {
     const cur = dataRef.current
@@ -901,7 +912,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
-    setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, setAdvisor, claimQuest, buyFreezeToken, setTheme,
+    setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, setAdvisor, claimQuest, addWonder, deleteWonder, buyFreezeToken, setTheme,
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
   }

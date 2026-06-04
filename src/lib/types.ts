@@ -238,6 +238,17 @@ export interface WeeklyReview {
   createdAt: string
 }
 
+// Harika (Wonder): uzun vadeli gerçek bir hedef. İlgili tamamlamalar tuğla ekler;
+// megastructure dolup büyür. Uzun ufku görünür kılar (DEHB için kritik).
+export interface Wonder {
+  id: string
+  name: string
+  emoji: string
+  target: number
+  habitId: string | null   // null = tüm tamamlamalar sayılır
+  createdAt: string        // ISO (sayım bu tarihten itibaren)
+}
+
 export interface Routine {
   id: string
   name: string  // "Sabah Rutini" | "Akşam Rutini" | custom
@@ -271,4 +282,5 @@ export interface StoreData {
   routines: Routine[]
   savedQuotes: string[]  // quote texts that user saved
   claimedQuests: Record<string, string>  // questId -> claimedAt ISO (ödül bir kez alınır)
+  wonders: Wonder[]  // uzun vadeli hedefler (megastructure)
 }
