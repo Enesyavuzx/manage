@@ -1,7 +1,7 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useStore } from '@/hooks/useStore'
-import { buildRealm, phaseProgress, type RealmEra, type RealmStructure, type RealmMonument } from '@/lib/realm'
+import { buildRealm, phaseProgress, villagerLine, villagerName, type RealmEra, type RealmStructure, type RealmMonument } from '@/lib/realm'
 import { RealmSprite } from './realm-sprite'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +39,16 @@ export function RealmView() {
   const theme = eraTheme(world.era)
   const prog = phaseProgress(world)
   const [selected, setSelected] = useState<RealmStructure | null>(null)
+  const [talking, setTalking] = useState<{ idx: number; line: string } | null>(null)
+  const talkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (talkTimer.current) clearTimeout(talkTimer.current) }, [])
+
+  function speak(i: number) {
+    if (talkTimer.current) clearTimeout(talkTimer.current)
+    setTalking({ idx: i, line: villagerLine(world) })
+    talkTimer.current = setTimeout(() => setTalking(null), 5000)
+  }
 
   const built = world.structures.filter(s => s.stage >= 1)
 
@@ -241,18 +251,36 @@ export function RealmView() {
           </div>
         </div>
 
-        {/* Köylüler (sabit, görünen alanda yürür) */}
+        {/* Köylüler (görünen alanda yürür, tıklanınca diyaloğa girer) */}
         {world.villagerCount > 0 && (
-          <div className="pointer-events-none absolute inset-x-0" style={{ bottom: `${groundH - 2}px`, height: 36, zIndex: 15, overflow: 'hidden' }}>
-            {Array.from({ length: world.villagerCount }).map((_, i) => (
-              <div
-                key={i}
-                className={cn('absolute bottom-0', i % 2 === 0 ? 'animate-walk-right' : 'animate-walk-left')}
-                style={{ animationDuration: `${13 + i * 2.8}s`, animationDelay: `${i * -3.1}s` }}
-              >
-                <RealmSprite name="villager" pixel={5} tint={VILLAGER_COLORS[i % VILLAGER_COLORS.length]} />
-              </div>
-            ))}
+          <div className="pointer-events-none absolute inset-x-0" style={{ bottom: `${groundH - 2}px`, height: 150, zIndex: 15, overflow: 'hidden' }}>
+            {Array.from({ length: world.villagerCount }).map((_, i) => {
+              const walksRight = i % 2 === 0   // walk-left animasyonu scaleX(-1) içerir, sağ yürüyenler aynalanmaz
+              const isTalking = talking?.idx === i
+              return (
+                <button
+                  key={i}
+                  onClick={() => speak(i)}
+                  aria-label={`${villagerName(i)} ile konuş`}
+                  className={cn('pointer-events-auto absolute bottom-0 cursor-pointer p-1', walksRight ? 'animate-walk-right' : 'animate-walk-left')}
+                  style={{ animationDuration: `${13 + i * 2.8}s`, animationDelay: `${i * -3.1}s`, animationPlayState: isTalking ? 'paused' : 'running' }}
+                >
+                  {isTalking && (
+                    <div
+                      className="absolute bottom-full left-1/2 mb-1 w-40 -translate-x-1/2"
+                      style={{ transform: `translateX(-50%) ${walksRight ? '' : 'scaleX(-1)'}` }}
+                    >
+                      <div className="relative rounded-lg border border-border bg-surface px-2.5 py-1.5 shadow-lg">
+                        <p className="mb-0.5 text-[10px] font-bold text-primary">{villagerName(i)}</p>
+                        <p className="text-[11px] leading-snug text-fg">{talking!.line}</p>
+                        <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-4 border-r-4 border-t-[6px] border-l-transparent border-r-transparent border-t-surface" />
+                      </div>
+                    </div>
+                  )}
+                  <RealmSprite name="villager" pixel={5} tint={VILLAGER_COLORS[i % VILLAGER_COLORS.length]} className={isTalking ? 'drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]' : undefined} />
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -310,7 +338,7 @@ export function RealmView() {
       <UnlockHints world={world} />
 
       <p className="text-center text-xs text-muted-2">
-        Ruh halin hava durumunu, su takibin nehri, bütçen hazineyi, odak seansların saat kulesini açar.
+        Köylülere dokun, sana diyardan haber versinler. Ruh halin havayı, su takibin nehri, bütçen hazineyi, odak seansların saat kulesini açar.
       </p>
     </div>
   )

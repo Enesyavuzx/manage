@@ -228,6 +228,73 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
   }
 }
 
+// ---- Köylü diyaloğu ----
+// Köylüler diyarın "sesi"dir: söyledikleri tamamen mevcut duruma bağlıdır
+// (bugünkü ilerleme, faz, hava, en büyük yapı, seri, anıtlar). Saf fonksiyon;
+// her çağrıda eligible havuzdan rastgele bir replik seçer (tekrar dokununca değişir).
+
+export const VILLAGER_NAMES = ['Aslı', 'Demir', 'Eylül', 'Kerem', 'Mavi', 'Poyraz', 'Derya', 'Toprak']
+
+export function villagerName(index: number): string {
+  return VILLAGER_NAMES[index % VILLAGER_NAMES.length]
+}
+
+export function villagerLine(world: RealmWorld): string {
+  const pool: string[] = []
+  const { todayDoneCount: done, todayTotalCount: total } = world
+
+  // Bugünkü ilerleme
+  if (total > 0) {
+    if (done >= total) {
+      pool.push('Bugün her şeyi tamamladın, meydanda şenlik var!')
+      pool.push('Bütün işler bitti! Bu akşam kutlama yapacağız.')
+    } else if (done === 0) {
+      pool.push('Bugün henüz kimse işe koyulmadı. Bir tane yapsak mı?')
+      pool.push('Güne başlamak için harika bir an, ne dersin?')
+    } else {
+      pool.push(`Bugün ${done}/${total} iş bitti, kalanları da bekliyoruz.`)
+      pool.push(`${total - done} işin daha kaldı, sana güveniyoruz.`)
+    }
+  }
+
+  // Hava
+  if (world.weather === 'sunny') pool.push('Bugün hava harika, içim açıldı.')
+  else if (world.weather === 'rainy') pool.push('Yağmur moralleri bozdu ama geçer, hep geçer.')
+  else if (world.weather === 'cloudy') pool.push('Gökyüzü biraz kapalı, yine de yürümeye devam.')
+
+  // En büyük yapı
+  if (world.topStructure) {
+    if (world.topStructure.isLandmark) {
+      pool.push(`${world.topStructure.name} kalesi ufukta heybetle duruyor.`)
+    } else {
+      pool.push(`${world.topStructure.name} her gün biraz daha büyüyor.`)
+    }
+  }
+
+  // Seri
+  const maxStreak = world.structures.reduce((m, s) => Math.max(m, s.streak), 0)
+  if (maxStreak >= 7) pool.push(`Birileri ${maxStreak} gündür hiç aksatmıyor, efsane!`)
+  else if (maxStreak >= 3) pool.push(`${maxStreak} günlük seri var, sakın bozma.`)
+
+  // Anıtlar / dünya öğeleri
+  if (world.monuments.find(m => m.sprite === 'treasury')) pool.push('Hazine kasası dolup taşıyor, bütçene iyi bakıyorsun.')
+  if (world.monuments.find(m => m.sprite === 'clocktower')) pool.push('Saat kulesi her odak seansında çalışıyor.')
+  if (world.hasRiver) pool.push('Nehir bugün gürül gürül akıyor, suyunu içmeyi unutma.')
+  if (world.hasBalloon) pool.push('Balon yine havalandı, yukarıdan diyar çok güzelmiş.')
+
+  // Faz / nüfus
+  pool.push(`Burası artık ${world.phase.label}, gurur duyuyorum.`)
+  if (world.population >= 50) pool.push(`Nüfusumuz ${world.population} kişi, kalabalıklaşıyoruz!`)
+
+  // Genel flavor (her zaman seçilebilir)
+  pool.push('Selam yolcu! Diyarımıza hoş geldin.')
+  pool.push('Bir kahve molası iyi giderdi, değil mi?')
+  pool.push('Duydum ki komşu yeni bir ev dikiyormuş.')
+  pool.push('Sen çalıştıkça biz büyüyoruz, teşekkürler.')
+
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 export function phaseProgress(world: RealmWorld): { pct: number; remaining: number } | null {
   const { phase, population } = world
   if (phase.next === null) return null
