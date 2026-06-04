@@ -1,6 +1,4 @@
 'use client'
-import { format } from 'date-fns'
-import { tr } from 'date-fns/locale'
 import { LevelHero } from '@/components/profile/level-hero'
 import { TodayHabits } from '@/components/dashboard/today-habits'
 import { StreakOverview } from '@/components/dashboard/streak-overview'
@@ -11,15 +9,14 @@ import { DopamineSprites } from '@/components/dashboard/dopamine-sprites'
 import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { DailyQuote } from '@/components/dashboard/daily-quote'
 import { BadDay } from '@/components/dashboard/bad-day'
+import { ContextGreeting } from '@/components/dashboard/context-greeting'
+import { WelcomeBack } from '@/components/dashboard/welcome-back'
 
 export default function DashboardPage() {
-  const today = format(new Date(), 'd MMMM EEEE', { locale: tr })
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-fg text-gradient">Panel</h1>
-        <p className="mt-0.5 text-sm text-muted">{today}</p>
-      </div>
+      <ContextGreeting />
+      <WelcomeBack />
       <LevelHero />
       <DailyQuote />
       <DailyRewards />
