@@ -4,9 +4,10 @@ import { getStreak, getLongestStreak } from './store'
 // "Diyar" — tutarlılığın görünür hâli. Bu modül tamamen saf bir fonksiyondur:
 // dünya, mevcut completion geçmişinin deterministik bir yansımasıdır. Hiçbir yeni
 // state saklanmaz; her alışkanlık bir yapıya, her tamamlama o yapının büyümesine
-// dönüşür. Üç ay sonra açtığında aylarca emeğinin bir silüetini görürsün.
+// dönüşür. Nüfus (toplam tamamlama) arttıkça diyar anıtlar kazanır ve faz atlar.
 
 export type RealmStage = 0 | 1 | 2 | 3 | 4 | 5
+export type RealmSprite = 'hut' | 'house' | 'tower' | 'castle'
 
 export interface RealmStructure {
   habitId: string
@@ -15,10 +16,17 @@ export interface RealmStructure {
   color: string
   completions: number
   stage: RealmStage
-  sprite: 'hut' | 'house' | 'tower'
+  sprite: RealmSprite
   streak: number
   hasFlag: boolean       // aktif seri varsa bayrak
-  isLandmark: boolean    // en yüksek aşama
+  isLandmark: boolean    // en yüksek aşama (kale)
+}
+
+export interface RealmMonument {
+  id: string
+  sprite: 'fountain' | 'lamppost' | 'bigtree'
+  label: string
+  unlockedAt: number     // hangi nüfusta açıldı
 }
 
 export type RealmEra = 'dawn' | 'day' | 'dusk' | 'night'
@@ -26,21 +34,21 @@ export type RealmEra = 'dawn' | 'day' | 'dusk' | 'night'
 export interface RealmPhase {
   id: 'çorak' | 'köy' | 'kasaba' | 'şehir' | 'metropol'
   label: string
-  next: number | null   // bir sonraki faza geçiş için gereken nüfus (null = son faz)
+  next: number | null
 }
 
 export interface RealmWorld {
   structures: RealmStructure[]
-  population: number     // tüm zamanların toplam tamamlaması
-  buildingCount: number  // stage >= 1 yapı sayısı
+  monuments: RealmMonument[]
+  population: number
+  buildingCount: number
   landmarkCount: number
-  treeCount: number      // ambient ağaç sayısı
+  treeCount: number
   topStructure: RealmStructure | null
   phase: RealmPhase
   era: RealmEra
 }
 
-// Tamamlama sayısı -> büyüme aşaması.
 function stageFor(completions: number): RealmStage {
   if (completions <= 0) return 0
   if (completions < 5) return 1
@@ -50,10 +58,11 @@ function stageFor(completions: number): RealmStage {
   return 5
 }
 
-function spriteForStage(stage: RealmStage): 'hut' | 'house' | 'tower' {
+function spriteForStage(stage: RealmStage): RealmSprite {
   if (stage <= 1) return 'hut'
   if (stage <= 3) return 'house'
-  return 'tower'
+  if (stage === 4) return 'tower'
+  return 'castle'
 }
 
 const PHASES: RealmPhase[] = [
@@ -79,6 +88,12 @@ function eraFor(date: Date): RealmEra {
   if (h >= 18 && h < 21) return 'dusk'
   return 'night'
 }
+
+const MONUMENT_DEFS: RealmMonument[] = [
+  { id: 'fountain', sprite: 'fountain', label: 'Çeşme', unlockedAt: 15 },
+  { id: 'lamppost', sprite: 'lamppost', label: 'Sokak Feneri', unlockedAt: 45 },
+  { id: 'bigtree', sprite: 'bigtree', label: 'Kadim Ağaç', unlockedAt: 90 },
+]
 
 export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld {
   const completionsByHabit = new Map<string, number>()
@@ -107,18 +122,19 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
     }
   })
 
-  // Yapılar büyüklüğe göre sıralanır; en gelişmişler diyarın merkezinde durur.
+  // En gelişmiş yapılar önce (diyarın merkezinde dururlar).
   structures.sort((a, b) => b.completions - a.completions)
 
   const population = data.completions.length
+  const monuments = MONUMENT_DEFS.filter(m => population >= m.unlockedAt)
   const buildingCount = structures.filter(s => s.stage >= 1).length
   const landmarkCount = structures.filter(s => s.isLandmark).length
   const topStructure = structures.find(s => s.stage >= 1) ?? null
-  // Her 8 tamamlamaya bir ağaç, en fazla 24 ağaç (sahne kalabalaşmasın).
-  const treeCount = Math.min(24, Math.floor(population / 8))
+  const treeCount = Math.min(20, Math.floor(population / 10))
 
   return {
     structures,
+    monuments,
     population,
     buildingCount,
     landmarkCount,
@@ -129,7 +145,6 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
   }
 }
 
-// Bir sonraki faza ne kadar kaldığı (yüzde + kalan nüfus). Son fazda null döner.
 export function phaseProgress(world: RealmWorld): { pct: number; remaining: number } | null {
   const { phase, population } = world
   if (phase.next === null) return null

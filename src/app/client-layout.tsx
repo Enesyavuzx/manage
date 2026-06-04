@@ -8,6 +8,7 @@ import { ToastHost } from '@/components/layout/toast-host'
 import { ThemeSwitcher } from '@/components/layout/theme-switcher'
 import { SideDecor } from '@/components/decor/side-decor'
 import { PixelScene } from '@/components/decor/pixel-scene'
+import { PixelBackdrop } from '@/components/decor/pixel-backdrop'
 import { NotificationManager } from '@/components/layout/notification-manager'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 
@@ -27,6 +28,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <>
       <ThemeApplier />
       <NotificationManager />
+      <PixelBackdrop />
       <PixelScene />
       <SideDecor />
       <div className="relative z-10 flex h-screen overflow-hidden">
