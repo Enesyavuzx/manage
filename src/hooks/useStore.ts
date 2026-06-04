@@ -80,6 +80,9 @@ interface StoreContextType {
   unlockSkill: (id: string) => boolean
   setProfileName: (name: string) => void
   setActiveTitle: (id: string | null) => void
+  setRealmName: (name: string) => void
+  setRealmBanner: (hex: string) => void
+  buyFreezeToken: (cost: number) => boolean
   setTheme: (t: ThemeName) => void
   saveWeeklyReview: (review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>) => WeeklyReview
   saveRoutine: (routine: Omit<Routine, 'id' | 'createdAt'>) => void
@@ -778,6 +781,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, activeTitleId: id } }))
   }, [])
 
+  const setRealmName = useCallback((name: string) => {
+    const trimmed = name.trim().slice(0, 28)
+    setData(d => ({ ...d, profile: { ...d.profile, realmName: trimmed || undefined } }))
+  }, [])
+
+  const setRealmBanner = useCallback((hex: string) => {
+    setData(d => ({ ...d, profile: { ...d.profile, realmBanner: hex } }))
+  }, [])
+
+  // Gezgin tüccardan XP karşılığı dondurma jetonu (freeze token) satın al.
+  const buyFreezeToken = useCallback((cost: number): boolean => {
+    const cur = dataRef.current
+    const available = cur.profile.totalXP - cur.profile.redeemedXP
+    if (cost <= 0 || available < cost) return false
+    setData({
+      ...cur,
+      freezeTokens: cur.freezeTokens + 1,
+      profile: { ...cur.profile, redeemedXP: cur.profile.redeemedXP + cost },
+    })
+    return true
+  }, [])
+
   const setTheme = useCallback((t: ThemeName) => {
     setData(d => ({ ...d, profile: { ...d.profile, theme: t } }))
   }, [])
@@ -843,7 +868,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
-    setProfileName, setActiveTitle, setTheme,
+    setProfileName, setActiveTitle, setRealmName, setRealmBanner, buyFreezeToken, setTheme,
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
   }

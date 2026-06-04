@@ -244,6 +244,84 @@ export const REALM_SPRITES: Record<string, RealmSpriteDef> = {
       '.kk.',
     ],
   },
+  // maskot kedi (sabit renkli, küçük)
+  pet: {
+    palette: { o: '#e0904a', O: '#c8783c', k: '#3a2a20' },
+    rows: [
+      'o....k.k',
+      'oo..kooo',
+      '.ooooko',
+      '.ooooooo',
+      '.oooooo.',
+      '.k.kk.k.',
+    ],
+  },
+  // gezgin tüccar (sabit renkli; şapka + cüppe + mal sandığı)
+  merchant: {
+    palette: { k: '#1c1626', f: '#e8b87a', h: '#6b4a2f', r: '#2f7d4f', b: '#b07a3a', y: '#ffd24a' },
+    rows: [
+      '...hhh..',
+      '..hhhhh.',
+      '...fff..',
+      '..krrrk.',
+      'bbyrrrr.',
+      'bbbrrrr.',
+      'bybrrrr.',
+      '...rrrr.',
+      '...k..k.',
+    ],
+  },
+  // başarım anıtı: kahraman heykeli
+  statue: {
+    palette: { s: '#b8b2a0', S: '#8a8474', p: '#9a9486' },
+    rows: [
+      '..sss..',
+      '..sSs..',
+      '...s...',
+      '.sssss.',
+      'ss.s.ss',
+      '...s...',
+      '..sss..',
+      '..s.s..',
+      '.ppppp.',
+      '.ppppp.',
+      'SSSSSSS',
+    ],
+  },
+  // başarım anıtı: dikilitaş
+  obelisk: {
+    palette: { s: '#8a8474', S: '#6a6458', y: '#ffd24a' },
+    rows: [
+      '..y..',
+      '.sss.',
+      '.sSs.',
+      '.sss.',
+      '.sSs.',
+      '.sss.',
+      '.sSs.',
+      '.sss.',
+      '.sSs.',
+      '.sss.',
+      'sssss',
+      'SSSSS',
+    ],
+  },
+  // başarım anıtı: zafer takı
+  arch: {
+    palette: { s: '#b8b2a0', S: '#8a8474' },
+    rows: [
+      'sssssssssss',
+      'sSSSSSSSSSs',
+      'ssss...ssss',
+      'sss.....sss',
+      'sss.....sss',
+      'sss.....sss',
+      'sss.....sss',
+      'sss.....sss',
+      'sss.....sss',
+      'SSS.....SSS',
+    ],
+  },
   // --- doğa: sabit renkli ambient ---
   tree: {
     palette: { k: '#173a1a', G: '#3fae54', g: '#2c8a40', H: '#7be08a', t: '#6b4a2f', T: '#503722' },

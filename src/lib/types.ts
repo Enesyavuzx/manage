@@ -68,6 +68,8 @@ export interface UserProfile {
   loginStreak?: number          // consecutive daily-visit count
   dailyClaimedDate?: string     // yyyy-MM-dd the daily login bonus was claimed
   challengeClaimedDate?: string // yyyy-MM-dd the daily challenge was claimed
+  realmName?: string            // Diyar için kullanıcı tanımlı isim
+  realmBanner?: string          // Diyar bayrağı rengi (hex)
 }
 
 export interface BrainDumpItem {

@@ -8,7 +8,9 @@ import { getStreak, getLongestStreak } from './store'
 
 export type RealmStage = 0 | 1 | 2 | 3 | 4 | 5
 export type RealmSprite = 'hut' | 'house' | 'tower' | 'castle'
-export type RealmMonumentSprite = 'fountain' | 'lamppost' | 'bigtree' | 'well' | 'windmill' | 'treasury' | 'clocktower'
+export type RealmMonumentSprite =
+  | 'fountain' | 'lamppost' | 'bigtree' | 'well' | 'windmill' | 'treasury' | 'clocktower'
+  | 'statue' | 'obelisk' | 'arch'
 
 export interface RealmStructure {
   habitId: string
@@ -21,6 +23,8 @@ export interface RealmStructure {
   streak: number
   hasFlag: boolean
   isLandmark: boolean
+  doneToday: boolean     // bugün tamamlandı mı (hızlı tamamla / parlama için)
+  damaged: boolean       // bir zamanlar seri vardı ama koptu (yıkıntı görünümü)
 }
 
 export interface RealmMonument {
@@ -29,10 +33,16 @@ export interface RealmMonument {
   label: string
   unlockedAt: number
   condition?: (data: StoreData) => boolean
+  fromAchievement?: string   // bir başarımdan açıldıysa başarım id'si
 }
 
 export type RealmEra = 'dawn' | 'day' | 'dusk' | 'night'
 export type RealmWeather = 'sunny' | 'normal' | 'cloudy' | 'rainy'
+export type RealmSeason = 'kış' | 'ilkbahar' | 'yaz' | 'sonbahar'
+
+export interface RealmMerchant {
+  costXP: number         // bir dondurma jetonu (freeze token) fiyatı
+}
 
 export interface RealmPhase {
   id: 'çorak' | 'köy' | 'kasaba' | 'şehir' | 'metropol'
@@ -57,8 +67,12 @@ export interface RealmWorld {
   balloonColor: string
   villagerCount: number          // nüfusa göre köylü sayısı
   weather: RealmWeather          // ruh haline göre hava durumu
+  season: RealmSeason            // gerçek aya göre mevsim
   todayDoneCount: number
   todayTotalCount: number
+  perfectDay: boolean            // bugünün tüm alışkanlıkları bitti mi (havai fişek)
+  hasPet: boolean                // maskot açıldı mı
+  merchant: RealmMerchant | null // gezgin tüccar bugün var mı
 }
 
 // --- Yardımcı hesaplamalar ---
@@ -101,6 +115,22 @@ function eraFor(date: Date): RealmEra {
   if (h >= 9 && h < 18) return 'day'
   if (h >= 18 && h < 21) return 'dusk'
   return 'night'
+}
+
+// Kuzey yarımküre takvimine göre mevsim.
+function seasonFor(date: Date): RealmSeason {
+  const m = date.getMonth() // 0-11
+  if (m === 11 || m <= 1) return 'kış'
+  if (m <= 4) return 'ilkbahar'
+  if (m <= 7) return 'yaz'
+  return 'sonbahar'
+}
+
+// Yılın günü (1-366) — tüccar gibi gün bazlı deterministik olaylar için.
+function dayOfYear(date: Date): number {
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0)
+  const now = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  return Math.floor((now - start) / 86400000)
 }
 
 // Ruh hali ortalamasından hava durumu — son 3 gün ağırlıklı
@@ -156,7 +186,25 @@ const MONUMENT_DEFS: RealmMonument[] = [
     // 90 dakika odak seansı tamamlandıysa açılır
     condition: (d) => totalFocusMinutes(d) >= 90,
   },
+  // --- başarıma bağlı eşsiz anıtlar ---
+  {
+    id: 'statue', sprite: 'statue', label: 'Kahraman Heykeli', unlockedAt: 0,
+    fromAchievement: 'habit_king',
+    condition: (d) => !!d.unlockedAchievements['habit_king'],
+  },
+  {
+    id: 'arch', sprite: 'arch', label: 'Zafer Takı', unlockedAt: 0,
+    fromAchievement: 'legend_title',
+    condition: (d) => !!d.unlockedAchievements['legend_title'],
+  },
+  {
+    id: 'obelisk', sprite: 'obelisk', label: 'Dikilitaş', unlockedAt: 0,
+    fromAchievement: 'godmode',
+    condition: (d) => !!d.unlockedAchievements['godmode'],
+  },
 ]
+
+const MERCHANT_COST_XP = 220
 
 export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld {
   const today = now.toISOString().slice(0, 10)
@@ -188,6 +236,9 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
       streak,
       hasFlag: streak >= 3 || best >= 7,
       isLandmark: stage === 5,
+      doneToday: todayCompletions.has(h.id),
+      // Bir zamanlar 3+ gün seri yapılmış ama bugün seri kopmuş: yıkıntı görünümü.
+      damaged: best >= 3 && streak === 0,
     }
   })
 
@@ -207,6 +258,14 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
   const villagerCount = Math.min(8, Math.floor(population / 6))
   const balloonColor = topStructure?.color ?? '#7c6fcd'
 
+  const todayTotalCount = activeHabits.length
+  const todayDoneCount = todayCompletions.size
+  const perfectDay = todayTotalCount > 0 && todayDoneCount >= todayTotalCount
+
+  // Gezgin tüccar: yeterli nüfusta ve günün ~3'te 1'inde uğrar (deterministik).
+  const merchant: RealmMerchant | null =
+    population >= 30 && dayOfYear(now) % 3 === 0 ? { costXP: MERCHANT_COST_XP } : null
+
   return {
     structures,
     monuments,
@@ -223,8 +282,12 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
     balloonColor,
     villagerCount,
     weather: weatherFor(data, today),
-    todayDoneCount: todayCompletions.size,
-    todayTotalCount: activeHabits.length,
+    season: seasonFor(now),
+    todayDoneCount,
+    todayTotalCount,
+    perfectDay,
+    hasPet: population >= 20,
+    merchant,
   }
 }
 
@@ -279,8 +342,26 @@ export function villagerLine(world: RealmWorld): string {
   // Anıtlar / dünya öğeleri
   if (world.monuments.find(m => m.sprite === 'treasury')) pool.push('Hazine kasası dolup taşıyor, bütçene iyi bakıyorsun.')
   if (world.monuments.find(m => m.sprite === 'clocktower')) pool.push('Saat kulesi her odak seansında çalışıyor.')
+  if (world.monuments.find(m => m.fromAchievement)) pool.push('Meydandaki anıtlar başarılarının hatırası, ne gurur.')
   if (world.hasRiver) pool.push('Nehir bugün gürül gürül akıyor, suyunu içmeyi unutma.')
   if (world.hasBalloon) pool.push('Balon yine havalandı, yukarıdan diyar çok güzelmiş.')
+  if (world.hasPet) pool.push('Maskotumuz yine sokaklarda dolaşıyor, çok sevimli.')
+
+  // Yıkıntı / kopan seri
+  const damaged = world.structures.find(s => s.damaged)
+  if (damaged) pool.push(`${damaged.name} biraz harap oldu, bir tamamlama onu yeniden ayağa kaldırır.`)
+
+  // Mevsim
+  if (world.season === 'kış') pool.push('Kar yağıyor, içerisi sıcacık ama disiplin sıcak tutar.')
+  else if (world.season === 'ilkbahar') pool.push('İlkbahar geldi, her yer çiçek açtı.')
+  else if (world.season === 'yaz') pool.push('Yaz sıcağı bastırdı, gölgede biraz dinlenelim.')
+  else if (world.season === 'sonbahar') pool.push('Yapraklar dökülüyor, sonbahar diyara çok yakışıyor.')
+
+  // Tüccar
+  if (world.merchant) pool.push('Gezgin tüccar geldi! Tezgahına bir göz at derim.')
+
+  // Mükemmel gün
+  if (world.perfectDay) pool.push('Bugün kusursuz geçti, akşam havai fişek var!')
 
   // Faz / nüfus
   pool.push(`Burası artık ${world.phase.label}, gurur duyuyorum.`)

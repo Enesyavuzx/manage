@@ -22,7 +22,7 @@ export function RealmCard() {
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Castle size={15} className="text-primary" />
-          <span className="text-sm font-bold text-fg font-display">Diyarım</span>
+          <span className="text-sm font-bold text-fg font-display">{data.profile.realmName || 'Diyarım'}</span>
           <span className="text-xs text-muted">· {world.phase.label}</span>
         </div>
         <ChevronRight size={16} className="text-muted" />
