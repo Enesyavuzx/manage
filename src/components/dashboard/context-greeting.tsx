@@ -1,7 +1,7 @@
 'use client'
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { Zap } from 'lucide-react'
+import { Castle } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
@@ -40,10 +40,10 @@ export function ContextGreeting() {
           <p className="mt-0.5 text-sm text-muted">{today}</p>
         </div>
         <Link
-          href="/quick"
+          href="/diyar"
           className="flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors font-display"
         >
-          <Zap size={12} /> Hızlı
+          <Castle size={12} /> Diyar
         </Link>
       </div>
 

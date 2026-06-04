@@ -10,14 +10,14 @@ import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { DailyQuote } from '@/components/dashboard/daily-quote'
 import { BadDay } from '@/components/dashboard/bad-day'
 import { ContextGreeting } from '@/components/dashboard/context-greeting'
-import { WelcomeBack } from '@/components/dashboard/welcome-back'
+import { RealmCard } from '@/components/realm/realm-card'
 
 export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <ContextGreeting />
-      <WelcomeBack />
       <LevelHero />
+      <RealmCard />
       <DailyQuote />
       <DailyRewards />
       <TodayHabits />
