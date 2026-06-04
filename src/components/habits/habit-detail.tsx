@@ -5,7 +5,8 @@ import { format, subDays, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import type { Habit } from '@/lib/types'
 import { useStore } from '@/hooks/useStore'
-import { getStreak, getLongestStreak } from '@/lib/store'
+import { getStreak, getLongestStreak, isHabitDueOnDate, todayKey } from '@/lib/store'
+import { haptic } from '@/lib/confetti'
 import { CATEGORY_META } from '@/lib/constants'
 import { DIFFICULTY_META, xpForDifficulty } from '@/lib/gamification'
 import { cn } from '@/lib/utils'
@@ -15,10 +16,26 @@ interface Props {
 }
 
 export function HabitDetail({ habit }: Props) {
-  const { data } = useStore()
+  const { data, toggleHabitOnDate } = useStore()
 
   const completions = data.completions.filter(c => c.habitId === habit.id)
   const completedDates = useMemo(() => new Set(completions.map(c => c.date)), [completions])
+  const createdDay = habit.createdAt.slice(0, 10)
+  const tkey = todayKey()
+
+  // Bir günün geriye dönük işaretlenebilir olup olmadığı: gelecekte değil,
+  // oluşturulmadan önce değil ve o gün planlı.
+  function canToggle(dateStr: string): boolean {
+    if (dateStr > tkey) return false
+    if (dateStr < createdDay) return false
+    return isHabitDueOnDate(habit, new Date(dateStr + 'T12:00:00'))
+  }
+
+  function handleDayTap(dateStr: string) {
+    if (!canToggle(dateStr)) return
+    haptic(15)
+    toggleHabitOnDate(habit.id, dateStr)
+  }
   const total = completions.length
   const streak = getStreak(data.completions, habit.id, data.frozenDates)
   const best = getLongestStreak(data.completions, habit.id)
@@ -89,9 +106,9 @@ export function HabitDetail({ habit }: Props) {
         ))}
       </div>
 
-      {/* Calendar heatmap - last 35 days */}
+      {/* Calendar heatmap - last 35 days (tap to backfill) */}
       <div>
-        <p className="mb-2 text-xs font-medium text-muted font-display">Son 35 gün</p>
+        <p className="mb-2 text-xs font-medium text-muted font-display">Son 35 gün · dokunarak işaretle</p>
         <div className="grid grid-cols-7 gap-1">
           {weekLabels.map(w => (
             <div key={w} className="text-center text-[9px] text-muted-2">{w}</div>
@@ -102,22 +119,33 @@ export function HabitDetail({ habit }: Props) {
             const dow = (firstDay.getDay() + 6) % 7  // Mon=0
             return Array.from({ length: dow }).map((_, i) => <div key={`pad-${i}`} />)
           })()}
-          {days.map(({ date, label, done, isToday }) => (
-            <div key={date} title={`${label}${done ? ' ✓' : ''}`}
-              className={cn(
-                'aspect-square w-full rounded transition-all',
-                isToday ? 'ring-1 ring-primary ring-offset-1 ring-offset-surface' : '',
-                done
-                  ? 'opacity-100'
-                  : 'bg-surface-2 opacity-50',
-              )}
-              style={done ? { backgroundColor: habit.color } : undefined}
-            />
-          ))}
+          {days.map(({ date, label, done, isToday }) => {
+            const editable = canToggle(date)
+            return (
+              <button key={date} type="button"
+                onClick={() => handleDayTap(date)}
+                disabled={!editable}
+                title={`${label}${done ? ' ✓' : ''}${editable ? '' : ' · işaretlenemez'}`}
+                className={cn(
+                  'aspect-square w-full rounded transition-all',
+                  isToday ? 'ring-1 ring-primary ring-offset-1 ring-offset-surface' : '',
+                  done ? 'opacity-100' : 'bg-surface-2',
+                  editable
+                    ? 'cursor-pointer hover:opacity-80 hover:ring-1 hover:ring-border-hover'
+                    : 'cursor-default opacity-30',
+                  !done && editable && 'opacity-60',
+                )}
+                style={done ? { backgroundColor: habit.color } : undefined}
+              />
+            )
+          })}
         </div>
-        <div className="mt-1.5 flex items-center justify-end gap-1.5 text-[10px] text-muted">
-          <div className="h-2.5 w-2.5 rounded-sm bg-surface-2" /> Boş
-          <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: habit.color }} /> Tamamlandı
+        <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted">
+          <span className="text-muted-2">Unuttuğun bir günü sonradan işaretleyebilirsin</span>
+          <span className="flex items-center gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-sm bg-surface-2" /> Boş
+            <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: habit.color }} /> Tamam
+          </span>
         </div>
       </div>
 

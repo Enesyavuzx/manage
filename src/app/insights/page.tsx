@@ -1,5 +1,6 @@
 'use client'
 import { InsightHighlights } from '@/components/insights/insight-highlights'
+import { YearHeatmap } from '@/components/insights/year-heatmap'
 import { CompletionRateTrend } from '@/components/insights/completion-rate-trend'
 import { HabitReliability } from '@/components/insights/habit-reliability'
 import { EnergyInsight } from '@/components/insights/energy-insight'
@@ -13,6 +14,7 @@ export default function InsightsPage() {
         <p className="mt-0.5 text-sm text-muted">Verinin sana ne söylediği, eyleme dönüşür halde</p>
       </div>
       <InsightHighlights />
+      <YearHeatmap />
       <CompletionRateTrend />
       <HabitReliability />
       <EnergyInsight />

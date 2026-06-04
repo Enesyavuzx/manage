@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
 import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
 import {
-  loadStore, saveStore, todayKey, isHabitDueToday,
+  loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey,
 } from '@/lib/store'
 import { loginBonusXP, challengeForToday } from '@/lib/daily'
@@ -33,6 +33,7 @@ interface StoreContextType {
   notifications: GameNotification[]
   dismissNotification: (id: string) => void
   toggleHabit: (habitId: string) => void
+  toggleHabitOnDate: (habitId: string, dateKey: string) => void
   addHabit: (h: Omit<Habit, 'id' | 'createdAt' | 'archived'>) => void
   addTemplatePack: (pack: TemplatePack) => number
   updateHabit: (id: string, updates: Partial<Habit>) => void
@@ -275,6 +276,53 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(next)
     pushNotifications(notes)
   }, [pushNotifications])
+
+  // Geçmiş bir günü işaretle/kaldır. Bugünden ileri tarihe, alışkanlığın
+  // oluşturulmasından önceki tarihe veya o gün planlı olmadığı tarihe izin yok.
+  // Geçmiş işaretlemede streak bonusu hesaplanmaz, sadece taban XP verilir
+  // (geriye dönük seri bonusu suistimale açık olurdu).
+  const toggleHabitOnDate = useCallback((habitId: string, dateKey: string) => {
+    const cur = dataRef.current
+    const today = todayKey()
+    if (dateKey > today) return
+    const habit = cur.habits.find(h => h.id === habitId)
+    if (!habit) return
+    const created = habit.createdAt.slice(0, 10)
+    if (dateKey < created) return
+    const dateObj = new Date(dateKey + 'T12:00:00')
+    if (!isHabitDueOnDate(habit, dateObj)) return
+
+    if (dateKey === today) { toggleHabit(habitId); return }
+
+    const existing = cur.completions.find(c => c.habitId === habitId && c.date === dateKey)
+    if (existing) {
+      const xp = existing.xpAwarded ?? xpForDifficulty(habit.difficulty)
+      setData({
+        ...cur,
+        completions: cur.completions.filter(c => !(c.habitId === habitId && c.date === dateKey)),
+        profile: { ...cur.profile, totalXP: Math.max(0, cur.profile.totalXP - xp) },
+      })
+      return
+    }
+
+    const xp = xpForDifficulty(habit.difficulty)
+    const completion = {
+      id: generateId(), habitId, date: dateKey,
+      completedAt: dateObj.toISOString(), xpAwarded: xp,
+    }
+    const base: StoreData = {
+      ...cur,
+      completions: [...cur.completions, completion],
+      profile: { ...cur.profile, totalXP: cur.profile.totalXP + xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'xp', emoji: habit.emoji,
+      title: `+${xp} XP`, subtitle: `${habit.name} · geçmiş gün işaretlendi`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+  }, [toggleHabit, pushNotifications])
 
   const addHabit = useCallback((h: Omit<Habit, 'id' | 'createdAt' | 'archived'>) => {
     const habit: Habit = { ...h, id: generateId(), createdAt: new Date().toISOString(), archived: false }
@@ -738,7 +786,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value: StoreContextType = {
     data, ready, cloud: isSupabaseConfigured,
     todayCompletedIds, habitsToday, notifications, dismissNotification,
-    toggleHabit, addHabit, addTemplatePack, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
+    toggleHabit, toggleHabitOnDate, addHabit, addTemplatePack, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
     openMysteryBox, logMood, logEnergy, addMedication, deleteMedication, toggleMedicationDose, addFocusSession,
     addWater, removeWater, toggleSubtask, setNotificationsEnabled, setMorningReminder, setEveningReminder,

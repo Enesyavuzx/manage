@@ -10,6 +10,7 @@ import { WaterWidget } from '@/components/dashboard/water-widget'
 import { DopamineSprites } from '@/components/dashboard/dopamine-sprites'
 import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { DailyQuote } from '@/components/dashboard/daily-quote'
+import { BadDay } from '@/components/dashboard/bad-day'
 
 export default function DashboardPage() {
   const today = format(new Date(), 'd MMMM EEEE', { locale: tr })
@@ -23,6 +24,7 @@ export default function DashboardPage() {
       <DailyQuote />
       <DailyRewards />
       <TodayHabits />
+      <BadDay />
       <div className="grid gap-4 sm:grid-cols-2">
         <WaterWidget />
         <StreakOverview />
