@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
-import { Cloud, HardDrive, Check, Bell, BellOff, Download, Upload, AlertTriangle } from 'lucide-react'
+import { Cloud, HardDrive, Check, Bell, BellOff, Download, Upload, AlertTriangle, Volume2, VolumeX } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,13 +12,14 @@ import { format } from 'date-fns'
 const STORAGE_KEY = 'manage_app_data_v2'
 
 export function ProfileSettings() {
-  const { data, setProfileName, setNotificationsEnabled, setMorningReminder, setEveningReminder, cloud } = useStore()
+  const { data, setProfileName, setNotificationsEnabled, setSoundEnabled, setMorningReminder, setEveningReminder, cloud } = useStore()
   const [name, setName] = useState(data.profile.name)
   const [saved, setSaved] = useState(false)
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const notifEnabled = !!data.profile.notificationsEnabled
+  const soundEnabled = data.profile.soundEnabled !== false
 
   function save() {
     if (name.trim()) { setProfileName(name.trim()); setSaved(true); setTimeout(() => setSaved(false), 1500) }
@@ -86,6 +87,18 @@ export function ProfileSettings() {
         <div>
           <label className="mb-1.5 block text-xs font-medium text-muted font-display">Tema</label>
           <ThemeSwitcher />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-muted font-display">Tamamlama sesleri</label>
+          <button onClick={() => setSoundEnabled(!soundEnabled)}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition-all',
+              soundEnabled ? 'border-success/40 bg-success/5 text-fg' : 'border-border bg-surface-2 text-muted hover:text-fg',
+            )}>
+            {soundEnabled ? <Volume2 size={16} className="text-success" /> : <VolumeX size={16} />}
+            {soundEnabled ? 'Açık (tamamlama ve combo sesleri çalar)' : 'Kapalı, açmak için dokun'}
+          </button>
         </div>
 
         <div>

@@ -1,6 +1,6 @@
 'use client'
 import { useMemo } from 'react'
-import { Flame, Calendar, Trophy, CheckCircle2, Target } from 'lucide-react'
+import { Flame, Trophy, CheckCircle2, Target, Link2 } from 'lucide-react'
 import { format, subDays, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import type { Habit } from '@/lib/types'
@@ -91,6 +91,11 @@ export function HabitDetail({ habit }: Props) {
           </div>
           {habit.description && (
             <p className="mt-1 text-xs text-muted-2 leading-snug">{habit.description}</p>
+          )}
+          {habit.cue && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-primary2">
+              <Link2 size={11} className="shrink-0" /> {habit.cue}
+            </p>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { MoreHorizontal, Pencil, Archive, Flame, Trash2, RotateCcw, ChevronDown, ListTree, ArrowUp, ArrowDown, Bell } from 'lucide-react'
+import { MoreHorizontal, Pencil, Archive, Flame, Trash2, RotateCcw, ChevronDown, ListTree, ArrowUp, ArrowDown, Bell, Link2 } from 'lucide-react'
 import type { Habit } from '@/lib/types'
 import { useStore, getStreak } from '@/hooks/useStore'
 import { CATEGORY_META } from '@/lib/constants'
@@ -100,6 +100,12 @@ export function HabitCard({ habit, showCheck = false, canReorder = false }: { ha
                 </span>
               )}
             </div>
+            {habit.cue && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-muted-2">
+                <Link2 size={11} className="shrink-0" />
+                <span className="truncate">{habit.cue}</span>
+              </p>
+            )}
           </div>
 
           <div className="relative">

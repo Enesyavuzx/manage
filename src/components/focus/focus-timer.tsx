@@ -14,10 +14,14 @@ import { format } from 'date-fns'
 function pad(n: number) { return n.toString().padStart(2, '0') }
 
 export function FocusTimer() {
-  const { data, addFocusSession } = useStore()
+  const { data, addFocusSession, habitsToday, todayCompletedIds, toggleHabit } = useStore()
   const [minutes, setMinutes] = useState(25)
   const [secondsLeft, setSecondsLeft] = useState(25 * 60)
   const [running, setRunning] = useState(false)
+  const [habitId, setHabitId] = useState<string>('')
+
+  const focusable = habitsToday.filter(h => !todayCompletedIds.has(h.id))
+  const selectedHabit = habitId ? data.habits.find(h => h.id === habitId) ?? null : null
 
   // tick
   useEffect(() => {
@@ -31,9 +35,11 @@ export function FocusTimer() {
     if (running && secondsLeft === 0) {
       setRunning(false)
       addFocusSession(minutes)
+      // Seansa bir alışkanlık bağlandıysa ve henüz tamamlanmadıysa işaretle.
+      if (habitId && !todayCompletedIds.has(habitId)) toggleHabit(habitId)
       setSecondsLeft(minutes * 60)
     }
-  }, [secondsLeft, running, minutes, addFocusSession])
+  }, [secondsLeft, running, minutes, habitId, todayCompletedIds, addFocusSession, toggleHabit])
 
   function selectPreset(m: number) {
     if (running) return
@@ -67,6 +73,27 @@ export function FocusTimer() {
         </CardHeader>
 
         <div className="flex flex-col items-center gap-6 p-6">
+          {/* habit selector */}
+          {focusable.length > 0 && (
+            <div className="w-full">
+              <label className="mb-1.5 block text-center text-xs font-medium text-muted font-display">Neye odaklanıyorsun? (opsiyonel)</label>
+              <select
+                value={habitId}
+                onChange={e => setHabitId(e.target.value)}
+                disabled={running}
+                className="h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg focus:border-primary focus:outline-none disabled:opacity-50"
+              >
+                <option value="">Serbest odak</option>
+                {focusable.map(h => (
+                  <option key={h.id} value={h.id}>{h.emoji} {h.name}</option>
+                ))}
+              </select>
+              {selectedHabit && (
+                <p className="mt-1.5 text-center text-xs text-muted-2">Süre dolunca bu alışkanlık tamamlanmış sayılır.</p>
+              )}
+            </div>
+          )}
+
           {/* preset chips */}
           <div className="flex flex-wrap justify-center gap-2">
             {FOCUS_PRESETS.map(m => (
@@ -89,8 +116,10 @@ export function FocusTimer() {
             <span className="text-5xl font-bold text-fg font-display tabular-nums leading-none">
               {pad(mm)}:{pad(ss)}
             </span>
-            <span className="mt-2 text-xs text-muted font-display">
-              {running ? 'ODAKLAN' : secondsLeft === total ? 'HAZIR' : 'DURAKLATILDI'}
+            <span className="mt-2 max-w-[160px] truncate text-xs text-muted font-display">
+              {selectedHabit
+                ? `${selectedHabit.emoji} ${selectedHabit.name}`
+                : running ? 'ODAKLAN' : secondsLeft === total ? 'HAZIR' : 'DURAKLATILDI'}
             </span>
           </Ring>
 

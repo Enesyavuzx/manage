@@ -28,6 +28,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: HabitFormProps) {
   )
   const [subtasks, setSubtasks] = useState<HabitStep[]>(initial?.subtasks ?? [])
   const [reminderTime, setReminderTime] = useState<string>(initial?.reminderTime ?? '')
+  const [cue, setCue] = useState<string>(initial?.cue ?? '')
 
   function addSubtask() {
     setSubtasks(prev => [...prev, { id: generateId(), text: '' }])
@@ -48,6 +49,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: HabitFormProps) {
       frequency: freqDaily ? 'daily' : selectedDays.sort(),
       subtasks: subtasks.map(s => ({ ...s, text: s.text.trim() })).filter(s => s.text),
       reminderTime: reminderTime || null,
+      cue: cue.trim() || null,
     })
   }
 
@@ -174,6 +176,13 @@ export function HabitForm({ initial, onSubmit, onCancel }: HabitFormProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-muted font-display">Tetikleyici (opsiyonel)</label>
+        <input value={cue} onChange={e => setCue(e.target.value)} placeholder="örn. sabah kahvemi içtikten sonra"
+          className="h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg placeholder:text-muted-2 focus:border-primary focus:outline-none" />
+        <p className="mt-1 text-xs text-muted-2">Var olan bir alışkanlığa bağla, hatırlaması kolaylaşsın: &quot;[tetikleyici], sonra bunu yap&quot;.</p>
       </div>
 
       <div>

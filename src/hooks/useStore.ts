@@ -13,6 +13,9 @@ import { ACHIEVEMENTS } from '@/lib/achievements'
 import { TITLES } from '@/lib/achievements'
 import { MOOD_META, MOOD_XP, FOCUS_XP_PER_MIN, MYSTERY_BOX_COST, WATER_GOAL, WATER_XP } from '@/lib/constants'
 import { isSupabaseConfigured, cloudLoad, cloudSaveDebounced } from '@/lib/supabase'
+import { registerCombo, comboBonus, comboEmoji } from '@/lib/combo'
+import { playChime } from '@/lib/sound'
+import { fireConfetti } from '@/lib/confetti'
 import { generateId } from '@/lib/utils'
 import { format } from 'date-fns'
 
@@ -54,6 +57,7 @@ interface StoreContextType {
   removeWater: () => void
   toggleSubtask: (habitId: string, stepId: string) => void
   setNotificationsEnabled: (enabled: boolean) => void
+  setSoundEnabled: (enabled: boolean) => void
   setMorningReminder: (time: string | null) => void
   setEveningReminder: (time: string | null) => void
   addAccount: (a: Omit<BudgetAccount, 'id' | 'createdAt'>) => void
@@ -224,7 +228,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const streak = getStreak(cur.completions, habitId, cur.frozenDates)
     const base = xpForDifficulty(habit.difficulty)
     const bonus = Math.round(base * (streakBonus(streak + 1) + skillStreakBonus(cur.unlockedSkills)))
-    const xp = Math.round((base + bonus) * skillXpMultiplier(cur.unlockedSkills))
+    const combo = registerCombo()
+    const cBonus = comboBonus(combo)
+    const xp = Math.round((base + bonus) * skillXpMultiplier(cur.unlockedSkills)) + cBonus
 
     const completion = {
       id: generateId(), habitId, date: today,
@@ -240,6 +246,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       id: generateId(), kind: 'xp', emoji: habit.emoji,
       title: `+${xp} XP`, subtitle: bonus > 0 ? `${habit.name} · +${bonus} streak bonusu` : habit.name,
     }]
+    if (combo >= 2) {
+      notes.push({
+        id: generateId(), kind: 'xp', emoji: comboEmoji(combo),
+        title: `Combo x${combo}!`, subtitle: cBonus > 0 ? `+${cBonus} bonus XP` : 'Seri devam ediyor',
+      })
+    }
+
+    // Kutlama: ses (ayar açıksa) + yüksek combo'da ekstra konfeti.
+    if (cur.profile.soundEnabled !== false) playChime(combo)
+    if (combo >= 3) fireConfetti({ count: 70 + combo * 12, power: 1.1 })
 
     const { newAchievements, newTitles, bonusXP } = evaluateAchievements(next)
     if (newAchievements.length || newTitles.length) {
@@ -550,6 +566,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, notificationsEnabled: enabled } }))
   }, [])
 
+  const setSoundEnabled = useCallback((enabled: boolean) => {
+    setData(d => ({ ...d, profile: { ...d.profile, soundEnabled: enabled } }))
+  }, [])
+
   const setMorningReminder = useCallback((time: string | null) => {
     setData(d => ({ ...d, profile: { ...d.profile, morningReminderTime: time } }))
   }, [])
@@ -789,7 +809,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     toggleHabit, toggleHabitOnDate, addHabit, addTemplatePack, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     addReward, deleteReward, redeemReward,
     openMysteryBox, logMood, logEnergy, addMedication, deleteMedication, toggleMedicationDose, addFocusSession,
-    addWater, removeWater, toggleSubtask, setNotificationsEnabled, setMorningReminder, setEveningReminder,
+    addWater, removeWater, toggleSubtask, setNotificationsEnabled, setSoundEnabled, setMorningReminder, setEveningReminder,
     addAccount, deleteAccount, addTransaction, deleteTransaction,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,

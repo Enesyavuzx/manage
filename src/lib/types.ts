@@ -24,6 +24,7 @@ export interface Habit {
   archived: boolean
   subtasks?: HabitStep[]
   reminderTime?: string | null   // "HH:mm" or null
+  cue?: string | null            // habit stacking tetikleyicisi: "kahveden sonra"
 }
 
 export interface HabitTemplate {
@@ -59,6 +60,7 @@ export interface UserProfile {
   activeTitleId: string | null
   theme: ThemeName
   notificationsEnabled?: boolean
+  soundEnabled?: boolean                // tamamlama/combo sesleri (varsayılan açık)
   morningReminderTime?: string | null   // "HH:mm" — günlük özet sabah bildirimi
   eveningReminderTime?: string | null   // "HH:mm" — günlük özet akşam bildirimi
   onboarded?: boolean
