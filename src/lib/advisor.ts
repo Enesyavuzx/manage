@@ -1,0 +1,210 @@
+import type { StoreData } from './types'
+import { getStreak } from './store'
+import { WATER_GOAL } from './constants'
+import { format } from 'date-fns'
+
+// Filozof danışman: "Şimdi ne yapmalıyım?" sorusunu veriye dayalı yanıtlar.
+// Öneri sıralaması tamamen senin geçmişinden hesaplanır (offline, AI yok);
+// filozof yalnızca öğüdü kendi sesiyle çerçeveler. DEHB'de en büyük engel
+// karar felcidir; bu modül tek ve net bir sonraki adımı gösterir.
+
+export interface Philosopher {
+  id: string
+  name: string
+  emoji: string
+  era: string
+  lines: string[]
+}
+
+export const PHILOSOPHERS: Philosopher[] = [
+  {
+    id: 'aristoteles', name: 'Aristoteles', emoji: '🦉', era: 'Antik Yunan',
+    lines: [
+      'Biz tekrar ettiğimiz şeyiz; mükemmellik bir eylem değil, alışkanlıktır.',
+      'İyi bir başlangıç, işin yarısıdır.',
+      'Mutluluk, kendimize bağlı olan şeylerde saklıdır.',
+    ],
+  },
+  {
+    id: 'aurelius', name: 'Marcus Aurelius', emoji: '⚔️', era: 'Roma · Stoa',
+    lines: [
+      'Elinde olan tek şey şu andır. Onu iyi kullan.',
+      'Eylemin önündeki engel, eylemi ilerletir. Yola çıkan, yolu bulur.',
+      'Yarının ne getireceğini bırak; bugünün işini yap.',
+    ],
+  },
+  {
+    id: 'sokrates', name: 'Sokrates', emoji: '🏛️', era: 'Antik Yunan',
+    lines: [
+      'Bilgelik, ne yapman gerektiğini bilip onu yapmaktır.',
+      'Kendini tanı; bugün hangi adım sana yakışır?',
+      'Büyük karakter, küçük ve doğru seçimlerle kurulur.',
+    ],
+  },
+  {
+    id: 'seneca', name: 'Seneca', emoji: '⏳', era: 'Roma · Stoa',
+    lines: [
+      'Vaktimiz az değil, çoğunu israf ediyoruz.',
+      'Her yeni gün, yeni bir hayattır. Bugünü sahiplen.',
+      'Şans, hazırlığın fırsatla buluşmasıdır.',
+    ],
+  },
+  {
+    id: 'epiktetos', name: 'Epiktetos', emoji: '🔗', era: 'Roma · Stoa',
+    lines: [
+      'Elinde olana odaklan, gerisini bırak.',
+      'Önce ne olmak istediğine karar ver, sonra yapılması gerekeni yap.',
+      'Seni olaylar değil, onlara verdiğin tepki belirler.',
+    ],
+  },
+  {
+    id: 'platon', name: 'Platon', emoji: '📜', era: 'Antik Yunan',
+    lines: [
+      'İyi olan, düzenli olandır.',
+      'Kendine hâkim olan, gerçekten özgürdür.',
+      'Başlamak, işin en önemli kısmıdır.',
+    ],
+  },
+  {
+    id: 'diyojen', name: 'Diyojen', emoji: '🏺', era: 'Kinik',
+    lines: [
+      'Bahane değil, eylem.',
+      'Sadeleş: gereksizi at, gerekli olanı yap.',
+      'En zoru başlamaktır; gerisi gelir.',
+    ],
+  },
+  {
+    id: 'konfucyus', name: 'Konfüçyüs', emoji: '🎋', era: 'Çin',
+    lines: [
+      'En uzun yolculuk tek bir adımla başlar.',
+      'Yavaş gitmen önemli değil, durmaman önemli.',
+      'Yaptığın işi sev, ömrün boyunca çalışmamış olursun.',
+    ],
+  },
+]
+
+function dayOfYear(date: Date): number {
+  const start = Date.UTC(date.getFullYear(), 0, 0)
+  const now = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  return Math.floor((now - start) / 86400000)
+}
+
+export function philosopherOf(data: StoreData, now: Date = new Date()): Philosopher {
+  const chosen = data.profile.advisorId
+  if (chosen) {
+    const found = PHILOSOPHERS.find(p => p.id === chosen)
+    if (found) return found
+  }
+  return PHILOSOPHERS[dayOfYear(now) % PHILOSOPHERS.length]
+}
+
+export function philosopherLine(p: Philosopher, now: Date = new Date()): string {
+  return p.lines[dayOfYear(now) % p.lines.length]
+}
+
+export type AdviceKind = 'habit' | 'mood' | 'water' | 'focus' | 'rest' | 'celebrate'
+
+export interface Advice {
+  id: string
+  kind: AdviceKind
+  emoji: string
+  title: string
+  reason: string
+  habitId?: string
+  href?: string
+  urgency: number       // 0-100, sıralama için
+}
+
+const DIFFICULTY_COST: Record<string, number> = { trivial: 1, easy: 2, medium: 3, hard: 4, epic: 5 }
+
+export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
+  const today = format(now, 'yyyy-MM-dd')
+  const hour = now.getHours()
+  const out: Advice[] = []
+
+  const activeHabits = data.habits.filter(h => !h.archived)
+  const dueHabits = activeHabits.filter(h => h.frequency === 'daily' || (h.frequency as number[]).includes(now.getDay()))
+  const doneToday = new Set(data.completions.filter(c => c.date === today).map(c => c.habitId))
+  const undone = dueHabits.filter(h => !doneToday.has(h.id))
+
+  const energyToday = data.energyLogs.find(e => e.date === today)?.level ?? null
+  const moodToday = data.moods.find(m => m.date === today)
+  const waterToday = data.water.filter(w => w.date === today).length
+  const focusToday = data.focusSessions.filter(f => f.completedAt.slice(0, 10) === today).length
+
+  // Tüm günlük işler bitti: kutla.
+  if (dueHabits.length > 0 && undone.length === 0) {
+    out.push({
+      id: 'celebrate', kind: 'celebrate', emoji: '🎉',
+      title: 'Bugünü tamamladın',
+      reason: 'Diyarın çiçek açıyor. Hak ettin: biraz dinlen ya da diyarında gez.',
+      href: '/diyar', urgency: 100,
+    })
+  }
+
+  // Alışkanlıklar: seri koruması + enerjiye uyum.
+  for (const h of undone) {
+    const streak = getStreak(data.completions, h.id, data.frozenDates)
+    let urgency = 30
+    let reason = 'Küçük bir adım, momentumu başlatır.'
+    if (streak >= 2) {
+      urgency = 55 + Math.min(streak, 30)
+      reason = `${streak} günlük serin sürüyor. Bugün yapmazsan kopar, koru.`
+      if (hour >= 17) { urgency += 22; reason = `${streak} günlük seri bu gece kopabilir. Hemen koru.` }
+    }
+    if (energyToday != null) {
+      const cost = DIFFICULTY_COST[h.difficulty] ?? 3
+      if (energyToday <= 2) {
+        if (cost <= 2) { urgency += 12; if (streak < 2) reason = 'Enerjin düşük; bu küçük iş tam sana göre.' }
+        else if (cost >= 4) urgency -= 10
+      } else if (energyToday >= 4 && cost >= 4) {
+        urgency += 12
+        if (streak < 2) reason = 'Enerjin yüksek; zor işi şimdi devir.'
+      }
+    }
+    out.push({ id: `habit:${h.id}`, kind: 'habit', emoji: h.emoji, title: h.name, reason, habitId: h.id, urgency })
+  }
+
+  // Ruh hali kaydı.
+  if (!moodToday) {
+    out.push({
+      id: 'mood', kind: 'mood', emoji: '🙂',
+      title: 'Ruh halini kaydet',
+      reason: 'Bugünü nasıl geçirdiğini işaretle; desenlerin netleşsin.',
+      href: '/mood', urgency: 42,
+    })
+  }
+
+  // Su.
+  if (waterToday < WATER_GOAL) {
+    out.push({
+      id: 'water', kind: 'water', emoji: '💧',
+      title: `Su iç (${waterToday}/${WATER_GOAL})`,
+      reason: 'Bir bardak su, odağı ve enerjiyi en ucuz yoldan toplar.',
+      urgency: 30 + Math.min(16, (WATER_GOAL - waterToday) * 2),
+    })
+  }
+
+  // Odak seansı.
+  if (focusToday === 0 && (energyToday == null || energyToday >= 3) && hour >= 8 && hour <= 22) {
+    out.push({
+      id: 'focus', kind: 'focus', emoji: '🎯',
+      title: 'Kısa bir odak seansı',
+      reason: '25 dakikalık tek bir blok, en zor başlangıcı kırar.',
+      href: '/focus', urgency: 44,
+    })
+  }
+
+  // Düşük enerji + bir şeyler yapılmışsa: dinlenmeye izin.
+  if (energyToday != null && energyToday <= 2 && doneToday.size > 0 && undone.length > 0) {
+    out.push({
+      id: 'rest', kind: 'rest', emoji: '🌙',
+      title: 'Kendine nazik ol',
+      reason: 'Enerjin düşük ve bugün bir şeyler yaptın. En küçük işi seç, gerisini bırak.',
+      urgency: 25,
+    })
+  }
+
+  out.sort((a, b) => b.urgency - a.urgency)
+  return out
+}

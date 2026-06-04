@@ -71,6 +71,7 @@ export interface UserProfile {
   realmName?: string            // Diyar için kullanıcı tanımlı isim
   realmBanner?: string          // Diyar bayrağı rengi (hex)
   petType?: PetType             // Diyar maskotu türü
+  advisorId?: string            // sabit filozof danışman (boşsa günün filozofu)
 }
 
 export type PetType = 'cat' | 'dog' | 'bird'
@@ -269,4 +270,5 @@ export interface StoreData {
   weeklyReviews: WeeklyReview[]
   routines: Routine[]
   savedQuotes: string[]  // quote texts that user saved
+  claimedQuests: Record<string, string>  // questId -> claimedAt ISO (ödül bir kez alınır)
 }

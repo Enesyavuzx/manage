@@ -31,6 +31,7 @@ export function defaultData(): StoreData {
     weeklyReviews: [],
     routines: [],
     savedQuotes: [],
+    claimedQuests: {},
   }
 }
 
@@ -72,6 +73,7 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     weeklyReviews: parsed.weeklyReviews ?? [],
     routines: parsed.routines ?? [],
     savedQuotes: parsed.savedQuotes ?? [],
+    claimedQuests: parsed.claimedQuests ?? {},
   }
 }
 

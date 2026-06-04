@@ -11,12 +11,16 @@ import { DailyQuote } from '@/components/dashboard/daily-quote'
 import { BadDay } from '@/components/dashboard/bad-day'
 import { ContextGreeting } from '@/components/dashboard/context-greeting'
 import { RealmCard } from '@/components/realm/realm-card'
+import { AdvisorCard } from '@/components/advisor/advisor-card'
+import { QuestsPanel } from '@/components/quests/quests-panel'
 
 export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <ContextGreeting />
+      <AdvisorCard />
       <LevelHero />
+      <QuestsPanel />
       <RealmCard />
       <DailyQuote />
       <DailyRewards />

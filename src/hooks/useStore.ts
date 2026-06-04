@@ -7,6 +7,7 @@ import {
   getStreak, evaluateAchievements, subtaskKey,
 } from '@/lib/store'
 import { loginBonusXP, challengeForToday } from '@/lib/daily'
+import { getQuests } from '@/lib/quests'
 import { skillXpMultiplier, skillStreakBonus, canUnlockSkill, SKILL_TREE } from '@/lib/skills'
 import { getLevelInfo, getRank, xpForDifficulty, streakBonus } from '@/lib/gamification'
 import { ACHIEVEMENTS } from '@/lib/achievements'
@@ -83,6 +84,8 @@ interface StoreContextType {
   setRealmName: (name: string) => void
   setRealmBanner: (hex: string) => void
   setPetType: (pet: PetType) => void
+  setAdvisor: (id: string | null) => void
+  claimQuest: (id: string) => boolean
   buyFreezeToken: (cost: number) => boolean
   setTheme: (t: ThemeName) => void
   saveWeeklyReview: (review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>) => WeeklyReview
@@ -795,6 +798,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, profile: { ...d.profile, petType: pet } }))
   }, [])
 
+  const setAdvisor = useCallback((id: string | null) => {
+    setData(d => ({ ...d, profile: { ...d.profile, advisorId: id ?? undefined } }))
+  }, [])
+
+  // Görev ödülünü topla (bir kez). Yalnızca tamamlanmış görev talep edilebilir.
+  const claimQuest = useCallback((id: string): boolean => {
+    const cur = dataRef.current
+    if (cur.claimedQuests[id]) return false
+    const quest = getQuests(cur).find(q => q.id === id)
+    if (!quest || !quest.done) return false
+    const base: StoreData = {
+      ...cur,
+      claimedQuests: { ...cur.claimedQuests, [id]: new Date().toISOString() },
+      profile: { ...cur.profile, totalXP: cur.profile.totalXP + quest.xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'reward', emoji: quest.emoji,
+      title: 'Görev tamamlandı!', subtitle: `${quest.title} · +${quest.xp} XP`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+    return true
+  }, [pushNotifications])
+
   // Gezgin tüccardan XP karşılığı dondurma jetonu (freeze token) satın al.
   const buyFreezeToken = useCallback((cost: number): boolean => {
     const cur = dataRef.current
@@ -873,7 +901,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
-    setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, buyFreezeToken, setTheme,
+    setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, setAdvisor, claimQuest, buyFreezeToken, setTheme,
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
   }
