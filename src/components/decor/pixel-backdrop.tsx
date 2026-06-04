@@ -31,6 +31,13 @@ export function PixelBackdrop() {
   const farHills = useMemo(() => buildHillPath(VW, VH, 0.72, 26, 9001, 14), [])
   const nearHills = useMemo(() => buildHillPath(VW, VH, 0.82, 18, 4242, 10), [])
 
+  // Kayan yıldızlar — uzun periyotlu, aynı anda birden görünmez
+  const shootingStars = useMemo(() => [
+    { x: 40, y: 18, delay: 0 },
+    { x: 180, y: 8, delay: 6 },
+    { x: 260, y: 22, delay: 12 },
+  ], [])
+
   // Uzak şehir silüeti (ufukta minik binalar)
   const skyline = useMemo(() => {
     const r = rng(555)
@@ -67,6 +74,23 @@ export function PixelBackdrop() {
               opacity={st.big ? 0.5 : 0.3}
               className="animate-twinkle"
               style={{ animationDelay: `${st.delay}s` }}
+            />
+          ))}
+        </g>
+
+        {/* kayan yıldızlar */}
+        <g className="text-fg">
+          {shootingStars.map((ss, i) => (
+            <rect
+              key={`shoot-${i}`}
+              x={ss.x}
+              y={ss.y}
+              width={2}
+              height={1}
+              fill="currentColor"
+              opacity={0}
+              className="animate-shoot"
+              style={{ animationDelay: `${ss.delay}s` }}
             />
           ))}
         </g>

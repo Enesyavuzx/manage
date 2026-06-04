@@ -5,22 +5,21 @@ import { buildRealm, phaseProgress, type RealmEra, type RealmStructure, type Rea
 import { RealmSprite } from './realm-sprite'
 import { cn } from '@/lib/utils'
 
-// Era'ya göre gökyüzü/zemin renkleri. Sahne bilinçli olarak renklidir
+// Era'ya göre gökyüzü/zemin renkleri — bu sahne bilinçli olarak renklidir
 // (DEHB-odaklı tasarım), bu yüzden inline gradyan burada amaçlıdır.
 function eraTheme(era: RealmEra) {
   switch (era) {
     case 'dawn':
-      return { sky: 'linear-gradient(#1a2350 0%, #6b5a9e 30%, #ffb0c4 65%, #ffd9a8 100%)', grass: '#6cae5a', soil: '#7a5230', hill: '#4a7a55', night: false, label: 'Şafak' }
+      return { sky: 'linear-gradient(180deg,#1a2350 0%,#6b5a9e 28%,#ffb0c4 62%,#ffd9a8 100%)', grass: '#6cae5a', soil: '#7a5230', hill1: '#4a7a55', hill2: '#3a6244', hill3: '#2a4f35', water: '#6ac8e8', night: false, label: 'Şafak' }
     case 'day':
-      return { sky: 'linear-gradient(#5aa6e8 0%, #8fc8f5 50%, #c8ecff 100%)', grass: '#5cab4e', soil: '#6e4a2c', hill: '#3f8a52', night: false, label: 'Gündüz' }
+      return { sky: 'linear-gradient(180deg,#5aa6e8 0%,#8fc8f5 45%,#c8ecff 100%)', grass: '#5cab4e', soil: '#6e4a2c', hill1: '#4a9a5c', hill2: '#3a7a4a', hill3: '#2c6038', water: '#5abce0', night: false, label: 'Gündüz' }
     case 'dusk':
-      return { sky: 'linear-gradient(#231a4a 0%, #6b3a72 40%, #c66a6a 72%, #ff9a5a 100%)', grass: '#3f6b46', soil: '#5a3a22', hill: '#34603f', night: false, label: 'Akşam' }
+      return { sky: 'linear-gradient(180deg,#231a4a 0%,#6b3a72 38%,#c66a6a 70%,#ff9a5a 100%)', grass: '#3f6b46', soil: '#5a3a22', hill1: '#3a604a', hill2: '#2c4e3a', hill3: '#1e3c2a', water: '#4ab0d0', night: false, label: 'Akşam' }
     case 'night':
-      return { sky: 'linear-gradient(#070a22 0%, #0f1438 55%, #1c1c44 100%)', grass: '#24452c', soil: '#3a2a1a', hill: '#1a3322', night: true, label: 'Gece' }
+      return { sky: 'linear-gradient(180deg,#030a1c 0%,#0c1438 50%,#171c44 100%)', grass: '#1e3a26', soil: '#2e221a', hill1: '#1a2e24', hill2: '#12221c', hill3: '#0a1814', water: '#2848a0', night: true, label: 'Gece' }
   }
 }
 
-// Deterministik psödo-rastgele: aynı seed -> aynı dağılım (render'da sahne zıplamaz).
 function rng(seed: number) {
   let s = seed % 2147483647
   if (s <= 0) s += 2147483646
@@ -32,6 +31,8 @@ type SceneItem =
   | { kind: 'monument'; m: RealmMonument }
   | { kind: 'deco'; sprite: 'tree' | 'pine' | 'bush' }
 
+const VILLAGER_COLORS = ['#e03c52', '#e07a20', '#9a54d0', '#2a8de8', '#1a9e50', '#d0842a']
+
 export function RealmView() {
   const { data } = useStore()
   const world = useMemo(() => buildRealm(data), [data])
@@ -41,17 +42,15 @@ export function RealmView() {
 
   const built = world.structures.filter(s => s.stage >= 1)
 
-  // Sahne öğelerini deterministik olarak ört: yapılar + araya serpilen ağaç/çalı + anıtlar.
   const sceneItems = useMemo<SceneItem[]>(() => {
     const r = rng(built.length * 31 + world.population * 7 + 3)
     const decos: SceneItem[] = Array.from({ length: world.treeCount }).map(() => {
       const v = r()
-      return { kind: 'deco', sprite: v < 0.45 ? 'tree' : v < 0.8 ? 'pine' : 'bush' }
+      return { kind: 'deco', sprite: v < 0.4 ? 'tree' : v < 0.75 ? 'pine' : 'bush' }
     })
     const mons = [...world.monuments]
     const out: SceneItem[] = []
-    let di = 0
-    let mi = 0
+    let di = 0, mi = 0
     built.forEach((s, idx) => {
       out.push({ kind: 'building', s })
       if (di < decos.length && idx % 2 === 1) out.push(decos[di++])
@@ -62,31 +61,55 @@ export function RealmView() {
     return out
   }, [built, world.treeCount, world.monuments, world.population])
 
-  // Gökyüzü cisimleri
   const stars = useMemo(() => {
     const r = rng(7)
-    return Array.from({ length: 40 }).map(() => ({ left: r() * 100, top: r() * 60, big: r() > 0.85, delay: r() * 3 }))
+    return Array.from({ length: 50 }).map(() => ({ left: r() * 100, top: r() * 65, big: r() > 0.85, delay: r() * 4 }))
   }, [])
   const clouds = useMemo(() => {
     const r = rng(13)
-    return Array.from({ length: 3 }).map((_, i) => ({ left: 6 + i * 28 + r() * 10, top: 8 + r() * 22, p: 3 + Math.round(r() * 2), delay: i * 0.8 }))
-  }, [])
+    const n = world.weather === 'cloudy' ? 6 : world.weather === 'rainy' ? 8 : 3
+    return Array.from({ length: n }).map((_, i) => ({
+      left: 3 + i * 18 + r() * 8, top: 5 + r() * 22, p: 3 + Math.round(r() * 2), delay: i * 0.7,
+    }))
+  }, [world.weather])
   const birds = useMemo(() => {
     const r = rng(21)
-    return Array.from({ length: 3 }).map((_, i) => ({ left: 30 + i * 18 + r() * 8, top: 16 + r() * 14, delay: i * 0.6 }))
+    const n = world.weather === 'sunny' ? 5 : 2
+    return Array.from({ length: n }).map((_, i) => ({
+      left: 25 + i * 15 + r() * 8, top: 12 + r() * 18, delay: i * 0.5,
+    }))
+  }, [world.weather])
+  const fireflies = useMemo(() => {
+    const r = rng(42)
+    return Array.from({ length: 12 }).map((_, i) => ({
+      left: r() * 90 + 5, bottom: 10 + r() * 40, delay: i * 0.35,
+    }))
   }, [])
+
+  const riverH = world.riverSize === 1 ? 6 : world.riverSize === 2 ? 10 : world.riverSize === 3 ? 14 : 0
+  const groundH = 52 + riverH
+  const todayPct = world.todayTotalCount > 0 ? Math.round(world.todayDoneCount / world.todayTotalCount * 100) : 0
 
   return (
     <div className="space-y-4">
-      {/* Faz başlığı */}
+      {/* Faz ve günlük durum başlığı */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium text-muted font-display">{theme.label} · diyarın</p>
           <h2 className="text-xl font-bold text-fg font-display">{world.phase.label}</h2>
+          {world.todayTotalCount > 0 && (
+            <p className="mt-0.5 text-xs text-muted">
+              Bugün:{' '}
+              <span className={cn('font-semibold', todayPct === 100 ? 'text-success' : 'text-fg')}>
+                {world.todayDoneCount}/{world.todayTotalCount}
+              </span>
+              {todayPct === 100 && ' · diyar çiçek açıyor!'}
+            </p>
+          )}
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold text-fg font-display tabular-nums">{world.population.toLocaleString('tr-TR')}</p>
-          <p className="text-xs text-muted">nüfus (toplam tamamlama)</p>
+          <p className="text-xs text-muted">nüfus</p>
         </div>
       </div>
 
@@ -101,70 +124,115 @@ export function RealmView() {
         </div>
       )}
 
-      {/* Diyar sahnesi */}
-      <div className="relative h-[22rem] overflow-hidden rounded-2xl border border-border sm:h-[26rem]" style={{ background: theme.sky }}>
-        {/* gökyüzü katmanı (kaymaz) */}
+      {/* BÜYÜK DİYAR SAHNESİ */}
+      <div
+        className="relative overflow-hidden rounded-2xl border border-border"
+        style={{ height: '30rem', background: theme.sky }}
+      >
+        {/* Gökyüzü katmanı (sabit) */}
         <div className="pointer-events-none absolute inset-0">
           {theme.night ? (
             <>
               {stars.map((st, i) => (
-                <div key={i} className="absolute rounded-full bg-white animate-twinkle" style={{ left: `${st.left}%`, top: `${st.top}%`, width: st.big ? 3 : 2, height: st.big ? 3 : 2, animationDelay: `${st.delay}s` }} />
+                <div key={i} className="absolute rounded-full bg-white animate-twinkle"
+                  style={{ left: `${st.left}%`, top: `${st.top}%`, width: st.big ? 3 : 2, height: st.big ? 3 : 2, animationDelay: `${st.delay}s`, opacity: st.big ? 0.9 : 0.6 }} />
               ))}
-              <div className="absolute right-8 top-6"><RealmSprite name="moon" pixel={6} /></div>
+              <div className="absolute right-10 top-5"><RealmSprite name="moon" pixel={7} /></div>
             </>
           ) : (
             <>
-              <div className="absolute right-8 top-6 animate-float"><RealmSprite name="sun" pixel={7} /></div>
+              <div className={cn('absolute right-10 top-5 animate-float', world.weather === 'sunny' && 'drop-shadow-[0_0_18px_rgba(255,220,80,0.7)]')}>
+                <RealmSprite name="sun" pixel={8} />
+              </div>
               {birds.map((b, i) => (
-                <div key={i} className="absolute animate-float" style={{ left: `${b.left}%`, top: `${b.top}%`, animationDelay: `${b.delay}s`, animationDuration: '7s' }}>
+                <div key={i} className="absolute animate-float"
+                  style={{ left: `${b.left}%`, top: `${b.top}%`, animationDelay: `${b.delay}s`, animationDuration: '7s' }}>
                   <RealmSprite name="bird" pixel={3} />
                 </div>
               ))}
             </>
           )}
           {clouds.map((c, i) => (
-            <div key={i} className="absolute animate-float" style={{ left: `${c.left}%`, top: `${c.top}%`, animationDelay: `${c.delay}s`, animationDuration: '8s', opacity: theme.night ? 0.4 : 0.9 }}>
+            <div key={i} className="absolute animate-float"
+              style={{ left: `${c.left}%`, top: `${c.top}%`, animationDelay: `${c.delay}s`, animationDuration: '9s', opacity: theme.night ? 0.3 : world.weather === 'rainy' ? 0.85 : world.weather === 'cloudy' ? 0.75 : 0.85 }}>
               <RealmSprite name="cloud" pixel={c.p} />
             </div>
           ))}
-          {/* uzak tepe (derinlik) */}
-          <div className="absolute inset-x-0 bottom-9" style={{ height: '38%' }}>
-            <div className="absolute inset-x-[-10%] bottom-0 h-full rounded-[100%_100%_0_0]" style={{ background: theme.hill, opacity: 0.5 }} />
-            <div className="absolute inset-x-[20%] bottom-0 h-[78%] rounded-[100%_100%_0_0]" style={{ background: theme.hill, opacity: 0.7 }} />
-          </div>
         </div>
 
-        {/* şehir (yatay kaydırılır) */}
+        {/* Yağmur overlay */}
+        {(world.weather === 'rainy' || world.weather === 'cloudy') && (
+          <div
+            className={cn('pointer-events-none absolute inset-0', world.weather === 'rainy' && 'animate-rain')}
+            style={{
+              background: world.weather === 'rainy'
+                ? 'repeating-linear-gradient(175deg,transparent,transparent 5px,rgba(160,210,255,0.22) 5px,rgba(160,210,255,0.22) 6px)'
+                : 'rgba(180,200,220,0.08)',
+              backgroundSize: world.weather === 'rainy' ? '20px 40px' : undefined,
+            }}
+          />
+        )}
+
+        {/* Güneşli halo */}
+        {world.weather === 'sunny' && !theme.night && (
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 40% 30% at 88% 18%,rgba(255,240,100,0.12) 0%,transparent 70%)' }} />
+        )}
+
+        {/* Uzak dağ/tepe silüetleri — 3 katman */}
+        <div className="pointer-events-none absolute inset-x-0" style={{ bottom: `${groundH}px`, height: '55%' }}>
+          <div className="absolute inset-x-[-8%] bottom-0 h-[50%] rounded-[100%_100%_0_0]" style={{ background: theme.hill3, opacity: 0.45 }} />
+          <div className="absolute inset-x-[8%] bottom-0 h-[68%] rounded-[100%_100%_0_0]" style={{ background: theme.hill2, opacity: 0.60 }} />
+          <div className="absolute inset-x-[26%] bottom-0 h-[84%] rounded-[100%_100%_0_0]" style={{ background: theme.hill1, opacity: 0.75 }} />
+        </div>
+
+        {/* Sıcak hava balonu */}
+        {world.hasBalloon && (
+          <div className="pointer-events-none absolute animate-float" style={{ left: '14%', top: '7%', animationDuration: '8s', zIndex: 5 }}>
+            <RealmSprite name="balloon" pixel={6} tint={world.balloonColor} />
+          </div>
+        )}
+
+        {/* Şehir (yatay kaydırılabilir) */}
         <div className="absolute inset-0 overflow-x-auto overflow-y-hidden">
-          <div className="relative flex h-full min-w-full items-end gap-1.5 px-6 pb-9">
-            {/* zemin şeridi (şehir genişliğince) */}
-            <div className="absolute inset-x-0 bottom-0 h-9">
-              <div className="h-2 w-full" style={{ background: theme.grass }} />
-              <div className="h-7 w-full" style={{ background: theme.soil }} />
+          <div
+            className="relative flex h-full min-w-full items-end gap-1.5 px-5"
+            style={{ paddingBottom: `${groundH}px` }}
+          >
+            {/* Zemin şeridi */}
+            <div className="absolute inset-x-0 bottom-0" style={{ height: `${groundH}px` }}>
+              <div className="absolute inset-x-0 bottom-0" style={{ height: 20, background: theme.soil }} />
+              <div className="absolute inset-x-0" style={{ bottom: 20, height: 8, background: theme.grass }} />
+              <div className="absolute inset-x-0" style={{ bottom: 28, height: 4, background: 'repeating-linear-gradient(90deg,#7a7060 0px,#7a7060 6px,#6a6050 6px,#6a6050 10px)' }} />
+              {world.hasRiver && (
+                <div
+                  className="absolute inset-x-0 animate-flow"
+                  style={{
+                    bottom: 32,
+                    height: riverH,
+                    background: `repeating-linear-gradient(90deg,${theme.water}aa 0px,${theme.water}dd 10px,${theme.water}99 20px,${theme.water}cc 30px,${theme.water}aa 60px)`,
+                    backgroundSize: '60px 100%',
+                  }}
+                />
+              )}
             </div>
 
             {built.length === 0 ? (
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center pb-9 text-center">
-                <RealmSprite name="hut" tint="#7c8492" pixel={6} className="opacity-50" />
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center pb-12 text-center">
+                <RealmSprite name="hut" tint="#7c8492" pixel={7} className="opacity-40" />
                 <p className="mt-3 text-sm font-semibold text-white drop-shadow">Diyarın henüz çorak</p>
-                <p className="mt-1 max-w-xs text-xs text-white/80 drop-shadow">
-                  İlk alışkanlığını tamamla, ilk evin yükselsin. Her tamamlama bu toprağı büyütür.
-                </p>
+                <p className="mt-1 max-w-xs text-xs text-white/75 drop-shadow">İlk alışkanlığını tamamla, bu toprak sana ait olacak.</p>
               </div>
             ) : (
               sceneItems.map((it, i) => {
                 if (it.kind === 'building') {
-                  return <Building key={`b-${it.s.habitId}`} structure={it.s} onSelect={() => setSelected(it.s)} active={selected?.habitId === it.s.habitId} />
+                  return <Building key={`b-${it.s.habitId}`} structure={it.s} onSelect={() => setSelected(it.s)} active={selected?.habitId === it.s.habitId} nightGlow={theme.night} />
                 }
                 if (it.kind === 'monument') {
-                  return (
-                    <div key={`m-${it.m.id}-${i}`} className="relative z-10 shrink-0 self-end" title={it.m.label}>
-                      <RealmSprite name={it.m.sprite} pixel={it.m.sprite === 'bigtree' ? 6 : 5} className={it.m.sprite === 'lamppost' && theme.night ? 'drop-shadow-[0_0_6px_rgba(255,210,74,0.8)]' : undefined} />
-                    </div>
-                  )
+                  return <Monument key={`m-${it.m.id}-${i}`} monument={it.m} night={theme.night} />
                 }
                 return (
-                  <div key={`d-${i}`} className="relative z-10 shrink-0 self-end animate-sway" style={{ transformOrigin: 'bottom center', animationDelay: `${(i % 5) * 0.4}s` }}>
+                  <div key={`d-${i}`} className="relative z-10 shrink-0 self-end animate-sway"
+                    style={{ transformOrigin: 'bottom center', animationDelay: `${(i % 5) * 0.45}s` }}>
                     <RealmSprite name={it.sprite} pixel={4} />
                   </div>
                 )
@@ -173,12 +241,38 @@ export function RealmView() {
           </div>
         </div>
 
-        {/* kaydırma ipucu */}
+        {/* Köylüler (sabit, görünen alanda yürür) */}
+        {world.villagerCount > 0 && (
+          <div className="pointer-events-none absolute inset-x-0" style={{ bottom: `${groundH - 2}px`, height: 36, zIndex: 15, overflow: 'hidden' }}>
+            {Array.from({ length: world.villagerCount }).map((_, i) => (
+              <div
+                key={i}
+                className={cn('absolute bottom-0', i % 2 === 0 ? 'animate-walk-right' : 'animate-walk-left')}
+                style={{ animationDuration: `${13 + i * 2.8}s`, animationDelay: `${i * -3.1}s` }}
+              >
+                <RealmSprite name="villager" pixel={5} tint={VILLAGER_COLORS[i % VILLAGER_COLORS.length]} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Gece ateşböcekleri */}
+        {theme.night && world.buildingCount > 0 && fireflies.map((ff, i) => (
+          <div key={i} className="pointer-events-none absolute rounded-full bg-yellow-200 animate-twinkle"
+            style={{ left: `${ff.left}%`, bottom: `${ff.bottom}px`, width: 3, height: 3, animationDelay: `${ff.delay}s`, opacity: 0.7, boxShadow: '0 0 5px 2px rgba(255,250,150,0.45)', zIndex: 16 }} />
+        ))}
+
+        {/* Kaydır ipucu */}
         {built.length > 6 && (
-          <div className="pointer-events-none absolute right-2 top-2 rounded-full bg-black/30 px-2 py-0.5 text-[10px] text-white/90">
+          <div className="pointer-events-none absolute right-2 top-2 z-20 animate-bob rounded-full bg-black/35 px-2.5 py-1 text-[10px] text-white/90">
             kaydır →
           </div>
         )}
+
+        {/* Hava durumu rozeti */}
+        <div className="pointer-events-none absolute left-2 top-2 z-20 rounded-full bg-black/25 px-2 py-0.5 text-[10px] text-white/80">
+          {world.weather === 'sunny' ? '☀️ Güneşli' : world.weather === 'rainy' ? '🌧 Yağmurlu' : world.weather === 'cloudy' ? '☁️ Bulutlu' : theme.label}
+        </div>
       </div>
 
       {/* Seçili yapı detayı */}
@@ -191,69 +285,92 @@ export function RealmView() {
             <p className="truncate text-sm font-semibold text-fg">{selected.name}</p>
             <p className="text-xs text-muted">
               {selected.completions} tamamlama · {STAGE_LABEL[selected.stage]}
-              {selected.streak > 0 && <> · 🔥 {selected.streak} gün</>}
+              {selected.streak > 0 && <> · 🔥 {selected.streak} gün seri</>}
             </p>
           </div>
           {selected.isLandmark ? (
-            <span className="shrink-0 text-xs font-semibold text-xp">ANIT</span>
+            <span className="shrink-0 text-xs font-bold text-xp">KALE</span>
           ) : (
             <span className="shrink-0 text-right text-xs text-muted-2">
-              {STAGE_NEXT[selected.stage] - selected.completions} sonra<br />büyür
+              {(STAGE_NEXT[selected.stage] ?? 100) - selected.completions} sonra<br />yükselir
             </span>
           )}
         </div>
       )}
 
       {/* Dünya istatistikleri */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat value={world.buildingCount} label="yapı" />
-        <Stat value={world.landmarkCount} label="anıt yapı" />
+        <Stat value={world.landmarkCount} label="kale" />
         <Stat value={world.monuments.length} label="eser" />
-        <Stat value={world.treeCount} label="ağaç" />
+        <Stat value={world.villagerCount} label="köylü" />
       </div>
 
+      {/* Açılmamış anıt ipuçları */}
+      <UnlockHints world={world} />
+
       <p className="text-center text-xs text-muted-2">
-        Her alışkanlık bir yapı. Tamamladıkça büyür: kulübe → ev → kule → kale. Serisi yaşıyorsa bayrak çeker. Nüfus arttıkça diyar çeşme, fener ve kadim ağaç kazanır.
+        Ruh halin hava durumunu, su takibin nehri, bütçen hazineyi, odak seansların saat kulesini açar.
       </p>
     </div>
   )
 }
 
-function Building({ structure, onSelect, active }: { structure: RealmStructure; onSelect: () => void; active: boolean }) {
-  const pixel = structure.sprite === 'hut' ? 5 : 6
+function Building({ structure, onSelect, active, nightGlow }: {
+  structure: RealmStructure; onSelect: () => void; active: boolean; nightGlow: boolean
+}) {
+  const pixel = 6
   const smokes = structure.sprite === 'tower' || structure.sprite === 'castle'
+  const glowStyle = nightGlow ? { filter: `drop-shadow(0 0 6px ${structure.color}88)` } : undefined
   return (
     <button
       onClick={onSelect}
       title={`${structure.name} · ${structure.completions} tamamlama`}
-      className={cn('group relative z-10 flex shrink-0 flex-col items-center self-end transition-transform active:translate-y-0.5', active && '-translate-y-1')}
+      className={cn('group relative z-20 flex shrink-0 flex-col items-center self-end transition-transform active:translate-y-0.5', active && '-translate-y-1.5')}
     >
-      {/* baca dumanı */}
       {smokes && (
         <>
           <span className="absolute -top-1 left-[38%] h-1 w-1 rounded-full bg-white/60 animate-smoke" />
-          <span className="absolute -top-1 left-[48%] h-1.5 w-1.5 rounded-full bg-white/50 animate-smoke" style={{ animationDelay: '1.2s' }} />
+          <span className="absolute -top-1 left-[52%] h-1.5 w-1.5 rounded-full bg-white/45 animate-smoke" style={{ animationDelay: '1.4s' }} />
         </>
       )}
-
-      {/* bayrak (aktif seri) */}
       {structure.hasFlag && (
-        <div className="relative mb-0.5 h-3 animate-sway" style={{ transformOrigin: 'bottom left' }}>
-          <div className="absolute bottom-0 left-1/2 h-3 w-[2px]" style={{ backgroundColor: '#5a4630' }} />
-          <div className="absolute bottom-1.5 left-1/2 h-2 w-3" style={{ backgroundColor: structure.color }} />
+        <div className="relative mb-0.5 h-3.5 animate-sway" style={{ transformOrigin: 'bottom left' }}>
+          <div className="absolute bottom-0 left-1/2 h-3.5 w-[2px]" style={{ backgroundColor: '#6a5040' }} />
+          <div className="absolute bottom-2 left-1/2 h-2 w-3.5" style={{ backgroundColor: structure.color }} />
         </div>
       )}
-
-      {/* her zaman görünen emoji tabela */}
-      <span className={cn(
-        'mb-0.5 rounded bg-black/25 px-1 text-[11px] leading-tight text-white transition-transform',
-        active && 'scale-110',
-      )}>
+      <span className={cn('mb-0.5 rounded bg-black/30 px-1 text-[11px] leading-tight text-white', active && 'bg-black/50')}>
         {structure.emoji}
       </span>
-
-      <RealmSprite name={structure.sprite} tint={structure.color} pixel={pixel} className={cn(active && 'drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]')} />
+      <RealmSprite
+        name={structure.sprite}
+        tint={structure.color}
+        pixel={pixel}
+        className={active ? 'drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]' : undefined}
+        style={glowStyle}
+      />
     </button>
+  )
+}
+
+function Monument({ monument, night }: { monument: RealmMonument; night: boolean }) {
+  const isLamppost = monument.sprite === 'lamppost'
+  const isWindmill = monument.sprite === 'windmill'
+  const pxl = monument.sprite === 'bigtree' ? 6 : monument.sprite === 'clocktower' ? 5 : monument.sprite === 'windmill' ? 4 : 5
+  return (
+    <div
+      className={cn('relative z-20 shrink-0 self-end', isWindmill && 'animate-sway')}
+      style={isWindmill ? { transformOrigin: 'bottom center', animationDuration: '8s' } : undefined}
+      title={monument.label}
+    >
+      <RealmSprite
+        name={monument.sprite}
+        pixel={pxl}
+        className={isLamppost && night ? 'drop-shadow-[0_0_8px_rgba(255,210,74,0.9)]' : undefined}
+      />
+      <p className="mt-0.5 text-center text-[9px] leading-none text-white/55 drop-shadow">{monument.label}</p>
+    </div>
   )
 }
 
@@ -262,6 +379,25 @@ function Stat({ value, label }: { value: number; label: string }) {
     <div className="rounded-lg border border-border bg-surface-2 p-3 text-center">
       <p className="text-xl font-bold text-fg font-display tabular-nums">{value}</p>
       <p className="text-xs text-muted">{label}</p>
+    </div>
+  )
+}
+
+function UnlockHints({ world }: { world: ReturnType<typeof buildRealm> }) {
+  const hints: string[] = []
+  if (!world.hasRiver) hints.push('Su takibini başlat → nehir belirir')
+  if (!world.monuments.find(m => m.sprite === 'treasury')) hints.push('Bütçe hesabı ekle → hazine kasası açılır')
+  if (!world.monuments.find(m => m.sprite === 'clocktower')) hints.push('90 dk odak seansı tamamla → saat kulesi')
+  if (!world.hasBalloon) hints.push(`${30 - world.population} tamamlama daha → sıcak hava balonu`)
+  if (hints.length === 0) return null
+  return (
+    <div className="rounded-lg border border-border bg-surface-2/60 px-3 py-2">
+      <p className="mb-1.5 text-xs font-semibold text-muted">Henüz açılmadı</p>
+      <div className="space-y-0.5">
+        {hints.slice(0, 3).map((h, i) => (
+          <p key={i} className="text-xs text-muted-2">· {h}</p>
+        ))}
+      </div>
     </div>
   )
 }
