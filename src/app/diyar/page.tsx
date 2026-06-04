@@ -1,5 +1,6 @@
 'use client'
 import { RealmView } from '@/components/realm/realm-view'
+import { DiyarShareCard } from '@/components/realm/diyar-share-card'
 
 export default function DiyarPage() {
   return (
@@ -9,6 +10,7 @@ export default function DiyarPage() {
         <p className="mt-0.5 text-sm text-muted">Tutarlılığınla büyüyen şehir. Her alışkanlık bir yapı, her tamamlama bir tuğla.</p>
       </div>
       <RealmView />
+      <DiyarShareCard />
     </div>
   )
 }
