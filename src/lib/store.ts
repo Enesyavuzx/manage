@@ -20,6 +20,7 @@ export function defaultData(): StoreData {
     water: [],
     budgetAccounts: [],
     budgetTransactions: [],
+    budgetGoals: [],
     brainDump: [],
     freezeTokens: 2,
     frozenDates: [],
@@ -60,6 +61,7 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     water: parsed.water ?? def.water,
     budgetAccounts: parsed.budgetAccounts ?? def.budgetAccounts,
     budgetTransactions: parsed.budgetTransactions ?? def.budgetTransactions,
+    budgetGoals: parsed.budgetGoals ?? def.budgetGoals,
     brainDump: parsed.brainDump ?? def.brainDump,
     freezeTokens: parsed.freezeTokens ?? def.freezeTokens,
     frozenDates: parsed.frozenDates ?? def.frozenDates,
@@ -364,6 +366,37 @@ export function expenseByCategory(data: StoreData, monthPrefix: string): Record<
 
 export function currentMonthPrefix(): string {
   return format(new Date(), 'yyyy-MM')
+}
+
+// ---- Budget goal progress ----
+export interface GoalProgress {
+  current: number      // mevcut değer (savings: net varlık, limit: bu ay harcama)
+  target: number
+  pct: number          // 0-100+
+  remaining: number    // savings: kalan; limit: tavana kalan (negatifse aşım)
+  over: boolean        // sadece limit: tavan aşıldı mı
+}
+
+export function budgetGoalProgress(
+  data: StoreData,
+  goal: { kind: 'savings' | 'limit'; targetAmount: number; categoryId?: string },
+  monthPrefix: string = currentMonthPrefix(),
+): GoalProgress {
+  const target = Math.max(0, goal.targetAmount)
+  if (goal.kind === 'savings') {
+    const current = Math.max(0, netWorth(data))
+    const pct = target > 0 ? Math.round((current / target) * 100) : 0
+    return { current, target, pct, remaining: Math.max(0, target - current), over: false }
+  }
+  // limit
+  let current: number
+  if (goal.categoryId) {
+    current = expenseByCategory(data, monthPrefix)[goal.categoryId] ?? 0
+  } else {
+    current = monthTotals(data, monthPrefix).expense
+  }
+  const pct = target > 0 ? Math.round((current / target) * 100) : 0
+  return { current, target, pct, remaining: target - current, over: current > target }
 }
 
 // Returns { newlyUnlocked achievementIds, newTitles, bonusXP }

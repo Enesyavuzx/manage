@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey,
@@ -64,6 +64,8 @@ interface StoreContextType {
   deleteAccount: (id: string) => void
   addTransaction: (t: Omit<BudgetTransaction, 'id' | 'createdAt'>) => void
   deleteTransaction: (id: string) => void
+  addBudgetGoal: (g: Omit<BudgetGoal, 'id' | 'createdAt'>) => void
+  deleteBudgetGoal: (id: string) => void
   addBrainDumpItem: (text: string) => void
   toggleBrainDumpItem: (id: string) => void
   deleteBrainDumpItem: (id: string) => void
@@ -600,6 +602,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, budgetTransactions: d.budgetTransactions.filter(t => t.id !== id) }))
   }, [])
 
+  const addBudgetGoal = useCallback((g: Omit<BudgetGoal, 'id' | 'createdAt'>) => {
+    const goal: BudgetGoal = { ...g, id: generateId(), createdAt: new Date().toISOString() }
+    setData(d => ({ ...d, budgetGoals: [...d.budgetGoals, goal] }))
+  }, [])
+
+  const deleteBudgetGoal = useCallback((id: string) => {
+    setData(d => ({ ...d, budgetGoals: d.budgetGoals.filter(g => g.id !== id) }))
+  }, [])
+
   const logEnergy = useCallback((level: MoodLevel) => {
     setData(d => {
       const today = todayKey()
@@ -810,7 +821,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addReward, deleteReward, redeemReward,
     openMysteryBox, logMood, logEnergy, addMedication, deleteMedication, toggleMedicationDose, addFocusSession,
     addWater, removeWater, toggleSubtask, setNotificationsEnabled, setSoundEnabled, setMorningReminder, setEveningReminder,
-    addAccount, deleteAccount, addTransaction, deleteTransaction,
+    addAccount, deleteAccount, addTransaction, deleteTransaction, addBudgetGoal, deleteBudgetGoal,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,

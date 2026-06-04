@@ -160,6 +160,22 @@ export interface BudgetTransaction {
   createdAt: string     // ISO
 }
 
+// ---- Budget goals ----
+// 'savings' = bir hedefe doğru biriktirme (ilerleme = net varlık / hedef).
+// 'limit'   = aylık harcama tavanı (opsiyonel kategori; aşılırsa uyarı).
+export type BudgetGoalKind = 'savings' | 'limit'
+
+export interface BudgetGoal {
+  id: string
+  kind: BudgetGoalKind
+  name: string
+  emoji: string
+  targetAmount: number
+  categoryId?: string   // sadece 'limit' için; boşsa tüm harcamalar
+  color: string
+  createdAt: string     // ISO
+}
+
 export type AchievementType =
   | 'total_completions'
   | 'streak'
@@ -237,6 +253,7 @@ export interface StoreData {
   water: WaterLog[]
   budgetAccounts: BudgetAccount[]
   budgetTransactions: BudgetTransaction[]
+  budgetGoals: BudgetGoal[]
   brainDump: BrainDumpItem[]
   freezeTokens: number                           // streak-freeze tokens on hand
   frozenDates: string[]                          // yyyy-MM-dd days protected from breaking streaks

@@ -4,6 +4,7 @@ import { AccountManager } from '@/components/budget/account-manager'
 import { TransactionForm } from '@/components/budget/transaction-form'
 import { TransactionList } from '@/components/budget/transaction-list'
 import { BudgetCharts } from '@/components/budget/budget-charts'
+import { BudgetGoals } from '@/components/budget/budget-goals'
 
 export default function BudgetPage() {
   return (
@@ -14,6 +15,7 @@ export default function BudgetPage() {
       </div>
 
       <BudgetOverview />
+      <BudgetGoals />
       <BudgetCharts />
       <AccountManager />
 
