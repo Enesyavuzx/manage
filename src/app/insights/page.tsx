@@ -2,6 +2,7 @@
 import { InsightHighlights } from '@/components/insights/insight-highlights'
 import { CompletionRateTrend } from '@/components/insights/completion-rate-trend'
 import { HabitReliability } from '@/components/insights/habit-reliability'
+import { EnergyInsight } from '@/components/insights/energy-insight'
 import { MoodHabitInsight } from '@/components/mood/mood-habit-insight'
 
 export default function InsightsPage() {
@@ -14,6 +15,7 @@ export default function InsightsPage() {
       <InsightHighlights />
       <CompletionRateTrend />
       <HabitReliability />
+      <EnergyInsight />
       <MoodHabitInsight />
     </div>
   )

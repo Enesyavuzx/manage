@@ -3,8 +3,9 @@
 // İleride gerçek bir LLM bağlanmak istenirse coachAnswer'ın yerine async bir
 // uç eklenebilir; arayüz aynı kalır.
 import type { StoreData, Habit } from '@/lib/types'
-import { isHabitDueToday, maxCurrentStreak, getStreak } from '@/lib/store'
-import { recentRate, momentum, habitReliability, bestHour, bestWeekday } from '@/lib/insights'
+import { isHabitDueToday, maxCurrentStreak, getStreak, todayEnergy } from '@/lib/store'
+import { recentRate, momentum, habitReliability, bestHour, bestWeekday, energyCompletionCorrelation } from '@/lib/insights'
+import { ENERGY_META } from '@/lib/constants'
 import { xpForDifficulty } from '@/lib/gamification'
 import { quoteForToday } from '@/lib/quotes'
 
@@ -42,6 +43,12 @@ export function coachBriefing(ctx: CoachContext): string {
     const hour = bestHour(ctx.data)
     if (hour) parts.push(`En verimli saatin genelde ${String(hour.hour).padStart(2, '0')}:00 civarı.`)
   }
+  const energy = todayEnergy(ctx.data)
+  if (energy) {
+    const meta = ENERGY_META[energy.level]
+    if (energy.level <= 2) parts.push(`Enerji: ${meta.emoji} ${meta.label} — bugün hafif tut.`)
+    else if (energy.level >= 4) parts.push(`Enerji: ${meta.emoji} ${meta.label} — bu ivmeyi kullan!`)
+  }
   parts.push('Aşağıdaki butonlardan birine dokunabilir ya da bir şey sorabilirsin.')
   return parts.join(' ')
 }
@@ -63,7 +70,38 @@ function answerWhatToDo(ctx: CoachContext): string {
     return 'Bugünün alışkanlıkları bitti. İstersen 5 dakikalık bir odak seansı, bir bardak su veya bugünün ruh halini kaydetmek iyi bir sonraki adım olabilir.'
   }
   const easiest = [...left].sort((a, b) => xpForDifficulty(a.difficulty) - xpForDifficulty(b.difficulty))[0]
+  const energy = todayEnergy(ctx.data)
+  if (energy && energy.level <= 2) {
+    return `Enerjin ${ENERGY_META[energy.level].emoji} ${ENERGY_META[energy.level].label} — bu tamamen normal. Bugün sadece en küçük adımı at:\n\n${easiest.emoji} ${easiest.name}. 2 dakika bile sayılır.`
+  }
   return `Şununla başla: ${easiest.emoji} ${easiest.name}. En küçük adımı at, 2 dakikası bile sayılır. Başlamak en zor kısım, gerisi gelir. 💪`
+}
+
+function answerEnergyStatus(ctx: CoachContext): string {
+  const energy = todayEnergy(ctx.data)
+  if (!energy) {
+    return 'Bugün enerji kaydın yok. Ruh Hali sayfasından işaretlersen daha kişiselleştirilmiş tavsiyeler verebilirim.'
+  }
+  const meta = ENERGY_META[energy.level]
+  const parts = [`Bugün enerjin ${meta.emoji} ${meta.label} (${energy.level}/5).`]
+  if (energy.level <= 2) {
+    const left = incompleteToday(ctx)
+    const easiest = left.length > 0
+      ? [...left].sort((a, b) => xpForDifficulty(a.difficulty) - xpForDifficulty(b.difficulty))[0]
+      : null
+    parts.push('Enerjin düşük — kendine karşı nazik ol, bir şeyi zorla yapman gerekmiyor.')
+    if (easiest) parts.push(`En hafif seçenek: ${easiest.emoji} ${easiest.name}`)
+  } else if (energy.level === 3) {
+    parts.push('Orta enerji — rutin alışkanlıklara odaklan, büyük baskı hissetmeden ilerle.')
+  } else {
+    parts.push('Enerjin yüksek — zor alışkanlıkları halletmek için harika bir an!')
+  }
+  const corr = energyCompletionCorrelation(ctx.data)
+  if (corr && corr.highDays > 1 && corr.lowDays > 1) {
+    const diff = Math.round((corr.highEnergyRate - corr.lowEnergyRate) * 100)
+    if (diff > 10) parts.push(`Verilerine göre yüksek enerji günlerinde %${diff} daha fazla tamamlıyorsun.`)
+  }
+  return parts.join('\n\n')
 }
 
 function answerAtRisk(ctx: CoachContext): string {
@@ -130,10 +168,11 @@ interface Intent {
 const INTENTS: Intent[] = [
   { test: /eksik|kaldı|kalan|bugün ne|yapmam gereken|todo|to-do|liste/i, answer: answerLeftToday },
   { test: /ne yap|öneri|öner|nereden başla|başlayayım|next|sıradaki|tavsiye/i, answer: answerWhatToDo },
-  { test: /geride|risk|zayıf|aksayan|ihmal|düşük|kötü giden/i, answer: answerAtRisk },
+  { test: /geride|risk|zayıf|aksayan|ihmal|kötü giden/i, answer: answerAtRisk },
   { test: /nasıl gidiyor|durum|özet|ilerleme|istatistik|performans|gidişat/i, answer: answerProgress },
   { test: /en verimli|ne zaman|hangi saat|hangi gün|verimli zaman/i, answer: answerBestTime },
   { test: /streak|seri|zincir/i, answer: answerStreak },
+  { test: /enerjim|enerji nasıl|enerji durumu|bugünkü enerji|enerji kaç/i, answer: answerEnergyStatus },
   { test: /motivasyon|moral|isteksiz|enerji yok|hevesim|söz|alıntı/i, answer: answerMotivation },
   { test: /merhaba|selam|hey|naber|nasılsın/i, answer: coachBriefing },
 ]
@@ -157,6 +196,7 @@ export const COACH_ACTIONS: CoachAction[] = [
   { label: 'Ne yapabilirim?', query: 'ne yapabilirim' },
   { label: 'Hangi alışkanlık geride?', query: 'hangi alışkanlık geride' },
   { label: 'Nasıl gidiyorum?', query: 'nasıl gidiyorum' },
+  { label: 'Enerji durumum', query: 'enerjim nasıl' },
   { label: 'En verimli zamanım', query: 'en verimli zamanım' },
   { label: 'Motivasyon', query: 'motivasyon' },
 ]

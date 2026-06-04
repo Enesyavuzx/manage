@@ -153,3 +153,54 @@ export function momentum(data: StoreData): Momentum {
   const lastRate = rateForDays(data, lastDays).rate
   return { thisRate, lastRate, delta: thisRate - lastRate }
 }
+
+export function avgEnergyRecent(data: StoreData, days: number): number | null {
+  const cutoff = format(subDays(new Date(), days - 1), DAY_KEY)
+  const recent = data.energyLogs.filter(e => e.date >= cutoff)
+  if (recent.length === 0) return null
+  return recent.reduce((s, e) => s + e.level, 0) / recent.length
+}
+
+export interface EnergyCorrelation {
+  highEnergyRate: number
+  lowEnergyRate: number
+  highDays: number
+  lowDays: number
+}
+
+export function energyCompletionCorrelation(data: StoreData): EnergyCorrelation | null {
+  if (data.energyLogs.length < 5) return null
+
+  const energyByDate = new Map<string, number>()
+  for (const e of data.energyLogs) energyByDate.set(e.date, e.level)
+
+  const doneByDate = new Map<string, Set<string>>()
+  for (const c of data.completions) {
+    if (!doneByDate.has(c.date)) doneByDate.set(c.date, new Set())
+    doneByDate.get(c.date)!.add(c.habitId)
+  }
+
+  let highDue = 0, highDone = 0, highDays = 0
+  let lowDue = 0, lowDone = 0, lowDays = 0
+
+  for (const [date, level] of energyByDate) {
+    const d = new Date(date + 'T12:00:00')
+    const due = dueHabitsOnDate(data, d)
+    if (due.length === 0) continue
+    const doneSet = doneByDate.get(date)
+    const done = doneSet ? due.filter(h => doneSet.has(h.id)).length : 0
+    if (level >= 4) {
+      highDue += due.length; highDone += done; highDays++
+    } else if (level <= 2) {
+      lowDue += due.length; lowDone += done; lowDays++
+    }
+  }
+
+  if (highDays === 0 && lowDays === 0) return null
+  return {
+    highEnergyRate: highDue > 0 ? highDone / highDue : 0,
+    lowEnergyRate: lowDue > 0 ? lowDone / lowDue : 0,
+    highDays,
+    lowDays,
+  }
+}
