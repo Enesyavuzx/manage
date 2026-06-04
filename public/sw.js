@@ -1,6 +1,6 @@
 // Minimal service worker for PWA offline support
-const CACHE = 'manage-v3'
-const PRECACHE = ['/', '/diyar', '/habits', '/rewards', '/stats', '/profile']
+const CACHE = 'manage-v4'
+const PRECACHE = ['/', '/diyar', '/habits', '/rewards', '/stats', '/profile', '/budget', '/casino']
 
 self.addEventListener('install', e => {
   e.waitUntil(

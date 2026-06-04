@@ -66,6 +66,8 @@ interface StoreContextType {
   deleteTransaction: (id: string) => void
   addBudgetGoal: (g: Omit<BudgetGoal, 'id' | 'createdAt'>) => void
   deleteBudgetGoal: (id: string) => void
+  placeBet: (amount: number) => boolean
+  payout: (amount: number) => void
   addBrainDumpItem: (text: string) => void
   toggleBrainDumpItem: (id: string) => void
   deleteBrainDumpItem: (id: string) => void
@@ -611,6 +613,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, budgetGoals: d.budgetGoals.filter(g => g.id !== id) }))
   }, [])
 
+  // Casino: bahis XP'sini "harcanmış" sayıp (redeemedXP), kazancı totalXP'ye ekler.
+  // available = totalXP - redeemedXP modeliyle tutarlı.
+  const placeBet = useCallback((amount: number): boolean => {
+    const cur = dataRef.current
+    const available = cur.profile.totalXP - cur.profile.redeemedXP
+    if (amount <= 0 || available < amount) return false
+    setData({ ...cur, profile: { ...cur.profile, redeemedXP: cur.profile.redeemedXP + amount } })
+    return true
+  }, [])
+
+  const payout = useCallback((amount: number) => {
+    if (amount <= 0) return
+    setData(d => ({ ...d, profile: { ...d.profile, totalXP: d.profile.totalXP + amount } }))
+  }, [])
+
   const logEnergy = useCallback((level: MoodLevel) => {
     setData(d => {
       const today = todayKey()
@@ -822,6 +839,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     openMysteryBox, logMood, logEnergy, addMedication, deleteMedication, toggleMedicationDose, addFocusSession,
     addWater, removeWater, toggleSubtask, setNotificationsEnabled, setSoundEnabled, setMorningReminder, setEveningReminder,
     addAccount, deleteAccount, addTransaction, deleteTransaction, addBudgetGoal, deleteBudgetGoal,
+    placeBet, payout,
     addBrainDumpItem, toggleBrainDumpItem, deleteBrainDumpItem, clearDoneBrainDump,
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
