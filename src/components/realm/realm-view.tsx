@@ -7,7 +7,7 @@ import {
   buildRealm, phaseProgress, villagerLine, villagerName,
   type RealmEra, type RealmSeason, type RealmStructure, type RealmMonument,
 } from '@/lib/realm'
-import { philosopherOf, philosopherLine, philosopherLesson, type Philosopher } from '@/lib/advisor'
+import { philosopherOf, philosopherLine, philosopherLesson, getWeeklyTheme, type Philosopher, type WeeklyTheme } from '@/lib/advisor'
 import { RealmSprite } from './realm-sprite'
 import { Button } from '@/components/ui/button'
 import { fireConfetti, haptic } from '@/lib/confetti'
@@ -78,6 +78,7 @@ export function RealmView() {
   const [merchantOpen, setMerchantOpen] = useState(false)
   const [wisdomOpen, setWisdomOpen] = useState(false)
   const philosopher = useMemo(() => philosopherOf(data), [data])
+  const weeklyTheme = useMemo(() => getWeeklyTheme(), [])
   const [bought, setBought] = useState(false)
   const [editing, setEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState(realmName)
@@ -490,7 +491,8 @@ export function RealmView() {
 
         {/* Bilgelik akademisi modalı */}
         {wisdomOpen && (
-          <WisdomModal philosopher={philosopher} isFixed={!!data.profile.advisorId} onClose={() => setWisdomOpen(false)} />
+          <WisdomModal philosopher={philosopher} theme={weeklyTheme} quotes={data.savedQuotes}
+            isFixed={!!data.profile.advisorId} onClose={() => setWisdomOpen(false)} />
         )}
       </div>
 
@@ -667,14 +669,26 @@ function BalloonSummary({ world, realmName, onClose }: { world: ReturnType<typeo
   )
 }
 
-function WisdomModal({ philosopher, isFixed, onClose }: { philosopher: Philosopher; isFixed: boolean; onClose: () => void }) {
+function WisdomModal({ philosopher, theme, quotes, isFixed, onClose }: {
+  philosopher: Philosopher; theme: WeeklyTheme; quotes: string[]; isFixed: boolean; onClose: () => void
+}) {
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/55 p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-4 shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-bold text-fg font-display">📜 Bilgelik Akademisi</p>
           <button onClick={onClose} className="text-muted hover:text-fg"><X size={16} /></button>
         </div>
+
+        {/* Haftanın teması */}
+        <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-border bg-surface-2 p-3">
+          <span className="text-xl">{theme.emoji}</span>
+          <div>
+            <p className="text-xs font-semibold text-fg">Bu haftanın teması: {theme.title}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-muted">{theme.desc}</p>
+          </div>
+        </div>
+
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-3xl">{philosopher.emoji}</span>
           <div>
@@ -687,6 +701,18 @@ function WisdomModal({ philosopher, isFixed, onClose }: { philosopher: Philosoph
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Günün dersi</p>
           <p className="text-sm leading-relaxed text-fg">{philosopherLesson(philosopher)}</p>
         </div>
+
+        {/* Kaydettiğin sözler */}
+        {quotes.length > 0 && (
+          <div className="mt-3">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Kaydettiğin sözler ({quotes.length})</p>
+            <div className="space-y-1.5">
+              {quotes.slice(-6).reverse().map((q, i) => (
+                <p key={i} className="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs italic leading-snug text-muted">&ldquo;{q}&rdquo;</p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

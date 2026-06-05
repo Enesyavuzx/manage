@@ -118,6 +118,35 @@ export function philosopherLesson(p: Philosopher): string {
   return LESSONS[p.id] ?? p.lines[0]
 }
 
+// Haftalık tema: gün gün değişen filozof sözünün aksine, hafta boyunca sabit
+// kalan bir felsefi odak. Haftayı bir niyetle çerçeveler.
+export interface WeeklyTheme {
+  id: string
+  emoji: string
+  title: string
+  desc: string
+}
+
+const THEMES: WeeklyTheme[] = [
+  { id: 'discipline', emoji: '🛡️', title: 'Disiplin', desc: 'Bu hafta küçük sözlerini tut. Disiplin, gelecekteki sana verdiğin bir armağandır.' },
+  { id: 'patience', emoji: '⏳', title: 'Sabır', desc: 'Acele etme. Kalıcı şeyler yavaş büyür; bugün bir tuğla koy, yeter.' },
+  { id: 'courage', emoji: '🔥', title: 'Cesaret', desc: 'En zor işi önce yap. Korktuğun şey çoğu zaman seni en çok büyüten şeydir.' },
+  { id: 'simplicity', emoji: '🌿', title: 'Sadelik', desc: 'Fazlalığı at. Az ama düzenli, çok ama dağınıktan daima iyidir.' },
+  { id: 'gratitude', emoji: '🙏', title: 'Şükran', desc: 'Elindekine bak. Şükran, sahip olduklarını yeterli kılan bakıştır.' },
+  { id: 'focus', emoji: '🎯', title: 'Odak', desc: 'Tek bir şeye derinlemesine dal. Dağınık dikkat hiçbir yere varmaz.' },
+  { id: 'resilience', emoji: '🪨', title: 'Dayanıklılık', desc: 'Düşersen kalk. Önemli olan kaç kez düştüğün değil, kaç kez kalktığın.' },
+  { id: 'beginning', emoji: '🌱', title: 'Başlangıç', desc: 'Bekleme. En iyi an şimdi; küçük başla, akış kendiliğinden gelir.' },
+]
+
+function weekIndex(date: Date): number {
+  const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  return Math.floor(utc / 86400000 / 7)
+}
+
+export function getWeeklyTheme(now: Date = new Date()): WeeklyTheme {
+  return THEMES[weekIndex(now) % THEMES.length]
+}
+
 export type AdviceKind = 'habit' | 'mood' | 'water' | 'focus' | 'rest' | 'celebrate'
 
 export interface Advice {

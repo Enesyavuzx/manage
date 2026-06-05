@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, createContext, useCont
 import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
-  getStreak, evaluateAchievements, subtaskKey,
+  getStreak, evaluateAchievements, subtaskKey, wonderProgress,
 } from '@/lib/store'
 import { loginBonusXP, challengeForToday } from '@/lib/daily'
 import { getQuests } from '@/lib/quests'
@@ -299,6 +299,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const afterRank = getRank(afterLevel).rank
       if (afterRank.id !== beforeRank) {
         notes.push({ id: generateId(), kind: 'rank', emoji: afterRank.emoji, title: 'Rütbe yükseldi!', subtitle: afterRank.label })
+      }
+    }
+
+    // Bu tamamlama bir Harika'yı tamamladıysa kutla (konfeti + bildirim).
+    for (const w of cur.wonders) {
+      if (wonderProgress(cur, w) < w.target && wonderProgress(next, w) >= w.target) {
+        fireConfetti({ count: 180, power: 1.4 })
+        notes.push({ id: generateId(), kind: 'achievement', emoji: w.emoji, title: 'Harika tamamlandı!', subtitle: `${w.name} · diyarına kalıcı bir anıt yükseldi` })
       }
     }
 
