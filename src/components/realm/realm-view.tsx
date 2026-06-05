@@ -7,7 +7,7 @@ import {
   buildRealm, phaseProgress, villagerLine, villagerName,
   type RealmEra, type RealmSeason, type RealmStructure, type RealmMonument,
 } from '@/lib/realm'
-import { philosopherOf, philosopherLine, philosopherLesson, getWeeklyTheme, type Philosopher, type WeeklyTheme } from '@/lib/advisor'
+import { philosopherOf, philosopherLine, philosopherLesson, getWeeklyTheme, PHILOSOPHERS, type Philosopher, type WeeklyTheme } from '@/lib/advisor'
 import { RealmSprite } from './realm-sprite'
 import { Button } from '@/components/ui/button'
 import { fireConfetti, haptic } from '@/lib/confetti'
@@ -57,7 +57,7 @@ const PET_META = {
 }
 
 export function RealmView() {
-  const { data, toggleHabit, setRealmName, setRealmBanner, setPetType, buyFreezeToken, toggleSaveQuote } = useStore()
+  const { data, toggleHabit, setRealmName, setRealmBanner, setPetType, buyFreezeToken, toggleSaveQuote, setAdvisor } = useStore()
   const world = useMemo(() => buildRealm(data), [data])
   const theme = eraTheme(world.era)
   const prog = phaseProgress(world)
@@ -491,8 +491,9 @@ export function RealmView() {
 
         {/* Bilgelik akademisi modalı */}
         {wisdomOpen && (
-          <WisdomModal philosopher={philosopher} theme={weeklyTheme} quotes={data.savedQuotes}
-            isFixed={!!data.profile.advisorId} onSaveQuote={toggleSaveQuote} onClose={() => setWisdomOpen(false)} />
+          <WisdomModal philosophers={PHILOSOPHERS} current={philosopher} theme={weeklyTheme} quotes={data.savedQuotes}
+            currentAdvisorId={data.profile.advisorId} onSaveQuote={toggleSaveQuote} onSetAdvisor={setAdvisor}
+            onClose={() => setWisdomOpen(false)} />
         )}
       </div>
 
@@ -670,16 +671,19 @@ function BalloonSummary({ world, realmName, savedQuotes, onClose }: { world: Ret
   )
 }
 
-function WisdomModal({ philosopher, theme, quotes, isFixed, onSaveQuote, onClose }: {
-  philosopher: Philosopher; theme: WeeklyTheme; quotes: string[]; isFixed: boolean
-  onSaveQuote: (text: string) => void; onClose: () => void
+function WisdomModal({ philosophers, current, theme, quotes, currentAdvisorId, onSaveQuote, onSetAdvisor, onClose }: {
+  philosophers: Philosopher[]; current: Philosopher; theme: WeeklyTheme; quotes: string[]
+  currentAdvisorId?: string
+  onSaveQuote: (text: string) => void; onSetAdvisor: (id: string | null) => void; onClose: () => void
 }) {
   const [copied, setCopied] = useState(false)
-  const line = philosopherLine(philosopher)
+  const [sel, setSel] = useState<Philosopher>(current)
+  const line = philosopherLine(sel)
   const isSaved = quotes.includes(line)
+  const isAdvisor = currentAdvisorId === sel.id
 
   function copyQuote() {
-    navigator.clipboard.writeText(`"${line}" — ${philosopher.name}`).then(() => {
+    navigator.clipboard.writeText(`"${line}" — ${sel.name}`).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }).catch(() => {})
@@ -702,15 +706,38 @@ function WisdomModal({ philosopher, theme, quotes, isFixed, onSaveQuote, onClose
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-3xl">{philosopher.emoji}</span>
-          <div>
-            <p className="text-base font-bold text-fg font-display">{philosopher.name}</p>
-            <p className="text-[11px] text-muted-2">{philosopher.era}{isFixed ? '' : ' · günün filozofu'}</p>
-          </div>
+        {/* Filozof galerisi */}
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Filozoflar</p>
+        <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
+          {philosophers.map(p => (
+            <button key={p.id} onClick={() => setSel(p)}
+              className={cn('flex shrink-0 flex-col items-center gap-0.5 rounded-lg border px-2 py-1.5 transition-all',
+                sel.id === p.id ? 'border-primary bg-primary/10' : 'border-border bg-surface-2 hover:border-muted-2')}>
+              <span className="text-lg leading-none">{p.emoji}</span>
+              <span className={cn('text-[9px] leading-none', sel.id === p.id ? 'text-primary' : 'text-muted')}>{p.name.split(' ')[0]}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Günün sözü + kaydet/kopyala */}
+        {/* Seçili filozof */}
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-3xl">{sel.emoji}</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold text-fg font-display">{sel.name}</p>
+            <p className="text-[11px] text-muted-2">
+              {sel.era}
+              {currentAdvisorId === sel.id ? ' · danışmanın' : current.id === sel.id && !currentAdvisorId ? ' · günün filozofu' : ''}
+            </p>
+          </div>
+          <button
+            onClick={() => onSetAdvisor(isAdvisor ? null : sel.id)}
+            className={cn('shrink-0 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all',
+              isAdvisor ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted hover:text-fg')}>
+            {isAdvisor ? '✓ Danışmanın' : 'Danışmanım yap'}
+          </button>
+        </div>
+
+        {/* Söz + kaydet/kopyala */}
         <p className="mt-3 text-sm italic leading-snug text-muted">&ldquo;{line}&rdquo;</p>
         <div className="mt-2 flex items-center gap-2">
           <button
@@ -729,8 +756,8 @@ function WisdomModal({ philosopher, theme, quotes, isFixed, onSaveQuote, onClose
         </div>
 
         <div className="mt-3 rounded-xl border border-border bg-surface-2 p-3">
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Günün dersi</p>
-          <p className="text-sm leading-relaxed text-fg">{philosopherLesson(philosopher)}</p>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">{sel.name} der ki</p>
+          <p className="text-sm leading-relaxed text-fg">{philosopherLesson(sel)}</p>
         </div>
 
         {/* Kaydettiğin sözler */}

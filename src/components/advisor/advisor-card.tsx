@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronRight, Check, Settings2 } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { getAdvice, philosopherOf, philosopherLine, getWeeklyTheme, PHILOSOPHERS, type Advice } from '@/lib/advisor'
+import { getQuests } from '@/lib/quests'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,7 @@ export function AdvisorCard() {
   const philosopher = useMemo(() => philosopherOf(data), [data])
   const line = useMemo(() => philosopherLine(philosopher), [philosopher])
   const theme = useMemo(() => getWeeklyTheme(), [])
+  const themeQuest = useMemo(() => getQuests(data).find(q => q.themeBonus), [data])
   const advice = useMemo(() => getAdvice(data), [data])
 
   const top = advice[0]
@@ -31,8 +33,14 @@ export function AdvisorCard() {
             <span className="text-[10px] text-muted-2">{philosopher.era}</span>
           </div>
           <p className="mt-0.5 text-xs italic leading-snug text-muted">&ldquo;{line}&rdquo;</p>
-          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-muted">
+          <p className={cn(
+            'mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+            themeQuest?.done ? 'bg-xp/15 text-xp' : 'bg-surface-2 text-muted',
+          )}>
             {theme.emoji} Bu hafta: {theme.title}
+            {themeQuest && (
+              <span className="tabular-nums">· {themeQuest.done ? '✓' : `${themeQuest.progress}/${themeQuest.target}`}</span>
+            )}
           </p>
         </div>
         <button onClick={() => setPicking(p => !p)} className="shrink-0 text-muted-2 hover:text-fg" aria-label="Danışmanı seç">
