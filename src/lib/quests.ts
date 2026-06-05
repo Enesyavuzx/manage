@@ -1,5 +1,6 @@
 import type { StoreData, Habit } from './types'
 import { WATER_GOAL } from './constants'
+import { getWeeklyTheme } from './advisor'
 import { format } from 'date-fns'
 
 // Görevler: kendi verinden otomatik üretilen, küçük ve net günlük/haftalık
@@ -20,6 +21,7 @@ export interface Quest {
   progress: number
   done: boolean
   claimed: boolean
+  themeBonus?: boolean
 }
 
 function dayOfYear(date: Date): number {
@@ -68,6 +70,7 @@ interface Ctx {
   weekCompletions: number
   weekFocus: number
   perfectDaysThisWeek: number
+  weekMoodDays: number
 }
 
 function buildCtx(data: StoreData, now: Date): Ctx {
@@ -97,6 +100,7 @@ function buildCtx(data: StoreData, now: Date): Ctx {
     weekCompletions: data.completions.filter(c => weekSet.has(c.date)).length,
     weekFocus: data.focusSessions.filter(f => weekSet.has(f.completedAt.slice(0, 10))).length,
     perfectDaysThisWeek: perfect,
+    weekMoodDays: week.filter(date => data.moods.some(m => m.date === date)).length,
   }
 }
 
@@ -124,6 +128,17 @@ const WEEKLY: Template[] = [
   { key: 'perfect2', emoji: '🎆', title: () => '2 kusursuz gün geçir', reward: 'Festival ışıkları', xp: 90, target: () => 2, progress: c => c.perfectDaysThisWeek },
 ]
 
+const THEME_BONUS: Record<string, Template> = {
+  discipline: { key: 'theme_discipline', emoji: '🛡️', title: () => 'Bu hafta 3 kusursuz gün',       reward: 'Şeref anıtı',        xp: 120, target: () => 3,  progress: c => c.perfectDaysThisWeek },
+  patience:   { key: 'theme_patience',   emoji: '⏳', title: () => 'Bu hafta 20 tamamlama yap',      reward: 'Sabır çeşmesi',      xp: 100, target: () => 20, progress: c => c.weekCompletions },
+  courage:    { key: 'theme_courage',    emoji: '🔥', title: () => 'Bu hafta 5 odak seansı',         reward: 'Cesaret ateşi',      xp: 110, target: () => 5,  progress: c => c.weekFocus },
+  simplicity: { key: 'theme_simplicity', emoji: '🌿', title: () => 'Bu hafta 3 odak seansı',         reward: 'Sade bahçe',         xp: 90,  target: () => 3,  progress: c => c.weekFocus },
+  gratitude:  { key: 'theme_gratitude',  emoji: '🙏', title: () => '5 gün ruh hali kaydet',          reward: 'Minnet anıtı',       xp: 80,  target: () => 5,  progress: c => c.weekMoodDays },
+  focus:      { key: 'theme_focus',      emoji: '🎯', title: () => 'Bu hafta 4 odak seansı',         reward: 'Saat kulesi parlar', xp: 100, target: () => 4,  progress: c => c.weekFocus },
+  resilience: { key: 'theme_resilience', emoji: '🪨', title: () => 'Bu hafta 25 tamamlama yap',      reward: 'Dayanıklılık taşı',  xp: 110, target: () => 25, progress: c => c.weekCompletions },
+  beginning:  { key: 'theme_beginning',  emoji: '🌱', title: () => 'Bu hafta 2 kusursuz gün',        reward: 'İlk filiz',          xp: 90,  target: () => 2,  progress: c => c.perfectDaysThisWeek },
+}
+
 function pick(templates: Template[], ctx: Ctx, seed: string, n: number): Template[] {
   return templates
     .filter(t => t.target(ctx) > 0)
@@ -139,17 +154,25 @@ export function getQuests(data: StoreData, now: Date = new Date()): Quest[] {
   const wKey = mondayKey(now)
   const claimed = data.claimedQuests ?? {}
 
-  const make = (t: Template, scope: QuestScope, period: string): Quest => {
+  const make = (t: Template, scope: QuestScope, period: string, themeBonus?: boolean): Quest => {
     const target = t.target(ctx)
     const progress = Math.min(target, t.progress(ctx))
     const id = `${scope === 'daily' ? 'd' : 'w'}:${period}:${t.key}`
     return {
       id, scope, emoji: t.emoji, title: t.title(ctx), reward: t.reward, xp: t.xp,
       target, progress, done: progress >= target, claimed: !!claimed[id],
+      themeBonus,
     }
   }
 
   const daily = pick(DAILY, ctx, dKey, 3).map(t => make(t, 'daily', ctx.today))
   const weekly = pick(WEEKLY, ctx, wKey, 2).map(t => make(t, 'weekly', wKey))
-  return [...daily, ...weekly]
+
+  const theme = getWeeklyTheme(now)
+  const bonusTemplate = THEME_BONUS[theme.id]
+  const themeQuest = bonusTemplate && bonusTemplate.target(ctx) > 0
+    ? make(bonusTemplate, 'weekly', wKey, true)
+    : null
+
+  return themeQuest ? [...daily, themeQuest, ...weekly] : [...daily, ...weekly]
 }

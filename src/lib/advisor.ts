@@ -147,6 +147,15 @@ export function getWeeklyTheme(now: Date = new Date()): WeeklyTheme {
   return THEMES[weekIndex(now) % THEMES.length]
 }
 
+export type AdviceTone = 'morning' | 'midday' | 'evening' | 'night'
+
+export function adviceTone(hour: number): AdviceTone {
+  if (hour >= 5 && hour < 12) return 'morning'
+  if (hour >= 12 && hour < 17) return 'midday'
+  if (hour >= 17 && hour < 22) return 'evening'
+  return 'night'
+}
+
 export type AdviceKind = 'habit' | 'mood' | 'water' | 'focus' | 'rest' | 'celebrate'
 
 export interface Advice {
@@ -165,6 +174,7 @@ const DIFFICULTY_COST: Record<string, number> = { trivial: 1, easy: 2, medium: 3
 export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
   const today = format(now, 'yyyy-MM-dd')
   const hour = now.getHours()
+  const tone = adviceTone(hour)
   const out: Advice[] = []
 
   const activeHabits = data.habits.filter(h => !h.archived)
@@ -179,24 +189,44 @@ export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
 
   // Tüm günlük işler bitti: kutla.
   if (dueHabits.length > 0 && undone.length === 0) {
+    const celebReason = tone === 'morning'
+      ? 'Sabahı nasıl da tamamladın. Diyarın seninle gurur duyuyor.'
+      : (tone === 'evening' || tone === 'night')
+      ? 'Bugünü tamamladın. Dinlenme vakti; yarın yine burada olacaksın.'
+      : 'Diyarın çiçek açıyor. Hak ettin: biraz dinlen ya da diyarında gez.'
     out.push({
       id: 'celebrate', kind: 'celebrate', emoji: '🎉',
       title: 'Bugünü tamamladın',
-      reason: 'Diyarın çiçek açıyor. Hak ettin: biraz dinlen ya da diyarında gez.',
+      reason: celebReason,
       href: '/diyar', urgency: 100,
     })
   }
 
-  // Alışkanlıklar: seri koruması + enerjiye uyum.
+  // Alışkanlıklar: seri koruması + enerjiye uyum + sabah/akşam tonu.
   for (const h of undone) {
     const streak = getStreak(data.completions, h.id, data.frozenDates)
     let urgency = 30
-    let reason = 'Küçük bir adım, momentumu başlatır.'
+    let reason = tone === 'morning'
+      ? 'Güne temiz başla: küçük adım, büyük momentum.'
+      : tone === 'night'
+      ? 'Gece bitmeden, küçük bir adım yeter.'
+      : 'Küçük bir adım, momentumu başlatır.'
+
     if (streak >= 2) {
       urgency = 55 + Math.min(streak, 30)
-      reason = `${streak} günlük serin sürüyor. Bugün yapmazsan kopar, koru.`
-      if (hour >= 17) { urgency += 22; reason = `${streak} günlük seri bu gece kopabilir. Hemen koru.` }
+      if (tone === 'morning') {
+        reason = `${streak} günlük serin var. Sabah rutinin zaten bu; devam et.`
+      } else if (tone === 'evening' || tone === 'night') {
+        urgency += 22
+        reason = `${streak} günlük seri bu gece kopabilir. Hemen koru.`
+      } else {
+        reason = `${streak} günlük serin sürüyor. Bugün yapmazsan kopar, koru.`
+      }
+    } else {
+      if (tone === 'morning') urgency += 8
+      else if (tone === 'night') urgency -= 10
     }
+
     if (energyToday != null) {
       const cost = DIFFICULTY_COST[h.difficulty] ?? 3
       if (energyToday <= 2) {
@@ -204,7 +234,9 @@ export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
         else if (cost >= 4) urgency -= 10
       } else if (energyToday >= 4 && cost >= 4) {
         urgency += 12
-        if (streak < 2) reason = 'Enerjin yüksek; zor işi şimdi devir.'
+        if (streak < 2) reason = tone === 'morning'
+          ? 'Enerjin yüksek; sabahın başında zor işi devir.'
+          : 'Enerjin yüksek; zor işi şimdi devir.'
       }
     }
     out.push({ id: `habit:${h.id}`, kind: 'habit', emoji: h.emoji, title: h.name, reason, habitId: h.id, urgency })
@@ -215,8 +247,12 @@ export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
     out.push({
       id: 'mood', kind: 'mood', emoji: '🙂',
       title: 'Ruh halini kaydet',
-      reason: 'Bugünü nasıl geçirdiğini işaretle; desenlerin netleşsin.',
-      href: '/mood', urgency: 42,
+      reason: tone === 'morning'
+        ? 'Sabah ruh halini kaydet; günü nasıl geçireceğini önceden hisset.'
+        : tone === 'evening'
+        ? 'Günü kapatmadan: bugünü nasıl geçirdin?'
+        : 'Bugünü nasıl geçirdiğini işaretle; desenlerin netleşsin.',
+      href: '/mood', urgency: tone === 'evening' ? 52 : 42,
     })
   }
 
@@ -225,7 +261,9 @@ export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
     out.push({
       id: 'water', kind: 'water', emoji: '💧',
       title: `Su iç (${waterToday}/${WATER_GOAL})`,
-      reason: 'Bir bardak su, odağı ve enerjiyi en ucuz yoldan toplar.',
+      reason: tone === 'morning'
+        ? 'Güne bir bardak su ile başla; en kolay enerji kaynağı.'
+        : 'Bir bardak su, odağı ve enerjiyi en ucuz yoldan toplar.',
       urgency: 30 + Math.min(16, (WATER_GOAL - waterToday) * 2),
     })
   }
@@ -235,8 +273,10 @@ export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
     out.push({
       id: 'focus', kind: 'focus', emoji: '🎯',
       title: 'Kısa bir odak seansı',
-      reason: '25 dakikalık tek bir blok, en zor başlangıcı kırar.',
-      href: '/focus', urgency: 44,
+      reason: tone === 'morning'
+        ? 'Sabahın ilk saatlerinde odak seansı, günün geri kalanını belirler.'
+        : '25 dakikalık tek bir blok, en zor başlangıcı kırar.',
+      href: '/focus', urgency: tone === 'morning' ? 54 : 44,
     })
   }
 
@@ -244,9 +284,11 @@ export function getAdvice(data: StoreData, now: Date = new Date()): Advice[] {
   if (energyToday != null && energyToday <= 2 && doneToday.size > 0 && undone.length > 0) {
     out.push({
       id: 'rest', kind: 'rest', emoji: '🌙',
-      title: 'Kendine nazik ol',
-      reason: 'Enerjin düşük ve bugün bir şeyler yaptın. En küçük işi seç, gerisini bırak.',
-      urgency: 25,
+      title: tone === 'night' ? 'Yatma vakti' : 'Kendine nazik ol',
+      reason: tone === 'night'
+        ? 'Gece oldu, bir şeyler yaptın. Dinlen; yarın için enerji biriktir.'
+        : 'Enerjin düşük ve bugün bir şeyler yaptın. En küçük işi seç, gerisini bırak.',
+      urgency: tone === 'night' ? 65 : tone === 'evening' ? 38 : 25,
     })
   }
 

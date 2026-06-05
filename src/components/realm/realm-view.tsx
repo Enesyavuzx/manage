@@ -57,7 +57,7 @@ const PET_META = {
 }
 
 export function RealmView() {
-  const { data, toggleHabit, setRealmName, setRealmBanner, setPetType, buyFreezeToken } = useStore()
+  const { data, toggleHabit, setRealmName, setRealmBanner, setPetType, buyFreezeToken, toggleSaveQuote } = useStore()
   const world = useMemo(() => buildRealm(data), [data])
   const theme = eraTheme(world.era)
   const prog = phaseProgress(world)
@@ -492,7 +492,7 @@ export function RealmView() {
         {/* Bilgelik akademisi modalı */}
         {wisdomOpen && (
           <WisdomModal philosopher={philosopher} theme={weeklyTheme} quotes={data.savedQuotes}
-            isFixed={!!data.profile.advisorId} onClose={() => setWisdomOpen(false)} />
+            isFixed={!!data.profile.advisorId} onSaveQuote={toggleSaveQuote} onClose={() => setWisdomOpen(false)} />
         )}
       </div>
 
@@ -669,9 +669,21 @@ function BalloonSummary({ world, realmName, onClose }: { world: ReturnType<typeo
   )
 }
 
-function WisdomModal({ philosopher, theme, quotes, isFixed, onClose }: {
-  philosopher: Philosopher; theme: WeeklyTheme; quotes: string[]; isFixed: boolean; onClose: () => void
+function WisdomModal({ philosopher, theme, quotes, isFixed, onSaveQuote, onClose }: {
+  philosopher: Philosopher; theme: WeeklyTheme; quotes: string[]; isFixed: boolean
+  onSaveQuote: (text: string) => void; onClose: () => void
 }) {
+  const [copied, setCopied] = useState(false)
+  const line = philosopherLine(philosopher)
+  const isSaved = quotes.includes(line)
+
+  function copyQuote() {
+    navigator.clipboard.writeText(`"${line}" — ${philosopher.name}`).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
+  }
+
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/55 p-4" onClick={onClose}>
       <div className="max-h-full w-full max-w-sm overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl" onClick={e => e.stopPropagation()}>
@@ -696,7 +708,25 @@ function WisdomModal({ philosopher, theme, quotes, isFixed, onClose }: {
             <p className="text-[11px] text-muted-2">{philosopher.era}{isFixed ? '' : ' · günün filozofu'}</p>
           </div>
         </div>
-        <p className="mt-3 text-sm italic leading-snug text-muted">&ldquo;{philosopherLine(philosopher)}&rdquo;</p>
+
+        {/* Günün sözü + kaydet/kopyala */}
+        <p className="mt-3 text-sm italic leading-snug text-muted">&ldquo;{line}&rdquo;</p>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            onClick={() => onSaveQuote(line)}
+            className={cn(
+              'flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all',
+              isSaved ? 'border-xp/40 bg-xp/10 text-xp' : 'border-border text-muted hover:text-fg',
+            )}>
+            {isSaved ? '✓ Kaydedildi' : '📌 Kaydet'}
+          </button>
+          <button
+            onClick={copyQuote}
+            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted transition-all hover:text-fg">
+            {copied ? '✓ Kopyalandı' : '📋 Kopyala'}
+          </button>
+        </div>
+
         <div className="mt-3 rounded-xl border border-border bg-surface-2 p-3">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Günün dersi</p>
           <p className="text-sm leading-relaxed text-fg">{philosopherLesson(philosopher)}</p>
@@ -708,7 +738,12 @@ function WisdomModal({ philosopher, theme, quotes, isFixed, onClose }: {
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Kaydettiğin sözler ({quotes.length})</p>
             <div className="space-y-1.5">
               {quotes.slice(-6).reverse().map((q, i) => (
-                <p key={i} className="rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs italic leading-snug text-muted">&ldquo;{q}&rdquo;</p>
+                <div key={i} className="flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5">
+                  <p className="min-w-0 flex-1 text-xs italic leading-snug text-muted">&ldquo;{q}&rdquo;</p>
+                  <button onClick={() => onSaveQuote(q)} className="shrink-0 text-muted-2 hover:text-danger" title="Kaldır">
+                    <X size={11} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
