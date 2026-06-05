@@ -344,6 +344,24 @@ export const REALM_SPRITES: Record<string, RealmSpriteDef> = {
       'kSSSSSSSSSk',
     ],
   },
+  // Bilgelik Kütüphanesi: akademide kaydedilen sözler bunu inşa eder. Kitap
+  // sırtları çok renkli; tepede altın doruk (bilgelik).
+  library: {
+    palette: { k: '#1c1626', s: '#cfc7b0', S: '#a59c82', r: '#c0512e', g: '#4a8a52', b: '#3a6ea5', y: '#ffd24a' },
+    rows: [
+      '....y....',
+      '...sss...',
+      '..sSSSs..',
+      '.sSSSSSs.',
+      'sSSSSSSSs',
+      'ksssssssk',
+      'kbrgbrgbk',
+      'krgbrgbrk',
+      'kbrgbrgbk',
+      'kSSSSSSSk',
+      'kkkkkkkkk',
+    ],
+  },
   // Harika: katedral (uzun vadeli hedef megastructure'ı)
   cathedral: {
     palette: { k: '#1c1626', w: '#cdeeff', g: '#2f4a27', y: '#ffd24a' },

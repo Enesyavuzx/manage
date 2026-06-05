@@ -480,7 +480,7 @@ export function RealmView() {
 
         {/* Balon özet modalı */}
         {balloonOpen && (
-          <BalloonSummary world={world} realmName={realmName} onClose={() => setBalloonOpen(false)} />
+          <BalloonSummary world={world} realmName={realmName} savedQuotes={data.savedQuotes.length} onClose={() => setBalloonOpen(false)} />
         )}
 
         {/* Tüccar modalı */}
@@ -545,10 +545,10 @@ export function RealmView() {
       </div>
 
       {/* Açılmamış içerikler */}
-      <UnlockHints world={world} />
+      <UnlockHints world={world} savedQuotes={data.savedQuotes.length} />
 
       <p className="text-center text-xs text-muted-2">
-        Yapıya dokun, oradan tamamla. Akademiye dokun, günün filozofundan ders al. Köylülere ve maskota dokun. Ruh halin havayı, mevsim manzarayı, su takibin nehri, bütçen hazineyi, odakların saat kulesini, başarımların ve tamamlanan harikaların anıtları açar.
+        Yapıya dokun, oradan tamamla. Akademiye dokun, günün filozofundan ders al, sözleri kaydet. Köylülere ve maskota dokun. Ruh halin havayı, mevsim manzarayı, su takibin nehri, bütçen hazineyi, odakların saat kulesini, kaydettiğin sözler kütüphaneyi, başarımların ve tamamlanan harikaların anıtları açar.
       </p>
     </div>
   )
@@ -635,7 +635,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   )
 }
 
-function BalloonSummary({ world, realmName, onClose }: { world: ReturnType<typeof buildRealm>; realmName: string; onClose: () => void }) {
+function BalloonSummary({ world, realmName, savedQuotes, onClose }: { world: ReturnType<typeof buildRealm>; realmName: string; savedQuotes: number; onClose: () => void }) {
   const maxStreak = world.structures.reduce((m, s) => Math.max(m, s.streak), 0)
   const rows: { label: string; value: string }[] = [
     { label: 'Faz', value: world.phase.label },
@@ -646,6 +646,7 @@ function BalloonSummary({ world, realmName, onClose }: { world: ReturnType<typeo
     { label: 'Köylüler', value: `${world.villagerCount}` },
     { label: 'Bugün', value: world.todayTotalCount > 0 ? `${world.todayDoneCount}/${world.todayTotalCount}` : '-' },
     { label: 'En uzun seri', value: maxStreak > 0 ? `🔥 ${maxStreak} gün` : '-' },
+    { label: 'Bilgelik', value: savedQuotes > 0 ? `📚 ${savedQuotes} söz` : '-' },
     { label: 'Hava', value: world.weather === 'sunny' ? 'Güneşli' : world.weather === 'rainy' ? 'Yağmurlu' : world.weather === 'cloudy' ? 'Bulutlu' : 'Açık' },
     { label: 'Mevsim', value: SEASON_META[world.season].label },
   ]
@@ -790,11 +791,12 @@ function MerchantPanel({ cost, available, tokens, bought, onBuy, onClose }: {
   )
 }
 
-function UnlockHints({ world }: { world: ReturnType<typeof buildRealm> }) {
+function UnlockHints({ world, savedQuotes }: { world: ReturnType<typeof buildRealm>; savedQuotes: number }) {
   const hints: string[] = []
   if (!world.hasRiver) hints.push('Su takibini başlat → nehir belirir')
   if (!world.monuments.find(m => m.sprite === 'treasury')) hints.push('Bütçe hesabı ekle → hazine kasası açılır')
   if (!world.monuments.find(m => m.sprite === 'clocktower')) hints.push('90 dk odak seansı tamamla → saat kulesi')
+  if (!world.monuments.find(m => m.sprite === 'library')) hints.push(`Akademiden ${Math.max(0, 3 - savedQuotes)} söz daha kaydet → bilgelik kütüphanesi`)
   if (!world.hasPet) hints.push(`${Math.max(0, 20 - world.population)} tamamlama daha → maskot`)
   if (!world.hasBalloon) hints.push(`${Math.max(0, 30 - world.population)} tamamlama daha → sıcak hava balonu`)
   if (!world.monuments.find(m => m.fromAchievement)) hints.push('Büyük başarımlar → eşsiz anıtlar (heykel, zafer takı)')

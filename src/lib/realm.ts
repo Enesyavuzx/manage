@@ -10,7 +10,7 @@ export type RealmStage = 0 | 1 | 2 | 3 | 4 | 5
 export type RealmSprite = 'hut' | 'house' | 'tower' | 'castle'
 export type RealmMonumentSprite =
   | 'fountain' | 'lamppost' | 'bigtree' | 'well' | 'windmill' | 'treasury' | 'clocktower'
-  | 'statue' | 'obelisk' | 'arch' | 'cathedral'
+  | 'statue' | 'obelisk' | 'arch' | 'cathedral' | 'library'
 
 export interface RealmStructure {
   habitId: string
@@ -252,6 +252,17 @@ export function buildRealm(data: StoreData, now: Date = new Date()): RealmWorld 
     population >= m.unlockedAt && (!m.condition || m.condition(data))
   )
 
+  // Akademide kaydedilen sözler bir Bilgelik Kütüphanesi inşa eder (3+ söz).
+  // Saf türev: yeni state yok, yalnızca savedQuotes sayısını yansıtır.
+  const savedCount = data.savedQuotes?.length ?? 0
+  if (savedCount >= 3) {
+    monuments.push({
+      id: 'library', sprite: 'library',
+      label: `Kütüphane · ${savedCount} söz`, unlockedAt: 0,
+      emoji: '📚',
+    })
+  }
+
   // Tamamlanmış Harikalar kalıcı birer anıt olarak diyara eklenir.
   const wonderTint = data.profile.realmBanner || '#d9a441'
   for (const w of data.wonders) {
@@ -356,6 +367,10 @@ export function villagerLine(world: RealmWorld): string {
   // Anıtlar / dünya öğeleri
   if (world.monuments.find(m => m.sprite === 'treasury')) pool.push('Hazine kasası dolup taşıyor, bütçene iyi bakıyorsun.')
   if (world.monuments.find(m => m.sprite === 'clocktower')) pool.push('Saat kulesi her odak seansında çalışıyor.')
+  if (world.monuments.find(m => m.sprite === 'library')) {
+    pool.push('Kütüphanedeki sözleri okudum, her biri bir hazine.')
+    pool.push('Akademiden topladığın bilgelik kütüphaneyi büyütüyor.')
+  }
   if (world.monuments.find(m => m.fromAchievement)) pool.push('Meydandaki anıtlar başarılarının hatırası, ne gurur.')
   if (world.hasRiver) pool.push('Nehir bugün gürül gürül akıyor, suyunu içmeyi unutma.')
   if (world.hasBalloon) pool.push('Balon yine havalandı, yukarıdan diyar çok güzelmiş.')
