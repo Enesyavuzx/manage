@@ -1,4 +1,4 @@
-import type { StoreData, Habit, Completion, WeeklyReview, Routine } from './types'
+import type { StoreData, Habit, Completion, WeeklyReview, Routine, FutureLetter } from './types'
 import { DEFAULT_REWARDS, EXTRA_REWARDS, WATER_GOAL } from './constants'
 import { ACHIEVEMENTS } from './achievements'
 import { getLevelInfo } from './gamification'
@@ -33,6 +33,7 @@ export function defaultData(): StoreData {
     savedQuotes: [],
     claimedQuests: {},
     wonders: [],
+    futureLetters: [],
   }
 }
 
@@ -86,11 +87,12 @@ function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
     savedQuotes: parsed.savedQuotes ?? [],
     claimedQuests: parsed.claimedQuests ?? {},
     wonders: parsed.wonders ?? [],
+    futureLetters: parsed.futureLetters ?? [],
   }
 }
 
 // Re-export types so external files can use them via store.ts if needed.
-export type { WeeklyReview, Routine }
+export type { WeeklyReview, Routine, FutureLetter }
 
 // migrate from the v1 schema (best-effort, never throws)
 function migrateLegacy(): StoreData | null {

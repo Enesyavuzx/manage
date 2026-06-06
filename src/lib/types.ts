@@ -257,6 +257,18 @@ export interface Routine {
   createdAt: string
 }
 
+export type FutureLetterDelay = '1w' | '1m' | '3m'
+
+export interface FutureLetter {
+  id: string
+  writtenAt: string   // ISO — when written
+  unlockAt: string    // ISO — earliest readable date
+  text: string
+  opened: boolean
+  openedAt?: string   // ISO
+  context?: string    // optional short note: "7-gün seri", "Seviye 10" etc.
+}
+
 export interface StoreData {
   habits: Habit[]
   completions: Completion[]
@@ -283,4 +295,5 @@ export interface StoreData {
   savedQuotes: string[]  // quote texts that user saved
   claimedQuests: Record<string, string>  // questId -> claimedAt ISO (ödül bir kez alınır)
   wonders: Wonder[]  // uzun vadeli hedefler (megastructure)
+  futureLetters: FutureLetter[]
 }

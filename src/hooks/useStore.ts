@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder, FutureLetter, FutureLetterDelay } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey, wonderProgress,
@@ -95,6 +95,9 @@ interface StoreContextType {
   deleteRoutine: (id: string) => void
   reorderRoutineHabits: (routineId: string, habitIds: string[]) => void
   toggleSaveQuote: (text: string) => void
+  saveFutureLetter: (text: string, delay: FutureLetterDelay, context?: string) => void
+  openFutureLetter: (id: string) => void
+  deleteFutureLetter: (id: string) => void
 }
 
 // Roll a weighted random Mystery Box outcome (slightly +EV vs cost to stay fun).
@@ -908,6 +911,40 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const DELAY_MS: Record<FutureLetterDelay, number> = {
+    '1w': 7 * 24 * 60 * 60 * 1000,
+    '1m': 30 * 24 * 60 * 60 * 1000,
+    '3m': 90 * 24 * 60 * 60 * 1000,
+  }
+
+  const saveFutureLetter = useCallback((text: string, delay: FutureLetterDelay, context?: string) => {
+    const t = text.trim()
+    if (!t) return
+    const now = new Date()
+    const letter: FutureLetter = {
+      id: generateId(),
+      writtenAt: now.toISOString(),
+      unlockAt: new Date(now.getTime() + DELAY_MS[delay]).toISOString(),
+      text: t,
+      opened: false,
+      context,
+    }
+    setData(d => ({ ...d, futureLetters: [...d.futureLetters, letter] }))
+  }, [])
+
+  const openFutureLetter = useCallback((id: string) => {
+    setData(d => ({
+      ...d,
+      futureLetters: d.futureLetters.map(l =>
+        l.id === id && !l.opened ? { ...l, opened: true, openedAt: new Date().toISOString() } : l
+      ),
+    }))
+  }, [])
+
+  const deleteFutureLetter = useCallback((id: string) => {
+    setData(d => ({ ...d, futureLetters: d.futureLetters.filter(l => l.id !== id) }))
+  }, [])
+
   const value: StoreContextType = {
     data, ready, cloud: isSupabaseConfigured,
     todayCompletedIds, habitsToday, notifications, dismissNotification,
@@ -923,6 +960,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, setAdvisor, claimQuest, addWonder, deleteWonder, buyFreezeToken, setTheme,
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
+    saveFutureLetter, openFutureLetter, deleteFutureLetter,
   }
 
   return React.createElement(Ctx.Provider, { value }, children)
