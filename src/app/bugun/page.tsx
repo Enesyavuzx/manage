@@ -6,6 +6,7 @@ import { useStore } from '@/hooks/useStore'
 import { getRealmEvents } from '@/lib/events'
 import { TodayHeader } from '@/components/today/today-header'
 import { AtRiskStreaks } from '@/components/today/at-risk-streaks'
+import { DayTimeline } from '@/components/today/day-timeline'
 import { RemainingToday } from '@/components/today/remaining-today'
 import { PerfectDayCard } from '@/components/today/perfect-day-card'
 import { QuickCapture } from '@/components/today/quick-capture'
@@ -40,6 +41,7 @@ export default function BugunPage() {
 
       <AdvisorCard />
       <AtRiskStreaks />
+      <DayTimeline />
       <RemainingToday />
       <PerfectDayCard />
       <QuickActions />

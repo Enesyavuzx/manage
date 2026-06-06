@@ -5,6 +5,7 @@ import { StreakOverview } from '@/components/dashboard/streak-overview'
 import { RecentAchievements } from '@/components/dashboard/recent-achievements'
 import { CategoryBars } from '@/components/dashboard/category-bars'
 import { WaterWidget } from '@/components/dashboard/water-widget'
+import { MoodQuickWidget } from '@/components/dashboard/mood-quick-widget'
 import { DopamineSprites } from '@/components/dashboard/dopamine-sprites'
 import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { DailyQuote } from '@/components/dashboard/daily-quote'
@@ -28,12 +29,13 @@ export default function DashboardPage() {
       <BadDay />
       <div className="grid gap-4 sm:grid-cols-2">
         <WaterWidget />
-        <StreakOverview />
+        <MoodQuickWidget />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
+        <StreakOverview />
         <RecentAchievements />
-        <CategoryBars />
       </div>
+      <CategoryBars />
       <DopamineSprites />
     </div>
   )
