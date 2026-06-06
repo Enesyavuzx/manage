@@ -7,6 +7,7 @@ import { getRealmEvents } from '@/lib/events'
 import { TodayHeader } from '@/components/today/today-header'
 import { AtRiskStreaks } from '@/components/today/at-risk-streaks'
 import { RemainingToday } from '@/components/today/remaining-today'
+import { PerfectDayCard } from '@/components/today/perfect-day-card'
 import { QuickCapture } from '@/components/today/quick-capture'
 import { QuickActions } from '@/components/today/quick-actions'
 import { AdvisorCard } from '@/components/advisor/advisor-card'
@@ -40,6 +41,7 @@ export default function BugunPage() {
       <AdvisorCard />
       <AtRiskStreaks />
       <RemainingToday />
+      <PerfectDayCard />
       <QuickActions />
       <QuickCapture />
     </div>

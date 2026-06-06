@@ -1,14 +1,18 @@
 'use client'
 import { useState } from 'react'
-import { Plus, Archive, Sparkles, Search, X } from 'lucide-react'
+import { Plus, Archive, Sparkles, Search, X, LayoutList, Link2 } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { HabitCard } from '@/components/habits/habit-card'
 import { HabitForm } from '@/components/habits/habit-form'
 import { TemplateGallery } from '@/components/habits/template-gallery'
 import { StreakFreeze } from '@/components/habits/streak-freeze'
+import { ChainBoard } from '@/components/habits/chain-board'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+
+type ViewMode = 'list' | 'chain'
 
 export default function HabitsPage() {
   const { data, addHabit } = useStore()
@@ -16,6 +20,7 @@ export default function HabitsPage() {
   const [tplOpen, setTplOpen] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [query, setQuery] = useState('')
+  const [view, setView] = useState<ViewMode>('list')
 
   const active = data.habits.filter(h => !h.archived)
   const archived = data.habits.filter(h => h.archived)
@@ -24,7 +29,7 @@ export default function HabitsPage() {
   const filtered = q
     ? active.filter(h => h.name.toLowerCase().includes(q) || h.description.toLowerCase().includes(q))
     : active
-  const reorderable = !q   // reordering only makes sense on the full, unfiltered list
+  const reorderable = !q
 
   return (
     <>
@@ -53,28 +58,58 @@ export default function HabitsPage() {
           </Card>
         )}
 
-        {active.length > 3 && (
-          <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" />
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Alışkanlık ara..."
-              className="h-10 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-9 text-sm text-fg placeholder:text-muted-2 focus:border-primary focus:outline-none"
-            />
-            {query && (
-              <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-2 hover:text-fg">
-                <X size={15} />
+        {active.length > 0 && (
+          <>
+            {/* Görünüm seçici */}
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-surface-2 p-1 w-fit">
+              <button
+                onClick={() => setView('list')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+                  view === 'list' ? 'bg-surface text-fg shadow-sm' : 'text-muted hover:text-fg',
+                )}>
+                <LayoutList size={13} /> Liste
               </button>
+              <button
+                onClick={() => setView('chain')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+                  view === 'chain' ? 'bg-surface text-fg shadow-sm' : 'text-muted hover:text-fg',
+                )}>
+                <Link2 size={13} /> Zincir
+              </button>
+            </div>
+
+            {view === 'list' && (
+              <>
+                {active.length > 3 && (
+                  <div className="relative">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" />
+                    <input
+                      value={query}
+                      onChange={e => setQuery(e.target.value)}
+                      placeholder="Alışkanlık ara..."
+                      className="h-10 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-9 text-sm text-fg placeholder:text-muted-2 focus:border-primary focus:outline-none"
+                    />
+                    {query && (
+                      <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-2 hover:text-fg">
+                        <X size={15} />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {q && filtered.length === 0 && (
+                  <p className="py-6 text-center text-sm text-muted">"{query}" ile eşleşen alışkanlık yok.</p>
+                )}
+
+                <div className="space-y-2">{filtered.map(h => <HabitCard key={h.id} habit={h} showCheck canReorder={reorderable} />)}</div>
+              </>
             )}
-          </div>
-        )}
 
-        {q && filtered.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted">"{query}" ile eşleşen alışkanlık yok.</p>
+            {view === 'chain' && <ChainBoard />}
+          </>
         )}
-
-        <div className="space-y-2">{filtered.map(h => <HabitCard key={h.id} habit={h} showCheck canReorder={reorderable} />)}</div>
 
         {archived.length > 0 && (
           <div>

@@ -1,5 +1,6 @@
 'use client'
 import { FocusTimer } from '@/components/focus/focus-timer'
+import { FocusHistory } from '@/components/focus/focus-history'
 
 export default function FocusPage() {
   return (
@@ -9,6 +10,7 @@ export default function FocusPage() {
         <p className="mt-0.5 text-sm text-muted">Bir işe kilitlen, dakika başına XP kazan</p>
       </div>
       <FocusTimer />
+      <FocusHistory />
     </div>
   )
 }
