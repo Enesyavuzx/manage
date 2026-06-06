@@ -6,6 +6,7 @@ import { RecentAchievements } from '@/components/dashboard/recent-achievements'
 import { CategoryBars } from '@/components/dashboard/category-bars'
 import { WaterWidget } from '@/components/dashboard/water-widget'
 import { MoodQuickWidget } from '@/components/dashboard/mood-quick-widget'
+import { WeeklySnapshot } from '@/components/dashboard/weekly-snapshot'
 import { DopamineSprites } from '@/components/dashboard/dopamine-sprites'
 import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { DailyQuote } from '@/components/dashboard/daily-quote'
@@ -25,6 +26,7 @@ export default function DashboardPage() {
       <RealmCard />
       <DailyQuote />
       <DailyRewards />
+      <WeeklySnapshot />
       <TodayHabits />
       <BadDay />
       <div className="grid gap-4 sm:grid-cols-2">

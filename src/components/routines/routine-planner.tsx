@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, Play, CheckCircle2 } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { todayKey } from '@/lib/store'
 import type { Routine } from '@/lib/types'
+import { RoutineFlow } from './routine-flow'
+import { cn } from '@/lib/utils'
 
 const EMOJI_OPTIONS = ['🌅', '🌙', '⚡', '💪', '🎯'] as const
 
@@ -22,7 +24,7 @@ const EMPTY_FORM: NewRoutineForm = {
 
 function RoutineCard({ routine }: { routine: Routine }) {
   const { data, deleteRoutine, reorderRoutineHabits, todayCompletedIds } = useStore()
-  const today = todayKey()
+  const [flowOpen, setFlowOpen] = useState(false)
 
   const habits = routine.habitIds
     .map(id => data.habits.find(h => h.id === id))
@@ -31,6 +33,7 @@ function RoutineCard({ routine }: { routine: Routine }) {
   const completedCount = habits.filter(h => todayCompletedIds.has(h.id)).length
   const totalCount = habits.length
   const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+  const allDone = totalCount > 0 && completedCount === totalCount
 
   function handleDelete() {
     if (window.confirm(`"${routine.name}" rutinini silmek istediğinden emin misin?`)) {
@@ -47,83 +50,99 @@ function RoutineCard({ routine }: { routine: Routine }) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
-      <div className="flex items-center justify-between">
+    <>
+      <div className={cn(
+        'rounded-xl border bg-surface p-4 space-y-3 transition-colors',
+        allDone ? 'border-success/30 bg-success/5' : 'border-border',
+      )}>
         <div className="flex items-center gap-2">
           <span className="text-xl">{routine.emoji}</span>
-          <h3 className="text-sm font-semibold text-fg">{routine.name}</h3>
+          <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-fg">{routine.name}</h3>
+          {allDone && <CheckCircle2 size={15} className="shrink-0 text-success" />}
+          {/* Başlat butonu */}
+          {totalCount > 0 && !allDone && (
+            <button
+              type="button"
+              onClick={() => setFlowOpen(true)}
+              className="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-bg shadow-glow hover:opacity-90 transition-opacity"
+            >
+              <Play size={12} fill="currentColor" /> Başlat
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="shrink-0 rounded-md p-1.5 text-muted hover:text-fg hover:bg-surface-2 transition-colors"
+            aria-label="Rutini sil"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="rounded-md p-1.5 text-muted hover:text-fg hover:bg-surface-2 transition-colors"
-          aria-label="Rutini sil"
-        >
-          <Trash2 size={14} />
-        </button>
+
+        {totalCount > 0 && (
+          <>
+            <div className="space-y-0.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-muted">{completedCount}/{totalCount} tamamlandı</span>
+                <span className={cn('text-xs font-medium', allDone ? 'text-success' : 'text-muted')}>{pct}%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full transition-all', allDone ? 'bg-success' : 'bg-primary')}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+
+            <ul className="space-y-0.5">
+              {habits.map((habit, idx) => {
+                const done = todayCompletedIds.has(habit.id)
+                return (
+                  <li
+                    key={habit.id}
+                    className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-2 group"
+                  >
+                    <span className="text-base leading-none">{habit.emoji}</span>
+                    <span className={cn('flex-1 text-xs', done ? 'text-muted line-through' : 'text-fg')}>
+                      {habit.name}
+                    </span>
+                    {done && <span className="text-success text-xs">✓</span>}
+                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => moveHabit(idx, 'up')}
+                        disabled={idx === 0}
+                        className="rounded p-0.5 text-muted hover:text-fg disabled:opacity-30 disabled:pointer-events-none"
+                        aria-label="Yukarı taşı"
+                      >
+                        <ChevronUp size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveHabit(idx, 'down')}
+                        disabled={idx === habits.length - 1}
+                        className="rounded p-0.5 text-muted hover:text-fg disabled:opacity-30 disabled:pointer-events-none"
+                        aria-label="Aşağı taşı"
+                      >
+                        <ChevronDown size={12} />
+                      </button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
+
+        {totalCount === 0 && (
+          <p className="text-xs text-muted italic">Bu rutinde henüz alışkanlık yok. Düzenle butonuyla ekle.</p>
+        )}
       </div>
 
-      {totalCount > 0 && (
-        <>
-          <div className="space-y-0.5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-muted">{completedCount}/{totalCount} tamamlandı</span>
-              <span className="text-xs text-muted">{pct}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-success transition-all"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
-
-          <ul className="space-y-0.5">
-            {habits.map((habit, idx) => {
-              const done = todayCompletedIds.has(habit.id)
-              return (
-                <li
-                  key={habit.id}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-2 group"
-                >
-                  <span className="text-base leading-none">{habit.emoji}</span>
-                  <span className={`flex-1 text-xs ${done ? 'text-success line-through' : 'text-fg'}`}>
-                    {habit.name}
-                  </span>
-                  {done && (
-                    <span className="text-success text-xs">✓</span>
-                  )}
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={() => moveHabit(idx, 'up')}
-                      disabled={idx === 0}
-                      className="rounded p-0.5 text-muted hover:text-fg disabled:opacity-30 disabled:pointer-events-none"
-                      aria-label="Yukarı taşı"
-                    >
-                      <ChevronUp size={12} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveHabit(idx, 'down')}
-                      disabled={idx === habits.length - 1}
-                      className="rounded p-0.5 text-muted hover:text-fg disabled:opacity-30 disabled:pointer-events-none"
-                      aria-label="Aşağı taşı"
-                    >
-                      <ChevronDown size={12} />
-                    </button>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </>
+      {flowOpen && (
+        <RoutineFlow routine={routine} onClose={() => setFlowOpen(false)} />
       )}
-
-      {totalCount === 0 && (
-        <p className="text-xs text-muted italic">Bu rutinde henüz alışkanlık yok.</p>
-      )}
-    </div>
+    </>
   )
 }
 
@@ -137,7 +156,7 @@ function NewRoutineFormPanel({ onCancel }: NewRoutineFormPanelProps) {
 
   const activeHabits = data.habits.filter(h => !h.archived)
 
-  function toggleHabit(id: string) {
+  function toggleHabitInForm(id: string) {
     setForm(f => ({
       ...f,
       habitIds: f.habitIds.includes(id)
@@ -157,34 +176,32 @@ function NewRoutineFormPanel({ onCancel }: NewRoutineFormPanelProps) {
     <div className="rounded-xl border border-border bg-surface p-4 space-y-4">
       <p className="text-xs font-semibold text-muted uppercase tracking-wider">Yeni Rutin</p>
 
-      {/* Emoji picker */}
       <div className="flex gap-2">
         {EMOJI_OPTIONS.map(em => (
           <button
             key={em}
             type="button"
             onClick={() => setForm(f => ({ ...f, emoji: em }))}
-            className={`rounded-lg border px-3 py-2 text-lg transition-colors ${
+            className={cn(
+              'rounded-lg border px-3 py-2 text-lg transition-colors',
               form.emoji === em
                 ? 'border-primary bg-primary/10 text-fg'
-                : 'border-border bg-surface-2 text-fg hover:border-primary'
-            }`}
+                : 'border-border bg-surface-2 text-fg hover:border-primary',
+            )}
           >
             {em}
           </button>
         ))}
       </div>
 
-      {/* Name input */}
       <input
         type="text"
         value={form.name}
         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
         placeholder="Rutin adı..."
-        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-primary focus:outline-none"
       />
 
-      {/* Habit multi-select */}
       {activeHabits.length > 0 && (
         <div className="space-y-1.5">
           <p className="text-xs text-muted">Alışkanlıklar</p>
@@ -195,10 +212,11 @@ function NewRoutineFormPanel({ onCancel }: NewRoutineFormPanelProps) {
                 <button
                   key={h.id}
                   type="button"
-                  onClick={() => toggleHabit(h.id)}
-                  className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors ${
-                    selected ? 'bg-primary/10 text-fg' : 'text-muted hover:bg-surface hover:text-fg'
-                  }`}
+                  onClick={() => toggleHabitInForm(h.id)}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+                    selected ? 'bg-primary/10 text-fg' : 'text-muted hover:bg-surface hover:text-fg',
+                  )}
                 >
                   <span>{h.emoji}</span>
                   <span className="flex-1">{h.name}</span>
