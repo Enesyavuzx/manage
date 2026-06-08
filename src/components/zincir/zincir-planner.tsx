@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Plus, Trash2, GripVertical, Play, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash2, Play, X, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Zincir, ZincirStep } from '@/lib/types'
 import { useStore } from '@/hooks/useStore'
 import { generateId } from '@/lib/utils'
@@ -8,13 +8,13 @@ import { ZincirFlow } from './zincir-flow'
 import { cn } from '@/lib/utils'
 
 const CHAIN_EMOJIS = ['⛓️', '🔗', '🌊', '🌙', '☀️', '🌿', '⚡', '🔥', '🎯', '💎']
-const DURATION_OPTIONS = [0, 5, 10, 15, 20, 30, 45, 60]
 
 function StepRow({
-  step, habits, onChange, onRemove, onMoveUp, onMoveDown, isFirst, isLast,
+  step, habits, index, onChange, onRemove, onMoveUp, onMoveDown, isFirst, isLast,
 }: {
   step: ZincirStep
   habits: { id: string; name: string; emoji: string; color: string }[]
+  index: number
   onChange: (updated: ZincirStep) => void
   onRemove: () => void
   onMoveUp: () => void
@@ -24,7 +24,25 @@ function StepRow({
 }) {
   const habit = step.habitId ? habits.find(h => h.id === step.habitId) : null
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-2 p-2.5">
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5">
+      <span className="w-5 shrink-0 text-center text-xs font-bold tabular-nums text-muted">{index + 1}</span>
+
+      <div
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xl"
+        style={habit ? { backgroundColor: habit.color + '22' } : { backgroundColor: 'var(--c-surface-3, #333)' }}>
+        {step.habitId === null ? '⚡' : (habit?.emoji ?? '?')}
+      </div>
+
+      <select
+        value={step.habitId ?? '__wildcard__'}
+        onChange={e => onChange({ ...step, habitId: e.target.value === '__wildcard__' ? null : e.target.value })}
+        className="h-8 flex-1 rounded-lg border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none">
+        <option value="__wildcard__">⚡ Serbest seçim</option>
+        {habits.map(h => (
+          <option key={h.id} value={h.id}>{h.emoji} {h.name}</option>
+        ))}
+      </select>
+
       <div className="flex flex-col gap-0.5">
         <button onClick={onMoveUp} disabled={isFirst} className="text-muted hover:text-fg disabled:opacity-20 transition-colors">
           <ChevronUp size={13} />
@@ -32,33 +50,6 @@ function StepRow({
         <button onClick={onMoveDown} disabled={isLast} className="text-muted hover:text-fg disabled:opacity-20 transition-colors">
           <ChevronDown size={13} />
         </button>
-      </div>
-
-      <div
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg"
-        style={habit ? { backgroundColor: habit.color + '22' } : { backgroundColor: 'var(--c-surface-3, #333)' }}>
-        {step.habitId === null ? '⚡' : (habit?.emoji ?? '?')}
-      </div>
-
-      <div className="min-w-0 flex-1 flex flex-col gap-1">
-        <select
-          value={step.habitId ?? '__wildcard__'}
-          onChange={e => onChange({ ...step, habitId: e.target.value === '__wildcard__' ? null : e.target.value })}
-          className="h-7 w-full rounded-lg border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none">
-          <option value="__wildcard__">⚡ Hobi (serbest seçim)</option>
-          {habits.map(h => (
-            <option key={h.id} value={h.id}>{h.emoji} {h.name}</option>
-          ))}
-        </select>
-
-        <select
-          value={step.durationMin}
-          onChange={e => onChange({ ...step, durationMin: Number(e.target.value) })}
-          className="h-7 w-full rounded-lg border border-border bg-surface px-2 text-xs text-muted focus:border-primary focus:outline-none">
-          {DURATION_OPTIONS.map(d => (
-            <option key={d} value={d}>{d === 0 ? 'Zamanlayıcısız' : `${d} dakika`}</option>
-          ))}
-        </select>
       </div>
 
       <button onClick={onRemove} className="text-muted-2 hover:text-danger transition-colors">
@@ -73,13 +64,13 @@ function NewZincirForm({ onSave, onCancel }: { onSave: () => void; onCancel: () 
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('⛓️')
   const [steps, setSteps] = useState<ZincirStep[]>([
-    { id: generateId(), habitId: null, durationMin: 5 },
+    { id: generateId(), habitId: null, durationMin: 0 },
   ])
 
   const habits = data.habits.filter(h => !h.archived)
 
   function addStep() {
-    setSteps(s => [...s, { id: generateId(), habitId: null, durationMin: 5 }])
+    setSteps(s => [...s, { id: generateId(), habitId: null, durationMin: 0 }])
   }
 
   function updateStep(i: number, updated: ZincirStep) {
@@ -130,6 +121,7 @@ function NewZincirForm({ onSave, onCancel }: { onSave: () => void; onCancel: () 
             key={step.id}
             step={step}
             habits={habits}
+            index={i}
             onChange={updated => updateStep(i, updated)}
             onRemove={() => removeStep(i)}
             onMoveUp={() => moveStep(i, 'up')}

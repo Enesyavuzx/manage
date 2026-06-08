@@ -16,8 +16,10 @@ interface NavGroup { id: string; icon: typeof LayoutDashboard; label: string; it
 
 // En sık kullanılanlar her zaman görünür (gruplanmaz).
 const PINNED: NavItem[] = [
-  { href: '/',      icon: LayoutDashboard, label: 'Panel' },
-  { href: '/bugun', icon: Sparkles,        label: 'Bugün' },
+  { href: '/',       icon: LayoutDashboard, label: 'Panel' },
+  { href: '/bugun',  icon: Sparkles,        label: 'Bugün' },
+  { href: '/diyar',  icon: Castle,          label: 'Diyar' },
+  { href: '/basic',  icon: Zap,             label: 'Temel Mod' },
 ]
 
 // Geri kalan her şey anlamlı kategorilere ayrılır; başlığa tıklayınca açılır.
@@ -36,9 +38,8 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: 'oyun', icon: Castle, label: 'Diyar & Oyun',
+    id: 'oyun', icon: Gamepad2, label: 'Oyun & Macera',
     items: [
-      { href: '/diyar',        icon: Castle,   label: 'Diyar' },
       { href: '/seferler',     icon: Flag,     label: 'Seferler' },
       { href: '/achievements', icon: Trophy,   label: 'Başarımlar' },
       { href: '/skills',       icon: Network,  label: 'Beceri Ağacı' },
