@@ -257,6 +257,20 @@ export interface Routine {
   createdAt: string
 }
 
+export interface ZincirStep {
+  id: string
+  habitId: string | null  // null = wildcard "Hobi" slot
+  durationMin: number     // 0 = adım zamanlayıcısız
+}
+
+export interface Zincir {
+  id: string
+  name: string
+  emoji: string
+  steps: ZincirStep[]
+  createdAt: string
+}
+
 export type FutureLetterDelay = '1w' | '1m' | '3m'
 
 export interface FutureLetter {
@@ -296,4 +310,5 @@ export interface StoreData {
   claimedQuests: Record<string, string>  // questId -> claimedAt ISO (ödül bir kez alınır)
   wonders: Wonder[]  // uzun vadeli hedefler (megastructure)
   futureLetters: FutureLetter[]
+  zincirs: Zincir[]
 }

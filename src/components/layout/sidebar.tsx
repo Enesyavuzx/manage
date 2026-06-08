@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle, Brain, Network, CalendarCheck, ListOrdered, Lightbulb, Castle, Dices, Flag, Sparkles, Send, ChevronDown, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle, Brain, Network, CalendarCheck, ListOrdered, Lightbulb, Castle, Dices, Flag, Sparkles, Send, ChevronDown, TrendingUp, Link2, Candy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
 import { getLevelInfo, getRank } from '@/lib/gamification'
@@ -31,6 +31,8 @@ const GROUPS: NavGroup[] = [
       { href: '/focus',     icon: Target,     label: 'Odak' },
       { href: '/mood',      icon: Smile,      label: 'Ruh Hali' },
       { href: '/braindump', icon: Brain,      label: 'Beyin Boşalt' },
+      { href: '/zincir',    icon: Link2,      label: 'Zincir' },
+      { href: '/dopamin',   icon: Candy,      label: 'Dopamin Menüsü' },
     ],
   },
   {

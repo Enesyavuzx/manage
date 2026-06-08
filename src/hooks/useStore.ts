@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
-import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder, FutureLetter, FutureLetterDelay } from '@/lib/types'
+import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder, FutureLetter, FutureLetterDelay, Zincir, ZincirStep } from '@/lib/types'
 import {
   loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey, wonderProgress,
@@ -98,6 +98,8 @@ interface StoreContextType {
   saveFutureLetter: (text: string, delay: FutureLetterDelay, context?: string) => void
   openFutureLetter: (id: string) => void
   deleteFutureLetter: (id: string) => void
+  saveZincir: (z: Omit<Zincir, 'id' | 'createdAt'>) => void
+  deleteZincir: (id: string) => void
 }
 
 // Roll a weighted random Mystery Box outcome (slightly +EV vs cost to stay fun).
@@ -945,6 +947,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, futureLetters: d.futureLetters.filter(l => l.id !== id) }))
   }, [])
 
+  const saveZincir = useCallback((z: Omit<Zincir, 'id' | 'createdAt'>) => {
+    const newZ: Zincir = { ...z, id: generateId(), createdAt: new Date().toISOString() }
+    setData(d => ({ ...d, zincirs: [...(d.zincirs ?? []), newZ] }))
+  }, [])
+
+  const deleteZincir = useCallback((id: string) => {
+    setData(d => ({ ...d, zincirs: (d.zincirs ?? []).filter(z => z.id !== id) }))
+  }, [])
+
   const value: StoreContextType = {
     data, ready, cloud: isSupabaseConfigured,
     todayCompletedIds, habitsToday, notifications, dismissNotification,
@@ -961,6 +972,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
     saveFutureLetter, openFutureLetter, deleteFutureLetter,
+    saveZincir, deleteZincir,
   }
 
   return React.createElement(Ctx.Provider, { value }, children)
