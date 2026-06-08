@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function ZincirFlow({ zincir, onClose }: Props) {
-  const { data, toggleHabit, todayCompletedIds } = useStore()
+  const { data, toggleHabit, todayCompletedIds, awardZincirXP } = useStore()
   const [idx, setIdx] = useState(0)
   const [done, setDone] = useState<Set<number>>(new Set())
   const [wildcard, setWildcard] = useState<Record<number, string>>({})   // stepIndex -> habitId
@@ -83,6 +83,7 @@ export function ZincirFlow({ zincir, onClose }: Props) {
     const next = idx + 1
     if (next >= total) {
       setFinished(true)
+      awardZincirXP(d.size)
       fireConfetti({ count: 120, power: 1.1 })
       haptic([30, 60, 30])
     } else {

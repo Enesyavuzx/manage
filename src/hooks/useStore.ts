@@ -100,6 +100,7 @@ interface StoreContextType {
   deleteFutureLetter: (id: string) => void
   saveZincir: (z: Omit<Zincir, 'id' | 'createdAt'>) => void
   deleteZincir: (id: string) => void
+  awardZincirXP: (stepCount: number) => void
 }
 
 // Roll a weighted random Mystery Box outcome (slightly +EV vs cost to stay fun).
@@ -947,6 +948,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, futureLetters: d.futureLetters.filter(l => l.id !== id) }))
   }, [])
 
+  const awardZincirXP = useCallback((stepCount: number) => {
+    const xp = stepCount * 15
+    const cur = dataRef.current
+    const base: StoreData = {
+      ...cur,
+      profile: { ...cur.profile, totalXP: cur.profile.totalXP + xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'xp', emoji: '⛓️',
+      title: `+${xp} XP`, subtitle: `Zincir tamamlandı! ${stepCount} adım`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+  }, [pushNotifications])
+
   const saveZincir = useCallback((z: Omit<Zincir, 'id' | 'createdAt'>) => {
     const newZ: Zincir = { ...z, id: generateId(), createdAt: new Date().toISOString() }
     setData(d => ({ ...d, zincirs: [...(d.zincirs ?? []), newZ] }))
@@ -972,7 +989,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
     saveFutureLetter, openFutureLetter, deleteFutureLetter,
-    saveZincir, deleteZincir,
+    saveZincir, deleteZincir, awardZincirXP,
   }
 
   return React.createElement(Ctx.Provider, { value }, children)

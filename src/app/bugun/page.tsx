@@ -11,6 +11,7 @@ import { RemainingToday } from '@/components/today/remaining-today'
 import { PerfectDayCard } from '@/components/today/perfect-day-card'
 import { QuickCapture } from '@/components/today/quick-capture'
 import { QuickActions } from '@/components/today/quick-actions'
+import { ZincirToday } from '@/components/today/zincir-today'
 import { AdvisorCard } from '@/components/advisor/advisor-card'
 import { cn } from '@/lib/utils'
 
@@ -44,6 +45,7 @@ export default function BugunPage() {
       <DayTimeline />
       <RemainingToday />
       <PerfectDayCard />
+      <ZincirToday />
       <QuickActions />
       <QuickCapture />
     </div>
