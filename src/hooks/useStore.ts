@@ -94,6 +94,7 @@ interface StoreContextType {
   saveRoutine: (routine: Omit<Routine, 'id' | 'createdAt'>) => void
   deleteRoutine: (id: string) => void
   reorderRoutineHabits: (routineId: string, habitIds: string[]) => void
+  updateRoutine: (routineId: string, patch: Partial<Routine>) => void
   toggleSaveQuote: (text: string) => void
   saveFutureLetter: (text: string, delay: FutureLetterDelay, context?: string) => void
   openFutureLetter: (id: string) => void
@@ -917,6 +918,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }))
   }, [])
 
+  const updateRoutine = useCallback((routineId: string, patch: Partial<Routine>) => {
+    setData(d => ({
+      ...d,
+      routines: d.routines.map(r => r.id === routineId ? { ...r, ...patch } : r),
+    }))
+  }, [])
+
   const toggleSaveQuote = useCallback((text: string) => {
     setData(d => {
       const already = d.savedQuotes.includes(text)
@@ -1001,7 +1009,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     claimDailyBonus, claimChallenge, completeOnboarding,
     useFreezeToken, reorderHabit, unlockSkill,
     setProfileName, setActiveTitle, setRealmName, setRealmBanner, setPetType, setAdvisor, claimQuest, addWonder, deleteWonder, buyFreezeToken, setTheme,
-    saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
+    saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits, updateRoutine,
     toggleSaveQuote,
     saveFutureLetter, openFutureLetter, deleteFutureLetter,
     saveZincir, deleteZincir, awardZincirXP,
