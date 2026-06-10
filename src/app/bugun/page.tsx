@@ -5,12 +5,12 @@ import { ChevronRight } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { getRealmEvents } from '@/lib/events'
 import { TodayHeader } from '@/components/today/today-header'
-import { AtRiskStreaks } from '@/components/today/at-risk-streaks'
 import { DayTimeline } from '@/components/today/day-timeline'
 import { RemainingToday } from '@/components/today/remaining-today'
 import { PerfectDayCard } from '@/components/today/perfect-day-card'
 import { QuickCapture } from '@/components/today/quick-capture'
 import { QuickActions } from '@/components/today/quick-actions'
+import { ZincirToday } from '@/components/today/zincir-today'
 import { AdvisorCard } from '@/components/advisor/advisor-card'
 import { cn } from '@/lib/utils'
 
@@ -40,10 +40,10 @@ export default function BugunPage() {
       )}
 
       <AdvisorCard />
-      <AtRiskStreaks />
       <DayTimeline />
       <RemainingToday />
       <PerfectDayCard />
+      <ZincirToday />
       <QuickActions />
       <QuickCapture />
     </div>

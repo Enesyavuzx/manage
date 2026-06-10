@@ -100,6 +100,7 @@ interface StoreContextType {
   deleteFutureLetter: (id: string) => void
   saveZincir: (z: Omit<Zincir, 'id' | 'createdAt'>) => void
   deleteZincir: (id: string) => void
+  awardZincirXP: (stepCount: number) => void
 }
 
 // Roll a weighted random Mystery Box outcome (slightly +EV vs cost to stay fun).
@@ -207,9 +208,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (items.length === 0) return
     setNotifications(prev => [...prev, ...items])
     items.forEach(it => {
+      // Seviye/rütbe tam ekran overlay'de kutlanır; erken kaybolmasın.
+      const ttl = it.kind === 'levelup' || it.kind === 'rank' ? 12000 : 4500
       setTimeout(() => {
         setNotifications(prev => prev.filter(n => n.id !== it.id))
-      }, 4500)
+      }, ttl)
     })
   }, [])
 
@@ -305,6 +308,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (afterRank.id !== beforeRank) {
         notes.push({ id: generateId(), kind: 'rank', emoji: afterRank.emoji, title: 'Rütbe yükseldi!', subtitle: afterRank.label })
       }
+    }
+
+    // Streak milestone kutlamaları (3, 7, 14, 21, 30, 50, 100 gün)
+    const STREAK_MILESTONES = [3, 7, 14, 21, 30, 50, 100]
+    const newStreak = streak + 1
+    if (STREAK_MILESTONES.includes(newStreak)) {
+      const milestoneEmoji = newStreak >= 30 ? '💎' : newStreak >= 14 ? '🔥' : '⚡'
+      notes.push({
+        id: generateId(), kind: 'achievement', emoji: milestoneEmoji,
+        title: `${newStreak} günlük seri!`,
+        subtitle: `${habit.name} · ${newStreak} gün kesintisiz`,
+      })
+      if (newStreak >= 7) fireConfetti({ count: 80 + newStreak * 2, power: 1.3 })
     }
 
     // Bu tamamlama bir Harika'yı tamamladıysa kutla (konfeti + bildirim).
@@ -947,6 +963,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(d => ({ ...d, futureLetters: d.futureLetters.filter(l => l.id !== id) }))
   }, [])
 
+  const awardZincirXP = useCallback((stepCount: number) => {
+    const xp = stepCount * 15
+    const cur = dataRef.current
+    const base: StoreData = {
+      ...cur,
+      profile: { ...cur.profile, totalXP: cur.profile.totalXP + xp },
+    }
+    const baseNotes: GameNotification[] = [{
+      id: generateId(), kind: 'xp', emoji: '⛓️',
+      title: `+${xp} XP`, subtitle: `Zincir tamamlandı! ${stepCount} adım`,
+    }]
+    const { data: next, notes } = withRewardsAndLevels(cur, base, baseNotes)
+    setData(next)
+    pushNotifications(notes)
+  }, [pushNotifications])
+
   const saveZincir = useCallback((z: Omit<Zincir, 'id' | 'createdAt'>) => {
     const newZ: Zincir = { ...z, id: generateId(), createdAt: new Date().toISOString() }
     setData(d => ({ ...d, zincirs: [...(d.zincirs ?? []), newZ] }))
@@ -972,7 +1004,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     saveWeeklyReview, saveRoutine, deleteRoutine, reorderRoutineHabits,
     toggleSaveQuote,
     saveFutureLetter, openFutureLetter, deleteFutureLetter,
-    saveZincir, deleteZincir,
+    saveZincir, deleteZincir, awardZincirXP,
   }
 
   return React.createElement(Ctx.Provider, { value }, children)

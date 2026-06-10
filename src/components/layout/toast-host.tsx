@@ -2,6 +2,7 @@
 import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import type { GameNotification } from '@/hooks/useStore'
+import { LevelUpOverlay } from './level-up-overlay'
 
 const KIND_STYLE: Record<GameNotification['kind'], string> = {
   xp:          'border-xp/40 bg-xp/10',
@@ -15,24 +16,41 @@ const KIND_STYLE: Record<GameNotification['kind'], string> = {
 export function ToastHost() {
   const { notifications, dismissNotification } = useStore()
 
+  // Seviye atlama tam ekran kutlanır; rank bildirimi varsa aynı overlay'e dahil.
+  const levelUpNote = notifications.find(n => n.kind === 'levelup') ?? null
+  const rankNote = levelUpNote ? (notifications.find(n => n.kind === 'rank') ?? null) : null
+  const toasts = notifications.filter(n => n.id !== levelUpNote?.id && n.id !== rankNote?.id)
+
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-[min(92vw,340px)] flex-col gap-2">
-      {notifications.map(n => (
-        <button
-          key={n.id}
-          onClick={() => dismissNotification(n.id)}
-          className={cn(
-            'pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-glow backdrop-blur-md animate-toast-in',
-            KIND_STYLE[n.kind],
-          )}
-        >
-          <span className="text-2xl shrink-0">{n.emoji}</span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-fg font-display truncate">{n.title}</p>
-            {n.subtitle && <p className="text-xs text-muted truncate">{n.subtitle}</p>}
-          </div>
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-[min(92vw,340px)] flex-col gap-2">
+        {toasts.map(n => (
+          <button
+            key={n.id}
+            onClick={() => dismissNotification(n.id)}
+            className={cn(
+              'pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-glow backdrop-blur-md animate-toast-in',
+              KIND_STYLE[n.kind],
+            )}
+          >
+            <span className="text-2xl shrink-0">{n.emoji}</span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-fg font-display truncate">{n.title}</p>
+              {n.subtitle && <p className="text-xs text-muted truncate">{n.subtitle}</p>}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {levelUpNote && (
+        <LevelUpOverlay
+          hasRankUp={rankNote !== null}
+          onDismiss={() => {
+            dismissNotification(levelUpNote.id)
+            if (rankNote) dismissNotification(rankNote.id)
+          }}
+        />
+      )}
+    </>
   )
 }

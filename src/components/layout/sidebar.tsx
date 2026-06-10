@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle, Brain, Network, CalendarCheck, ListOrdered, Lightbulb, Castle, Dices, Flag, Sparkles, Send, ChevronDown, TrendingUp, Link2, Candy } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle, Brain, Network, CalendarCheck, ListOrdered, Lightbulb, Castle, Flag, Sparkles, Send, ChevronDown, TrendingUp, Link2, Candy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
 import { getLevelInfo, getRank } from '@/lib/gamification'
@@ -16,8 +16,10 @@ interface NavGroup { id: string; icon: typeof LayoutDashboard; label: string; it
 
 // En sık kullanılanlar her zaman görünür (gruplanmaz).
 const PINNED: NavItem[] = [
-  { href: '/',      icon: LayoutDashboard, label: 'Panel' },
-  { href: '/bugun', icon: Sparkles,        label: 'Bugün' },
+  { href: '/',       icon: LayoutDashboard, label: 'Panel' },
+  { href: '/bugun',  icon: Sparkles,        label: 'Bugün' },
+  { href: '/diyar',  icon: Castle,          label: 'Diyar' },
+  { href: '/basic',  icon: Zap,             label: 'Temel Mod' },
 ]
 
 // Geri kalan her şey anlamlı kategorilere ayrılır; başlığa tıklayınca açılır.
@@ -36,15 +38,13 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: 'oyun', icon: Castle, label: 'Diyar & Oyun',
+    id: 'oyun', icon: Gamepad2, label: 'Oyun & Macera',
     items: [
-      { href: '/diyar',        icon: Castle,   label: 'Diyar' },
       { href: '/seferler',     icon: Flag,     label: 'Seferler' },
       { href: '/achievements', icon: Trophy,   label: 'Başarımlar' },
       { href: '/skills',       icon: Network,  label: 'Beceri Ağacı' },
       { href: '/rewards',      icon: Gift,     label: 'Ödüller' },
       { href: '/arcade',       icon: Gamepad2, label: 'Mini Oyun' },
-      { href: '/casino',       icon: Dices,    label: 'Casino' },
     ],
   },
   {
