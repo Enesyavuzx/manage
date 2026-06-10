@@ -308,6 +308,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Streak milestone kutlamaları (3, 7, 14, 21, 30, 50, 100 gün)
+    const STREAK_MILESTONES = [3, 7, 14, 21, 30, 50, 100]
+    const newStreak = streak + 1
+    if (STREAK_MILESTONES.includes(newStreak)) {
+      const milestoneEmoji = newStreak >= 30 ? '💎' : newStreak >= 14 ? '🔥' : '⚡'
+      notes.push({
+        id: generateId(), kind: 'achievement', emoji: milestoneEmoji,
+        title: `${newStreak} günlük seri!`,
+        subtitle: `${habit.name} · ${newStreak} gün kesintisiz`,
+      })
+      if (newStreak >= 7) fireConfetti({ count: 80 + newStreak * 2, power: 1.3 })
+    }
+
     // Bu tamamlama bir Harika'yı tamamladıysa kutla (konfeti + bildirim).
     for (const w of cur.wonders) {
       if (wonderProgress(cur, w) < w.target && wonderProgress(next, w) >= w.target) {
