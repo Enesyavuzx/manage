@@ -208,9 +208,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (items.length === 0) return
     setNotifications(prev => [...prev, ...items])
     items.forEach(it => {
+      // Seviye/rütbe tam ekran overlay'de kutlanır; erken kaybolmasın.
+      const ttl = it.kind === 'levelup' || it.kind === 'rank' ? 12000 : 4500
       setTimeout(() => {
         setNotifications(prev => prev.filter(n => n.id !== it.id))
-      }, 4500)
+      }, ttl)
     })
   }, [])
 
