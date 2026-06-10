@@ -4,7 +4,7 @@ export type Category =
 
 export type Difficulty = 'trivial' | 'easy' | 'medium' | 'hard' | 'epic'
 
-export type ThemeName = 'aurora' | 'neon' | 'pixel'
+export type ThemeName = 'aurora' | 'neon' | 'pixel' | 'forest'
 
 export interface HabitStep {
   id: string
@@ -236,6 +236,8 @@ export interface WeeklyReview {
   nextWeekGoal: string
   xpEarned: number
   createdAt: string
+  weekMood?: MoodLevel      // 1-5 haftalık genel ruh hali
+  wins?: string             // hızlı kazanımlar / şükran notları
 }
 
 // Harika (Wonder): uzun vadeli gerçek bir hedef. İlgili tamamlamalar tuğla ekler;
@@ -255,6 +257,9 @@ export interface Routine {
   emoji: string
   habitIds: string[]  // ordered list of habit IDs in this routine
   createdAt: string
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'anytime'
+  lastCompletedDate?: string  // yyyy-MM-dd
+  completionStreak?: number
 }
 
 export interface ZincirStep {

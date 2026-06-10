@@ -1,7 +1,9 @@
 'use client'
 import { CoachChat } from '@/components/coach/coach-chat'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export default function CoachPage() {
+  usePageTitle('ADHD Koçu')
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>

@@ -157,8 +157,59 @@ function answerMotivation(ctx: CoachContext): string {
   return `"${q.text}" - ${q.author}\n\n${nudge}`
 }
 
+function answerXP(ctx: CoachContext): string {
+  const { totalXP, redeemedXP } = ctx.data.profile
+  const available = totalXP - redeemedXP
+  const active = ctx.data.habits.filter(h => !h.archived)
+  const due = dueToday(ctx)
+  const left = incompleteToday(ctx)
+  const parts = [`Toplam XP: ${totalXP.toLocaleString('tr-TR')} • Harcanabilir: ${available.toLocaleString('tr-TR')} XP.`]
+  if (left.length > 0) {
+    const potentialXP = left.reduce((sum, h) => {
+      const base = { trivial: 10, easy: 20, medium: 40, hard: 70, epic: 120 }[h.difficulty] ?? 20
+      return sum + base
+    }, 0)
+    parts.push(`Bugün kalan ${left.length} alışkanlığı tamamlarsan ~${potentialXP} XP daha kazanırsın.`)
+  }
+  if (active.length > 0) parts.push(`Toplam ${active.length} aktif alışkanlığın var, ${due.length} tanesi bugün planlı.`)
+  return parts.join('\n\n')
+}
+
+function answerHabitCount(ctx: CoachContext): string {
+  const active = ctx.data.habits.filter(h => !h.archived)
+  const archived = ctx.data.habits.filter(h => h.archived)
+  const due = dueToday(ctx)
+  const done = due.filter(h => ctx.doneToday.has(h.id))
+  if (active.length === 0) {
+    return 'Henüz alışkanlığın yok. Alışkanlıklar sayfasından küçük bir tane ekleyebilirsin.'
+  }
+  const lines = [
+    `${active.length} aktif alışkanlığın var${archived.length > 0 ? ` (${archived.length} arşivde)` : ''}.`,
+    `Bugün planlı: ${due.length} • Tamamlanan: ${done.length}.`,
+  ]
+  if (done.length === due.length && due.length > 0) lines.push('Bugün mükemmel gidiyorsun! 🎉')
+  return lines.join('\n')
+}
+
+function answerFocus(ctx: CoachContext): string {
+  const sessions = ctx.data.focusSessions ?? []
+  if (sessions.length === 0) {
+    return 'Henüz odak seansın yok. Odak sayfasından bir Pomodoro başlatabilirsin — 25 dakika bile büyük fark yaratır.'
+  }
+  const today = new Date().toISOString().slice(0, 10)
+  const todayMins = sessions
+    .filter(s => s.completedAt?.startsWith(today))
+    .reduce((sum, s) => sum + (s.minutes ?? 0), 0)
+  const totalMins = sessions.reduce((sum, s) => sum + (s.minutes ?? 0), 0)
+  return `Bugün ${todayMins} dakika odaklandın. Toplam odak süren: ${totalMins} dakika (${Math.floor(totalMins / 60)} saat ${totalMins % 60} dakika).`
+}
+
+function answerHelp(_ctx: CoachContext): string {
+  return `Sana şunları yanıtlayabilirim:\n\n• Bugün ne eksik?\n• Ne yapabilirim? (öneri)\n• Hangi alışkanlık geride?\n• Nasıl gidiyorum? (özet)\n• Enerjim nasıl?\n• En verimli zamanım\n• Serim kaç gün?\n• XP durumum\n• Kaç alışkanlığım var?\n• Odak sürelerim\n• Motivasyon\n\nAşağıdaki butonları da kullanabilirsin.`
+}
+
 const FALLBACK =
-  'Bunu tam çözemedim, ama verinden şunları yanıtlayabilirim: bugün ne eksik, ne yapabilirim, hangi alışkanlık geride, nasıl gidiyorum, en verimli zamanım, serim ve motivasyon. Aşağıdaki butonları da kullanabilirsin.'
+  'Bunu tam anlayamadım, ama "yardım" yazarsan neler sorabileceğini gösterebilirim. Ya da aşağıdaki butonlardan birini seçebilirsin.'
 
 interface Intent {
   test: RegExp
@@ -174,6 +225,10 @@ const INTENTS: Intent[] = [
   { test: /streak|seri|zincir/i, answer: answerStreak },
   { test: /enerjim|enerji nasıl|enerji durumu|bugünkü enerji|enerji kaç/i, answer: answerEnergyStatus },
   { test: /motivasyon|moral|isteksiz|enerji yok|hevesim|söz|alıntı/i, answer: answerMotivation },
+  { test: /xp|puan|ödül|kaç xp|ne kadar xp/i, answer: answerXP },
+  { test: /kaç alışkanlık|alışkanlık sayısı|kaç tane alışkanlık/i, answer: answerHabitCount },
+  { test: /odak|pomodoro|focus|kaç dakika|ne kadar odak/i, answer: answerFocus },
+  { test: /yardım|help|ne sorabilir|ne sorabilirim|ne yaparsın|neler yapabilirsin/i, answer: answerHelp },
   { test: /merhaba|selam|hey|naber|nasılsın/i, answer: coachBriefing },
 ]
 
@@ -192,11 +247,13 @@ export interface CoachAction {
 }
 
 export const COACH_ACTIONS: CoachAction[] = [
-  { label: 'Bugün ne eksik?', query: 'bugün ne eksik' },
-  { label: 'Ne yapabilirim?', query: 'ne yapabilirim' },
+  { label: 'Bugün ne eksik?',        query: 'bugün ne eksik' },
+  { label: 'Ne yapabilirim?',         query: 'ne yapabilirim' },
   { label: 'Hangi alışkanlık geride?', query: 'hangi alışkanlık geride' },
-  { label: 'Nasıl gidiyorum?', query: 'nasıl gidiyorum' },
-  { label: 'Enerji durumum', query: 'enerjim nasıl' },
-  { label: 'En verimli zamanım', query: 'en verimli zamanım' },
-  { label: 'Motivasyon', query: 'motivasyon' },
+  { label: 'Nasıl gidiyorum?',        query: 'nasıl gidiyorum' },
+  { label: 'XP durumum',             query: 'xp durumum' },
+  { label: 'Enerji durumum',          query: 'enerjim nasıl' },
+  { label: 'En verimli zamanım',      query: 'en verimli zamanım' },
+  { label: 'Motivasyon',              query: 'motivasyon' },
+  { label: 'Serim',                   query: 'serim kaç gün' },
 ]

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Plus, Archive, Sparkles, Search, X, LayoutList, Link2 } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { HabitCard } from '@/components/habits/habit-card'
 import { HabitForm } from '@/components/habits/habit-form'
 import { TemplateGallery } from '@/components/habits/template-gallery'
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils'
 type ViewMode = 'list' | 'chain'
 
 export default function HabitsPage() {
+  usePageTitle('Alışkanlıklar')
   const { data, addHabit } = useStore()
   const [addOpen, setAddOpen] = useState(false)
   const [tplOpen, setTplOpen] = useState(false)
@@ -89,6 +91,7 @@ export default function HabitsPage() {
                       value={query}
                       onChange={e => setQuery(e.target.value)}
                       placeholder="Alışkanlık ara..."
+                      aria-label="Alışkanlık ara"
                       className="h-10 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-9 text-sm text-fg placeholder:text-muted-2 focus:border-primary focus:outline-none"
                     />
                     {query && (

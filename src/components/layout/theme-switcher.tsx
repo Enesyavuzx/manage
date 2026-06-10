@@ -1,13 +1,14 @@
 'use client'
-import { Sparkles, Flame, Gamepad2 } from 'lucide-react'
+import { Sparkles, Flame, Gamepad2, Leaf } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import type { ThemeName } from '@/lib/types'
 
 const OPTIONS: { id: ThemeName; label: string; icon: React.ElementType }[] = [
-  { id: 'aurora', label: 'Aurora', icon: Sparkles },
-  { id: 'neon',   label: 'Ember',  icon: Flame },
-  { id: 'pixel',  label: 'Mint',   icon: Gamepad2 },
+  { id: 'aurora', label: 'Aurora',  icon: Sparkles },
+  { id: 'neon',   label: 'Ember',   icon: Flame },
+  { id: 'pixel',  label: 'Mint',    icon: Gamepad2 },
+  { id: 'forest', label: 'Forest',  icon: Leaf },
 ]
 
 export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
@@ -15,7 +16,11 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
   const active = data.profile.theme
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-2 p-1">
+    <div
+      className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-2 p-1"
+      role="group"
+      aria-label="Tema seçici"
+    >
       {OPTIONS.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
@@ -25,6 +30,8 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
             active === id ? 'bg-primary text-bg' : 'text-muted hover:text-fg',
           )}
           title={`${label} teması`}
+          aria-label={`${label} teması`}
+          aria-pressed={active === id}
         >
           <Icon size={13} />
           {!compact && label}

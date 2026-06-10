@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, ChevronRight } from 'lucide-react'
 import type { Routine, Habit } from '@/lib/types'
 import { useStore } from '@/hooks/useStore'
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function RoutineFlow({ routine, onClose }: Props) {
-  const { data, toggleHabit, todayCompletedIds } = useStore()
+  const { data, toggleHabit, todayCompletedIds, updateRoutine } = useStore()
 
   // Rutindeki aktif alışkanlıklar
   const habits: Habit[] = routine.habitIds
@@ -67,6 +67,19 @@ export function RoutineFlow({ routine, onClose }: Props) {
       setFinished(true)
       fireConfetti({ count: 100, power: 1 })
       haptic([30, 60, 30])
+      const today = todayKey()
+      const lastDate = routine.lastCompletedDate
+      const wasYesterday = lastDate
+        ? (() => {
+            const d = new Date(lastDate + 'T12:00:00')
+            d.setDate(d.getDate() + 1)
+            return d.toISOString().slice(0, 10) === today
+          })()
+        : false
+      updateRoutine(routine.id, {
+        lastCompletedDate: today,
+        completionStreak: wasYesterday ? (routine.completionStreak ?? 0) + 1 : 1,
+      })
     } else {
       setIdx(next)
     }
