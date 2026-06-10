@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { getRealmEvents } from '@/lib/events'
 import { TodayHeader } from '@/components/today/today-header'
 import { DayTimeline } from '@/components/today/day-timeline'
@@ -21,6 +22,7 @@ const TONE: Record<'good' | 'warn' | 'info', string> = {
 }
 
 export default function BugunPage() {
+  usePageTitle('Bugün')
   const { data } = useStore()
   const topEvent = useMemo(() => getRealmEvents(data)[0] ?? null, [data])
 

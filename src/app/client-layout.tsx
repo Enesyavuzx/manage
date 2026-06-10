@@ -11,11 +11,12 @@ import { PixelScene } from '@/components/decor/pixel-scene'
 import { PixelBackdrop } from '@/components/decor/pixel-backdrop'
 import { NotificationManager } from '@/components/layout/notification-manager'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
+import { DashboardSkeleton } from '@/components/ui/skeleton'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
   const { ready, data } = useStore()
-  // Show only to genuinely fresh installs: not yet onboarded and no habits/XP yet.
   const showOnboarding = ready && !data.profile.onboarded && data.habits.length === 0 && data.profile.totalXP === 0
 
   useEffect(() => {
@@ -32,7 +33,13 @@ function Shell({ children }: { children: React.ReactNode }) {
       <PixelScene />
       <SideDecor />
       <div className="relative z-10 flex h-screen overflow-hidden">
-        {sideOpen && <div className="fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setSideOpen(false)} />}
+        {sideOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+            onClick={() => setSideOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
         <div className="hidden lg:flex"><Sidebar /></div>
 
@@ -42,15 +49,27 @@ function Shell({ children }: { children: React.ReactNode }) {
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
-            <button onClick={() => setSideOpen(o => !o)} className="text-muted hover:text-fg">
+            <button
+              onClick={() => setSideOpen(o => !o)}
+              className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-fg transition-colors"
+              aria-label={sideOpen ? 'Menüyü kapat' : 'Menüyü aç'}
+              aria-expanded={sideOpen}
+              aria-controls="mobile-sidebar"
+            >
               {sideOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <span className="text-sm font-bold text-fg font-display">MANAGE</span>
             <ThemeSwitcher compact />
           </div>
 
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-            <div className={ready ? 'animate-fade-in' : 'opacity-0'}>{children}</div>
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6" id="main-content">
+            {ready ? (
+              <ErrorBoundary>
+                <div className="animate-fade-in">{children}</div>
+              </ErrorBoundary>
+            ) : (
+              <DashboardSkeleton />
+            )}
           </main>
         </div>
       </div>

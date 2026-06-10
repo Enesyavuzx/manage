@@ -3,8 +3,10 @@ import { LevelHero } from '@/components/profile/level-hero'
 import { ProfileSettings } from '@/components/profile/profile-settings'
 import { TitlesPanel } from '@/components/profile/titles-panel'
 import { RanksLadder } from '@/components/profile/ranks-ladder'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export default function ProfilePage() {
+  usePageTitle('Profil')
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
