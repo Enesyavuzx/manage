@@ -238,6 +238,7 @@ export interface WeeklyReview {
   createdAt: string
   weekMood?: MoodLevel      // 1-5 haftalık genel ruh hali
   wins?: string             // hızlı kazanımlar / şükran notları
+  prevGoalAchieved?: boolean // önceki haftanın hedefi tutturuldu mu
 }
 
 // Harika (Wonder): uzun vadeli gerçek bir hedef. İlgili tamamlamalar tuğla ekler;
