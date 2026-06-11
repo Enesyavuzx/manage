@@ -883,18 +883,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const saveWeeklyReview = useCallback((review: Omit<WeeklyReview, 'id' | 'xpEarned' | 'createdAt'>): WeeklyReview => {
     const REVIEW_XP = 50
+    const GOAL_BONUS_XP = 25
+    const totalAward = REVIEW_XP + (review.prevGoalAchieved ? GOAL_BONUS_XP : 0)
     const saved: WeeklyReview = {
       ...review,
       id: crypto.randomUUID(),
-      xpEarned: REVIEW_XP,
+      xpEarned: totalAward,
       createdAt: new Date().toISOString(),
     }
     setData(d => ({
       ...d,
       weeklyReviews: [...d.weeklyReviews, saved],
-      profile: { ...d.profile, totalXP: d.profile.totalXP + REVIEW_XP },
+      profile: { ...d.profile, totalXP: d.profile.totalXP + totalAward },
     }))
-    pushNotifications([{ id: generateId(), kind: 'xp', emoji: '📋', title: `+${REVIEW_XP} XP`, subtitle: 'Haftalık retrospektif tamamlandı' }])
+    const notifs: GameNotification[] = [{ id: generateId(), kind: 'xp', emoji: '📋', title: `+${REVIEW_XP} XP`, subtitle: 'Haftalık retrospektif tamamlandı' }]
+    if (review.prevGoalAchieved) {
+      notifs.push({ id: generateId(), kind: 'xp', emoji: '🎯', title: `+${GOAL_BONUS_XP} XP`, subtitle: 'Haftalık hedef tutturuldu!' })
+    }
+    pushNotifications(notifs)
     return saved
   }, [pushNotifications])
 

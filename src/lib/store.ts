@@ -10,7 +10,7 @@ export function defaultData(): StoreData {
   return {
     habits: [],
     completions: [],
-    profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'aurora' },
+    profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'calm' },
     rewards: [...DEFAULT_REWARDS, ...EXTRA_REWARDS].map(r => ({ ...r })),
     moods: [],
     energyLogs: [],
@@ -60,12 +60,19 @@ export function loadStore(): StoreData {
   }
 }
 
+// Eski tema adları (aurora/neon/pixel/forest) iki yeni temaya eşlenir.
+function normalizeTheme(theme: unknown): StoreData['profile']['theme'] {
+  if (theme === 'calm' || theme === 'glass') return theme
+  if (theme === 'aurora' || theme === 'neon') return 'glass'
+  return 'calm'
+}
+
 function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
   const def = defaultData()
   return {
     habits: parsed.habits ?? def.habits,
     completions: parsed.completions ?? def.completions,
-    profile: { ...def.profile, ...(parsed.profile ?? {}) },
+    profile: { ...def.profile, ...(parsed.profile ?? {}), theme: normalizeTheme(parsed.profile?.theme) },
     rewards: parsed.rewards ?? def.rewards,
     moods: parsed.moods ?? def.moods,
     energyLogs: parsed.energyLogs ?? def.energyLogs,

@@ -93,6 +93,11 @@ function ReviewCard({ review }: { review: WeeklyReview }) {
 
       {open && (
         <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
+          {review.prevGoalAchieved !== undefined && (
+            <p className={cn('text-xs font-medium', review.prevGoalAchieved ? 'text-success' : 'text-muted')}>
+              {review.prevGoalAchieved ? '🎯 Önceki haftanın hedefi tutturuldu' : 'Önceki haftanın hedefi bu sefer olmadı'}
+            </p>
+          )}
           {review.wins && (
             <div>
               <p className="text-xs font-medium text-muted mb-1">🏆 Kazanımlar</p>
@@ -154,11 +159,16 @@ export function WeeklyReview() {
   const [nextWeekGoal, setNextWeekGoal] = useState('')
   const [wins, setWins] = useState('')
   const [weekMood, setWeekMood] = useState<MoodLevel | null>(null)
+  const [prevGoalAchieved, setPrevGoalAchieved] = useState<boolean | null>(null)
 
   const now = new Date()
   const thisWeekKey = weekKey(now)
   const weekStart = getWeekStart(now)
   const stats = useWeekStats(weekStart)
+
+  // Geçen haftanın retrospektifindeki hedef — bu hafta kapanırken sorulur.
+  const lastWeekKey = format(addDays(weekStart, -7), 'yyyy-MM-dd')
+  const lastWeekGoal = data.weeklyReviews.find(r => r.weekStart === lastWeekKey)?.nextWeekGoal?.trim() || null
 
   const alreadyReviewed = data.weeklyReviews.find(r => r.weekStart === thisWeekKey)
   const canSubmit = wentWell.trim() !== '' && toImprove.trim() !== '' && nextWeekGoal.trim() !== '' && !alreadyReviewed
@@ -172,8 +182,9 @@ export function WeeklyReview() {
       nextWeekGoal: nextWeekGoal.trim(),
       wins: wins.trim() || undefined,
       weekMood: weekMood ?? undefined,
+      prevGoalAchieved: lastWeekGoal ? prevGoalAchieved ?? undefined : undefined,
     })
-    setWentWell(''); setToImprove(''); setNextWeekGoal(''); setWins(''); setWeekMood(null)
+    setWentWell(''); setToImprove(''); setNextWeekGoal(''); setWins(''); setWeekMood(null); setPrevGoalAchieved(null)
   }
 
   const pastReviews = [...data.weeklyReviews]
@@ -270,6 +281,47 @@ export function WeeklyReview() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Geçen haftanın hedefi tutturuldu mu? */}
+            {lastWeekGoal && (
+              <div className="rounded-lg border border-xp/30 bg-xp/5 p-3 space-y-2.5">
+                <p className="text-xs font-medium text-muted">
+                  🎯 Geçen haftanın hedefi: <span className="text-fg font-semibold">{lastWeekGoal}</span>
+                </p>
+                <p className="text-xs text-muted">Tutturdun mu?</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPrevGoalAchieved(prevGoalAchieved === true ? null : true)}
+                    className={cn(
+                      'flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
+                      prevGoalAchieved === true
+                        ? 'border-success bg-success/15 text-success'
+                        : 'border-border bg-surface-2 text-muted hover:text-fg',
+                    )}
+                    aria-pressed={prevGoalAchieved === true}
+                  >
+                    ✅ Evet, başardım
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPrevGoalAchieved(prevGoalAchieved === false ? null : false)}
+                    className={cn(
+                      'flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
+                      prevGoalAchieved === false
+                        ? 'border-border-hover bg-surface-2 text-fg'
+                        : 'border-border bg-surface-2 text-muted hover:text-fg',
+                    )}
+                    aria-pressed={prevGoalAchieved === false}
+                  >
+                    Bu sefer olmadı
+                  </button>
+                </div>
+                {prevGoalAchieved === false && (
+                  <p className="text-xs text-muted-2">Sorun değil — hedefi küçültüp tekrar deneyebilirsin. Devam etmek kazanmaktır.</p>
+                )}
+              </div>
+            )}
+
             {/* Ruh hali */}
             <div>
               <p className="text-xs font-medium text-muted mb-2">Bu haftayı nasıl yaşadın?</p>
@@ -348,7 +400,7 @@ export function WeeklyReview() {
               disabled={!canSubmit}
               className="w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:bg-primary hover:text-bg hover:border-primary disabled:pointer-events-none disabled:opacity-40"
             >
-              Haftayı Kapat (+50 XP)
+              Haftayı Kapat ({prevGoalAchieved ? '+75 XP 🎯' : '+50 XP'})
             </button>
           </div>
         )}
