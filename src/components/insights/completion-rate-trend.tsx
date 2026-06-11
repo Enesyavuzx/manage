@@ -1,12 +1,19 @@
 'use client'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useStore } from '@/hooks/useStore'
 import { weeklyRates } from '@/lib/insights'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
+import { ChartTooltip, CHART, AXIS_TICK } from '@/components/ui/chart'
 
 export function CompletionRateTrend() {
   const { data } = useStore()
   const weeks = weeklyRates(data, 8)
   const hasAny = weeks.some(w => w.due > 0)
+
+  const chartData = weeks.map(w => ({
+    label: w.label,
+    Oran: w.due > 0 ? Math.round(w.rate * 100) : 0,
+  }))
 
   return (
     <Card>
@@ -18,25 +25,29 @@ export function CompletionRateTrend() {
         {!hasAny ? (
           <p className="py-6 text-center text-sm text-muted">Trend için yeterli veri yok.</p>
         ) : (
-          <div className="flex items-end gap-2" style={{ height: 140 }}>
-            {weeks.map((w, i) => {
-              const pct = Math.round(w.rate * 100)
-              const barH = w.due > 0 ? Math.max(4, pct) : 0
-              return (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                  <span className="text-[10px] font-medium text-muted">{w.due > 0 ? `%${pct}` : ''}</span>
-                  <div className="flex w-full items-end" style={{ height: 100 }}>
-                    <div
-                      className="w-full bg-primary transition-all duration-500"
-                      style={{ height: `${barH}%`, opacity: 0.35 + w.rate * 0.65 }}
-                      title={`${w.done}/${w.due}`}
-                    />
-                  </div>
-                  <span className="text-[10px] text-muted-2">{w.label}</span>
-                </div>
-              )
-            })}
-          </div>
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -24 }}>
+              <defs>
+                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={CHART.primary} stopOpacity={0.45} />
+                  <stop offset="100%" stopColor={CHART.primary} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke={CHART.grid} strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+              <YAxis domain={[0, 100]} tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={v => `%${v}`} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: CHART.grid }} />
+              <Area
+                type="monotone"
+                dataKey="Oran"
+                stroke={CHART.primary}
+                strokeWidth={2}
+                fill="url(#trendFill)"
+                dot={{ r: 2.5, fill: CHART.primary, strokeWidth: 0 }}
+                activeDot={{ r: 4 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         )}
       </CardBody>
     </Card>

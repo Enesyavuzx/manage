@@ -1,10 +1,11 @@
 'use client'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { useStore } from '@/hooks/useStore'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
+import { ChartTooltip, CHART, AXIS_TICK } from '@/components/ui/chart'
 import { format, subDays, startOfWeek } from 'date-fns'
 import { tr } from 'date-fns/locale'
-import { cn } from '@/lib/utils'
 
 function weekRange(offset: number): { start: string; end: string } {
   const monday = startOfWeek(subDays(new Date(), offset * 7), { weekStartsOn: 1 })
@@ -43,8 +44,6 @@ export function WeekComparison() {
     return { label: format(d, 'EEE', { locale: tr }), key, count, lastCount }
   })
 
-  const maxDay = Math.max(1, ...days.map(d => Math.max(d.count, d.lastCount)))
-
   function Delta({ cur, prev }: { cur: number; prev: number }) {
     if (prev === 0 && cur === 0) return <span className="text-muted-2">-</span>
     const diff = cur - prev
@@ -74,29 +73,21 @@ export function WeekComparison() {
         </div>
 
         <div>
-          <p className="mb-2 text-xs text-muted-2">Günlük tamamlama (bu hafta mor / geçen hafta soluk)</p>
-          <div className="flex items-end gap-1.5">
-            {days.map(d => (
-              <div key={d.key} className="flex flex-1 flex-col items-center gap-1">
-                <div className="flex w-full flex-col gap-0.5">
-                  {d.lastCount > 0 && (
-                    <div
-                      className="w-full rounded-sm bg-primary/25"
-                      style={{ height: `${Math.round((d.lastCount / maxDay) * 40)}px` }}
-                    />
-                  )}
-                  {d.count > 0 && (
-                    <div
-                      className="w-full rounded-sm bg-primary"
-                      style={{ height: `${Math.round((d.count / maxDay) * 40)}px` }}
-                    />
-                  )}
-                  {d.count === 0 && d.lastCount === 0 && <div className="h-1 w-full rounded-sm bg-surface-2" />}
-                </div>
-                <span className="text-[10px] text-muted-2 capitalize">{d.label}</span>
-              </div>
-            ))}
-          </div>
+          <p className="mb-2 text-xs text-muted-2">Günlük tamamlama</p>
+          <ResponsiveContainer width="100%" height={130}>
+            <BarChart
+              data={days.map(d => ({ label: d.label, 'Bu hafta': d.count, 'Geçen hafta': d.lastCount }))}
+              margin={{ top: 4, right: 0, bottom: 0, left: -32 }}
+              barGap={2}
+            >
+              <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} className="capitalize" />
+              <YAxis allowDecimals={false} tick={AXIS_TICK} tickLine={false} axisLine={false} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: CHART.primarySoft }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" iconSize={7} />
+              <Bar dataKey="Geçen hafta" fill={CHART.primary} fillOpacity={0.25} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Bu hafta" fill={CHART.primary} radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </CardBody>
     </Card>

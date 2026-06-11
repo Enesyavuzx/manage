@@ -1,12 +1,8 @@
 'use client'
+import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { useStore } from '@/hooks/useStore'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card'
-
-const HOUR_LABELS = [
-  '00', '01', '02', '03', '04', '05', '06', '07',
-  '08', '09', '10', '11', '12', '13', '14', '15',
-  '16', '17', '18', '19', '20', '21', '22', '23',
-]
+import { ChartTooltip, CHART, AXIS_TICK } from '@/components/ui/chart'
 
 const PERIOD = [
   { label: 'Gece', range: [0, 5],   emoji: '🌑' },
@@ -25,8 +21,8 @@ export function HourAnalysis() {
     hourCounts[h]++
   }
 
-  const max = Math.max(1, ...hourCounts)
   const peakHour = hourCounts.indexOf(Math.max(...hourCounts))
+  const chartData = hourCounts.map((count, h) => ({ hour: `${h}`, Görev: count }))
 
   const periodTotals = PERIOD.map(p => ({
     ...p,
@@ -40,28 +36,29 @@ export function HourAnalysis() {
         <span className="text-xs text-muted">Saat {peakHour}:00 zirvesi</span>
       </CardHeader>
       <CardBody className="space-y-4">
-        <div className="flex items-end gap-0.5 h-20">
-          {hourCounts.map((count, h) => {
-            const pct = (count / max) * 100
-            const isPeak = h === peakHour
-            return (
-              <div key={h} className="flex flex-1 flex-col items-center justify-end h-full" title={`${h}:00 - ${count}`}>
-                <div
-                  className="w-full rounded-sm transition-all"
-                  style={{
-                    height: `${Math.max(4, pct)}%`,
-                    backgroundColor: isPeak
-                      ? 'rgb(var(--c-xp))'
-                      : `rgb(var(--c-primary) / ${0.2 + (pct / 100) * 0.8})`,
-                  }}
-                />
-              </div>
-            )
-          })}
-        </div>
-        <div className="flex justify-between text-[10px] text-muted-2">
-          {[0, 6, 12, 18, 23].map(h => <span key={h}>{HOUR_LABELS[h]}</span>)}
-        </div>
+        <ResponsiveContainer width="100%" height={110}>
+          <BarChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }} barCategoryGap={1}>
+            <XAxis
+              dataKey="hour"
+              tick={AXIS_TICK}
+              tickLine={false}
+              axisLine={false}
+              interval={5}
+              tickFormatter={h => `${h.padStart(2, '0')}:00`}
+            />
+            <YAxis hide />
+            <Tooltip
+              content={<ChartTooltip />}
+              cursor={{ fill: CHART.primarySoft }}
+              labelFormatter={h => `${String(h).padStart(2, '0')}:00`}
+            />
+            <Bar dataKey="Görev" radius={[3, 3, 0, 0]} minPointSize={2}>
+              {chartData.map((_, h) => (
+                <Cell key={h} fill={h === peakHour ? CHART.xp : CHART.primary} fillOpacity={h === peakHour ? 1 : 0.7} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {periodTotals.map((p, i) => (

@@ -2,107 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Press+Start+2P&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-/* ============ THEME: AURORA (vivid, fluid, tech) ============ */
-:root, [data-theme='aurora'] {
-  --c-bg: 10 11 26;
-  --c-surface: 21 22 44;
-  --c-surface2: 32 33 64;
-  --c-border: 50 50 92;
-  --c-border-hover: 104 96 196;
-  --c-text: 240 241 255;
-  --c-muted: 160 164 200;
-  --c-muted2: 110 114 150;
-  --c-primary: 149 108 255;
-  --c-primary2: 56 202 255;
-  --c-accent: 255 110 196;
-  --c-xp: 255 209 64;
-  --c-success: 46 222 130;
-  --c-danger: 255 86 110;
-
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-display: 'Inter', system-ui, sans-serif;
-  --radius: 0.9rem;
-}
-
-/* ============ THEME: EMBER (bold red / near-black, high energy) ============ */
-[data-theme='neon'] {
-  --c-bg: 14 8 9;
-  --c-surface: 26 14 15;
-  --c-surface2: 42 21 23;
-  --c-border: 88 34 38;
-  --c-border-hover: 236 64 72;
-  --c-text: 255 240 240;
-  --c-muted: 214 158 160;
-  --c-muted2: 150 102 104;
-  --c-primary: 244 52 62;
-  --c-primary2: 255 124 78;
-  --c-accent: 255 86 86;
-  --c-xp: 255 196 64;
-  --c-success: 70 220 140;
-  --c-danger: 255 110 116;
+/* ============ THEME: CALM (minimal, sakin, düşük doygunluk) ============ */
+:root, [data-theme='calm'] {
+  --c-bg: 15 17 21;
+  --c-surface: 22 25 31;
+  --c-surface2: 30 34 42;
+  --c-border: 44 49 60;
+  --c-border-hover: 96 104 128;
+  --c-text: 232 234 240;
+  --c-muted: 154 160 176;
+  --c-muted2: 106 112 128;
+  --c-primary: 129 140 248;
+  --c-primary2: 165 180 252;
+  --c-accent: 244 164 188;
+  --c-xp: 250 204 110;
+  --c-success: 110 218 160;
+  --c-danger: 248 130 140;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Inter', system-ui, sans-serif;
   --radius: 1rem;
+
+  /* Recharts gibi SVG tabanlı grafiklerin tema renklerine erişimi */
+  --chart-primary: rgb(var(--c-primary));
+  --chart-primary-soft: rgb(var(--c-primary) / 0.25);
+  --chart-primary2: rgb(var(--c-primary2));
+  --chart-xp: rgb(var(--c-xp));
+  --chart-grid: rgb(var(--c-border) / 0.6);
+  --chart-label: rgb(var(--c-muted2));
 }
 
-/* ============ THEME: FOREST (deep emerald, earthy, grounded) ============ */
-[data-theme='forest'] {
-  --c-bg: 6 14 10;
-  --c-surface: 11 26 17;
-  --c-surface2: 18 40 26;
-  --c-border: 34 74 46;
-  --c-border-hover: 52 211 90;
-  --c-text: 226 255 234;
-  --c-muted: 148 200 162;
-  --c-muted2: 88 138 104;
-  --c-primary: 52 211 90;
-  --c-primary2: 134 239 172;
-  --c-accent: 250 204 21;
-  --c-xp: 250 204 21;
-  --c-success: 74 222 128;
-  --c-danger: 248 113 113;
+/* ============ THEME: GLASS (iOS-vari cam efekti, canlı arka plan) ============ */
+[data-theme='glass'] {
+  --c-bg: 16 14 36;
+  --c-surface: 40 36 76;
+  --c-surface2: 54 49 96;
+  --c-border: 96 90 156;
+  --c-border-hover: 154 144 232;
+  --c-text: 245 245 255;
+  --c-muted: 188 186 216;
+  --c-muted2: 136 134 170;
+  --c-primary: 64 156 255;
+  --c-primary2: 191 90 242;
+  --c-accent: 255 110 196;
+  --c-xp: 255 214 10;
+  --c-success: 48 209 88;
+  --c-danger: 255 96 92;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Inter', system-ui, sans-serif;
-  --radius: 0.75rem;
-}
-
-/* Forest ambient background glow */
-[data-theme='forest'] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(55% 45% at 10% 0%, rgb(var(--c-primary) / 0.18), transparent 60%),
-    radial-gradient(45% 40% at 92% 10%, rgb(var(--c-primary2) / 0.12), transparent 55%),
-    radial-gradient(55% 55% at 80% 100%, rgb(var(--c-accent) / 0.10), transparent 60%);
-  pointer-events: none;
-}
-
-/* ============ THEME: PIXEL (turquoise / mint 8-bit arcade) ============ */
-[data-theme='pixel'] {
-  --c-bg: 8 22 24;
-  --c-surface: 13 34 37;
-  --c-surface2: 20 50 54;
-  --c-border: 34 86 88;
-  --c-border-hover: 64 224 200;
-  --c-text: 226 255 250;
-  --c-muted: 158 214 206;
-  --c-muted2: 104 158 152;
-  --c-primary: 45 226 196;
-  --c-primary2: 120 255 214;
-  --c-accent: 116 248 178;
-  --c-xp: 255 216 66;
-  --c-success: 80 240 168;
-  --c-danger: 255 110 116;
-
-  --font-body: 'VT323', monospace;
-  --font-display: 'Press Start 2P', monospace;
-  --radius: 0px;
+  --radius: 1.25rem;
 }
 
 * { box-sizing: border-box; }
@@ -115,121 +66,39 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-[data-theme='pixel'] body {
-  font-size: 1.18rem;
-  letter-spacing: 0.3px;
-}
-
-/* Aurora ambient background glow */
-[data-theme='aurora'] body::before {
+/* Calm: efektsiz, düz zemin. Glass: canlı, bulanık renk lekeleri. */
+[data-theme='glass'] body::before {
   content: '';
   position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(55% 45% at 12% 0%, rgb(var(--c-primary) / 0.22), transparent 60%),
-    radial-gradient(45% 40% at 95% 8%, rgb(var(--c-primary2) / 0.18), transparent 55%),
-    radial-gradient(55% 55% at 82% 100%, rgb(var(--c-accent) / 0.12), transparent 60%);
-  pointer-events: none;
-}
-
-/* Ember ambient background glow */
-[data-theme='neon'] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(55% 40% at 5% 0%, rgb(var(--c-primary) / 0.28), transparent 55%),
-    radial-gradient(50% 45% at 95% 5%, rgb(var(--c-primary2) / 0.22), transparent 58%),
-    radial-gradient(60% 55% at 50% 100%, rgb(var(--c-primary) / 0.14), transparent 60%);
-  pointer-events: none;
-}
-
-/* Pixel/Mint manzara: bulanık ufuk gradyanı (en arka katman, z -2) */
-.pixel-scene { display: none; }
-[data-theme='pixel'] .pixel-scene {
-  display: block;
-  position: fixed;
-  inset: -60px;            /* taşır ki blur kenarları ekran dışında kalsın */
-  z-index: -2;
-  pointer-events: none;
-  filter: blur(3px);
-  background:
-    radial-gradient(95% 55% at 50% 82%, rgb(var(--c-primary) / 0.22), transparent 62%),
-    radial-gradient(60% 40% at 18% 14%, rgb(var(--c-primary2) / 0.12), transparent 58%),
-    linear-gradient(
-      to bottom,
-      rgb(var(--c-bg)) 0%,
-      rgb(7 26 28) 44%,
-      rgb(9 40 40) 66%,
-      rgb(6 20 22) 84%,
-      rgb(var(--c-bg)) 100%
-    );
-}
-
-/* Pixel/Mint üst katman: vinyet + piksel ızgara (net, z -1) */
-[data-theme='pixel'] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
+  inset: -10%;
   z-index: -1;
   pointer-events: none;
+  filter: blur(70px) saturate(140%);
   background:
-    radial-gradient(135% 120% at 50% 36%, transparent 50%, rgba(0,0,0,0.62) 100%),
-    radial-gradient(55% 40% at 15% 0%, rgb(var(--c-primary) / 0.16), transparent 55%),
-    radial-gradient(45% 40% at 88% 8%, rgb(var(--c-primary2) / 0.12), transparent 55%),
-    repeating-linear-gradient(0deg, rgb(var(--c-primary) / 0.045) 0 1px, transparent 1px 7px),
-    repeating-linear-gradient(90deg, rgb(var(--c-primary) / 0.045) 0 1px, transparent 1px 7px);
+    radial-gradient(40% 35% at 15% 10%, rgb(var(--c-primary) / 0.45), transparent 70%),
+    radial-gradient(38% 34% at 85% 18%, rgb(var(--c-primary2) / 0.40), transparent 70%),
+    radial-gradient(45% 40% at 70% 90%, rgb(var(--c-accent) / 0.30), transparent 70%),
+    radial-gradient(35% 32% at 20% 85%, rgb(48 209 88 / 0.18), transparent 70%);
 }
 
-/* Pixel CRT scanlines */
-[data-theme='pixel'] body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0,0,0,0) 0px,
-    rgba(0,0,0,0) 2px,
-    rgba(0,0,0,0.10) 3px,
-    rgba(0,0,0,0.10) 4px
-  );
-  mix-blend-mode: multiply;
-  opacity: 0.5;
+/* Glass: yüzeyler yarı saydam + backdrop blur. Tailwind utility'lerini tema
+   kapsamında ezer; içerikteki tüm kartlar otomatik camlaşır. */
+[data-theme='glass'] .bg-surface {
+  background-color: rgb(var(--c-surface) / 0.50);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
 }
-
-/* Pixel theme: flatten radius + hard borders + chunky shadow */
-[data-theme='pixel'] .rounded-xl,
-[data-theme='pixel'] .rounded-2xl,
-[data-theme='pixel'] .rounded-lg,
-[data-theme='pixel'] .rounded-md,
-[data-theme='pixel'] .rounded-full,
-[data-theme='pixel'] .rounded-sm,
-[data-theme='pixel'] .rounded {
-  border-radius: 0 !important;
+[data-theme='glass'] .bg-surface-2 {
+  background-color: rgb(var(--c-surface2) / 0.45);
 }
-[data-theme='pixel'] .pixel-shadow {
-  box-shadow: 4px 4px 0 0 rgb(var(--c-border-hover));
-}
-[data-theme='pixel'] h1,
-[data-theme='pixel'] h2,
-[data-theme='pixel'] .font-display {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0;
-  line-height: 1.5;
-}
-[data-theme='pixel'] h1 { font-size: 1.25rem; }
-[data-theme='pixel'] h2 { font-size: 0.95rem; }
+[data-theme='glass'] .border-border { border-color: rgb(255 255 255 / 0.14); }
+[data-theme='glass'] .rounded-xl  { border-radius: 1.25rem; }
+[data-theme='glass'] .rounded-lg  { border-radius: 1rem; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: rgb(var(--c-surface)); }
 ::-webkit-scrollbar-thumb { background: rgb(var(--c-border-hover)); border-radius: 4px; }
-[data-theme='pixel'] ::-webkit-scrollbar-thumb { border-radius: 0; }
 
 /* Range slider */
 input[type='range'] {
@@ -248,7 +117,6 @@ input[type='range']::-webkit-slider-thumb {
   cursor: pointer;
   box-shadow: 0 0 12px rgb(var(--c-primary) / 0.6);
 }
-[data-theme='pixel'] input[type='range']::-webkit-slider-thumb { border-radius: 0; }
 
 /* Utility helpers */
 .glass {
@@ -256,7 +124,6 @@ input[type='range']::-webkit-slider-thumb {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
-[data-theme='pixel'] .glass { backdrop-filter: none; background: rgb(var(--c-surface)); }
 
 .text-gradient {
   background: linear-gradient(120deg, rgb(var(--c-primary)), rgb(var(--c-primary2)));
@@ -264,7 +131,6 @@ input[type='range']::-webkit-slider-thumb {
   background-clip: text;
   color: transparent;
 }
-[data-theme='pixel'] .text-gradient { color: rgb(var(--c-primary)); -webkit-text-fill-color: rgb(var(--c-primary)); }
 
 .shimmer {
   background: linear-gradient(90deg, transparent, rgb(var(--c-text) / 0.10), transparent);
@@ -282,6 +148,10 @@ input[type='range']::-webkit-slider-thumb {
   animation: shimmer 1.6s linear infinite;
 }
 
+/* Pixel-art rendering for decorative sprites */
+.pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* Vurgulu kartlar için ince gradyan çerçeve (eski adıyla aurora-border) */
 .aurora-border {
   position: relative;
 }
@@ -291,19 +161,9 @@ input[type='range']::-webkit-slider-thumb {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(120deg, rgb(var(--c-primary) / 0.6), rgb(var(--c-primary2) / 0.5), rgb(var(--c-accent) / 0.35), transparent);
+  background: linear-gradient(120deg, rgb(var(--c-primary) / 0.55), rgb(var(--c-primary2) / 0.45), transparent 70%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-}
-[data-theme='pixel'] .aurora-border::before { display: none; }
-
-/* Pixel-art rendering for decorative sprites */
-.pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }
-
-/* Decorative side gutter sprites: only show on very wide screens */
-.side-decor { display: none; }
-@media (min-width: 1400px) {
-  .side-decor { display: flex; }
 }
