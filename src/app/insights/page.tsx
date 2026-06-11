@@ -10,6 +10,7 @@ const CompletionRateTrend = dynamic(() => import('@/components/insights/completi
 const HabitReliability   = dynamic(() => import('@/components/insights/habit-reliability').then(m => ({ default: m.HabitReliability })), { loading: () => <SkeletonCard /> })
 const EnergyInsight      = dynamic(() => import('@/components/insights/energy-insight').then(m => ({ default: m.EnergyInsight })), { loading: () => <SkeletonCard /> })
 const MoodHabitInsight   = dynamic(() => import('@/components/mood/mood-habit-insight').then(m => ({ default: m.MoodHabitInsight })), { loading: () => <SkeletonCard /> })
+const HabitDuel          = dynamic(() => import('@/components/insights/habit-duel').then(m => ({ default: m.HabitDuel })), { loading: () => <SkeletonCard /> })
 
 export default function InsightsPage() {
   usePageTitle('İçgörüler')
@@ -21,6 +22,7 @@ export default function InsightsPage() {
       </div>
       <ErrorBoundary><InsightHighlights /></ErrorBoundary>
       <ErrorBoundary><YearHeatmap /></ErrorBoundary>
+      <ErrorBoundary><HabitDuel /></ErrorBoundary>
       <ErrorBoundary><CompletionRateTrend /></ErrorBoundary>
       <ErrorBoundary><HabitReliability /></ErrorBoundary>
       <ErrorBoundary><EnergyInsight /></ErrorBoundary>
