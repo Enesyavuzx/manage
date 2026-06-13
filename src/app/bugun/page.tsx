@@ -12,6 +12,7 @@ import { PerfectDayCard } from '@/components/today/perfect-day-card'
 import { QuickCapture } from '@/components/today/quick-capture'
 import { QuickActions } from '@/components/today/quick-actions'
 import { ZincirToday } from '@/components/today/zincir-today'
+import { FlowMeter } from '@/components/today/flow-meter'
 import { WeeklyGoalCard } from '@/components/today/weekly-goal-card'
 import { RoutineSuggestion } from '@/components/today/routine-suggestion'
 import { AdvisorCard } from '@/components/advisor/advisor-card'
@@ -43,6 +44,7 @@ export default function BugunPage() {
         </Link>
       )}
 
+      <FlowMeter />
       <WeeklyGoalCard />
       <RoutineSuggestion />
       <AdvisorCard />

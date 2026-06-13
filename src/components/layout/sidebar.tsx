@@ -138,7 +138,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <span className="text-base font-bold tracking-tight text-fg font-display">MANAGE</span>
         </div>
-        <PixelSprite name="star" pixel={3} className="pixelated animate-float opacity-90" />
+        <PixelSprite name="star" pixel={3} className="pixel-only pixelated animate-float opacity-90" />
       </div>
 
       {/* Nav */}
@@ -204,7 +204,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
 
         {/* pixel mascots */}
-        <div className="flex items-center justify-center gap-3 py-1 opacity-90">
+        <div className="pixel-only flex items-center justify-center gap-3 py-1 opacity-90">
           <PixelSprite name="heart" pixel={3} className="pixelated animate-float" style={{ animationDelay: '0.2s' }} />
           <PixelSprite name="coin" pixel={3} className="pixelated animate-float" style={{ animationDelay: '0.9s' }} />
           <PixelSprite name="gem" pixel={3} className="pixelated animate-float" style={{ animationDelay: '1.4s' }} />
