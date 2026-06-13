@@ -44,33 +44,33 @@ export function WeeklySummaryCard() {
 
     // Background
     const bg = ctx.createLinearGradient(0, 0, W, H)
-    bg.addColorStop(0, '#0a0b1a')
-    bg.addColorStop(1, '#150d2e')
+    bg.addColorStop(0, '#0b0b10')
+    bg.addColorStop(1, '#16161c')
     ctx.fillStyle = bg
     ctx.roundRect(0, 0, W, H, 24)
     ctx.fill()
 
     // Glow orb top-right
     const grd = ctx.createRadialGradient(W - 80, 60, 0, W - 80, 60, 200)
-    grd.addColorStop(0, 'rgba(149,108,255,0.25)')
-    grd.addColorStop(1, 'rgba(149,108,255,0)')
+    grd.addColorStop(0, 'rgba(108,99,255,0.25)')
+    grd.addColorStop(1, 'rgba(108,99,255,0)')
     ctx.fillStyle = grd
     ctx.fillRect(0, 0, W, H)
 
     // Border
-    ctx.strokeStyle = 'rgba(149,108,255,0.35)'
+    ctx.strokeStyle = 'rgba(108,99,255,0.35)'
     ctx.lineWidth = 1.5
     ctx.roundRect(1, 1, W - 2, H - 2, 23)
     ctx.stroke()
 
     // App label top-left
-    ctx.fillStyle = 'rgba(149,108,255,0.9)'
+    ctx.fillStyle = 'rgba(108,99,255,0.9)'
     ctx.font = 'bold 14px Inter, system-ui'
     ctx.textBaseline = 'top'
     ctx.fillText('⚡ MANAGE', 32, 28)
 
     // Week label top-right
-    ctx.fillStyle = 'rgba(160,164,200,0.8)'
+    ctx.fillStyle = 'rgba(138,138,150,0.8)'
     ctx.font = '13px Inter, system-ui'
     ctx.textAlign = 'right'
     ctx.fillText(weekLabel + ' özeti', W - 32, 28)
@@ -81,12 +81,12 @@ export function WeeklySummaryCard() {
     ctx.fillStyle = '#f0f1ff'
     ctx.font = 'bold 32px Inter, system-ui'
     ctx.fillText(`${rank.emoji} ${name}`, 32, 72)
-    ctx.fillStyle = 'rgba(149,108,255,0.8)'
+    ctx.fillStyle = 'rgba(108,99,255,0.8)'
     ctx.font = '14px Inter, system-ui'
     ctx.fillText(`${rank.label}  ·  Seviye ${info.level}`, 32, 116)
 
     // Divider
-    ctx.strokeStyle = 'rgba(50,50,92,0.8)'
+    ctx.strokeStyle = 'rgba(39,39,46,0.8)'
     ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(32, 148); ctx.lineTo(W - 32, 148); ctx.stroke()
 
@@ -106,10 +106,10 @@ export function WeeklySummaryCard() {
       ctx.fillStyle = '#f0f1ff'
       ctx.fillText(s.emoji, cx, 195)
       ctx.font = 'bold 22px Inter, system-ui'
-      ctx.fillStyle = '#956cff'
+      ctx.fillStyle = '#6c63ff'
       ctx.fillText(s.value, cx, 240)
       ctx.font = '12px Inter, system-ui'
-      ctx.fillStyle = 'rgba(160,164,200,0.8)'
+      ctx.fillStyle = 'rgba(138,138,150,0.8)'
       ctx.fillText(s.label, cx, 264)
     })
 
@@ -131,12 +131,12 @@ export function WeeklySummaryCard() {
       ctx.beginPath()
       ctx.arc(x, y, 16, 0, Math.PI * 2)
       if (done) {
-        ctx.fillStyle = 'rgba(149,108,255,0.85)'
+        ctx.fillStyle = 'rgba(108,99,255,0.85)'
         ctx.fill()
       } else if (d > today) {
         ctx.fillStyle = 'rgba(32,33,64,0.8)'
         ctx.fill()
-        ctx.strokeStyle = 'rgba(50,50,92,0.6)'
+        ctx.strokeStyle = 'rgba(39,39,46,0.6)'
         ctx.lineWidth = 1
         ctx.stroke()
       } else {
@@ -149,10 +149,10 @@ export function WeeklySummaryCard() {
         ctx.stroke()
       }
 
-      ctx.fillStyle = done ? '#fff' : 'rgba(160,164,200,0.6)'
+      ctx.fillStyle = done ? '#fff' : 'rgba(138,138,150,0.6)'
       ctx.font = done ? 'bold 10px Inter, system-ui' : '10px Inter, system-ui'
       ctx.fillText(done ? '✓' : label.slice(0, 1), x, y + 4)
-      ctx.fillStyle = 'rgba(160,164,200,0.6)'
+      ctx.fillStyle = 'rgba(138,138,150,0.6)'
       ctx.font = '10px Inter, system-ui'
       ctx.fillText(label, x, y + 34)
     })

@@ -16,7 +16,7 @@ export function LevelHero() {
   const available = totalXP - redeemedXP
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-surface p-6 aurora-border">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-surface p-6 pixel-shadow aurora-border">
       <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center">
         {/* Ring */}
         <div className="flex items-center justify-center">
