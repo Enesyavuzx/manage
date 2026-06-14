@@ -192,6 +192,11 @@ export function BrixComputer() {
 
               {/* ikon + pencere alanı */}
               <div ref={deskRef} className="relative flex-1 overflow-hidden">
+                {/* temaya uyumlu duvar kâğıdı */}
+                <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(85% 60% at 50% -5%, rgb(var(--c-primary) / 0.12), transparent 70%), radial-gradient(70% 60% at 100% 100%, rgb(var(--c-accent) / 0.10), transparent 70%)' }} />
+                <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(rgb(var(--c-border) / 0.55) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+                <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 font-display text-[10px] uppercase tracking-[0.3em] text-muted/40">manage_os</span>
+
                 {/* ikonlar */}
                 {folders.map(f => {
                   const p = positions[f.id] || { x: 50, y: 50 }
