@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const CARDS = [
   { emoji: '✅', label: 'Alışkanlıklar', desc: 'Streak yap, zincirle', href: '/habits', accent: '74 124 89' },
@@ -43,6 +44,8 @@ export function FeatureCarousel() {
     return () => { track.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); if (raf) cancelAnimationFrame(raf) }
   }, [])
 
+  const scrollByDir = (d: number) => trackRef.current?.scrollBy({ left: d * 260, behavior: 'smooth' })
+
   return (
     <section>
       <div className="mb-4">
@@ -51,6 +54,8 @@ export function FeatureCarousel() {
         <p className="mt-1 text-sm text-muted">Yana kaydır — ortadaki kart öne çıkar.</p>
       </div>
 
+      <div className="relative">
+      <button onClick={() => scrollByDir(-1)} aria-label="Geri" className="absolute left-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border bg-surface text-fg shadow-glow hover:brightness-105 sm:flex"><ChevronLeft size={18} /></button>
       <div
         ref={trackRef}
         data-lenis-prevent
@@ -69,6 +74,8 @@ export function FeatureCarousel() {
             <span className="text-sm text-muted">{c.desc}</span>
           </Link>
         ))}
+      </div>
+      <button onClick={() => scrollByDir(1)} aria-label="İleri" className="absolute right-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border bg-surface text-fg shadow-glow hover:brightness-105 sm:flex"><ChevronRight size={18} /></button>
       </div>
     </section>
   )

@@ -12,6 +12,8 @@ import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import { SmoothScroll } from '@/components/layout/smooth-scroll'
+import { ScrollProgress } from '@/components/layout/scroll-progress'
+import { BackToTop } from '@/components/layout/back-to-top'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
@@ -73,6 +75,8 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <ToastHost />
+      <ScrollProgress />
+      <BackToTop />
       {showOnboarding && <OnboardingWizard />}
     </>
   )

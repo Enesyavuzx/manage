@@ -24,11 +24,13 @@ export function SmoothScroll() {
       touchMultiplier: 1.5,
     })
 
+    ;(window as unknown as { __lenis?: unknown }).__lenis = lenis
+
     let raf = 0
     const loop = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(loop) }
     raf = requestAnimationFrame(loop)
 
-    return () => { cancelAnimationFrame(raf); lenis.destroy() }
+    return () => { cancelAnimationFrame(raf); lenis.destroy(); delete (window as unknown as { __lenis?: unknown }).__lenis }
   }, [])
 
   return null
