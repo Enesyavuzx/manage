@@ -174,6 +174,15 @@
   0%   { opacity: 0; transform: scale(0.82) translateY(8px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
+/* Pencere ikondan büyüyerek açılır */
+@keyframes brixWindowOpen {
+  0%   { opacity: 0; transform: scale(0.18); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes brixFileIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* ============================================================
    BRIX: tüm uygulamaya pixel-retro giydirme (yan panel → en alta)
