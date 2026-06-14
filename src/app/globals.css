@@ -36,23 +36,24 @@
   --shadow-strength: 1;
 }
 
-/* ---------- PIXEL (synthwave arcade) ----------
-   Referans: Synthwave '84 (robb0wen). Resmi paletten birebir hex değerler. */
+/* ---------- PIXEL (vaporwave) ----------
+   Referans: klasik vaporwave paleti (#ff71ce / #01cdfe / #05ffa1 / #b967ff / #fffb96).
+   Derin indigo-mor zemin üzerinde canlı pastel neon; synthwave'den daha yumuşak. */
 [data-theme='pixel'] {
-  --c-bg: 23 21 32;          /* activity bar #171520 */
-  --c-surface: 36 27 47;     /* sidebar #241b2f */
-  --c-surface2: 42 33 57;    /* input #2a2139 */
-  --c-border: 70 52 101;     /* menu #463465 */
-  --c-border-hover: 255 126 219;  /* chunky gölge: hot pink #ff7edb */
-  --c-text: 246 240 255;
-  --c-muted: 132 139 189;    /* yorum mavisi #848bbd */
-  --c-muted2: 105 110 150;
-  --c-primary: 3 237 249;    /* electric cyan #03edf9 */
-  --c-primary2: 126 245 251; /* açık cyan */
-  --c-accent: 255 126 219;   /* hot pink #ff7edb */
-  --c-xp: 254 222 93;        /* sarı #fede5d */
-  --c-success: 114 241 184;  /* #72f1b8 */
-  --c-danger: 254 68 80;     /* #fe4450 */
+  --c-bg: 26 20 48;          /* derin indigo-mor */
+  --c-surface: 37 28 69;
+  --c-surface2: 50 37 84;
+  --c-border: 74 58 122;
+  --c-border-hover: 255 113 206;  /* chunky gölge: vaporwave pembe #ff71ce */
+  --c-text: 245 237 255;
+  --c-muted: 185 167 224;    /* yumuşak lavanta */
+  --c-muted2: 137 121 184;
+  --c-primary: 1 205 254;    /* cyan #01cdfe */
+  --c-primary2: 111 224 255;
+  --c-accent: 255 113 206;   /* pembe #ff71ce */
+  --c-xp: 255 251 150;       /* soluk sarı #fffb96 */
+  --c-success: 5 255 161;    /* nane #05ffa1 */
+  --c-danger: 255 94 126;    /* mercan */
 
   --font-body: 'VT323', monospace;
   --font-display: 'Press Start 2P', monospace;
@@ -103,11 +104,12 @@ html, body {
   z-index: -1;
   pointer-events: none;
   background:
-    /* üstte yumuşak güneş ışıması (hot pink + cyan) */
-    radial-gradient(80% 55% at 50% 8%, rgb(255 126 219 / 0.22), transparent 60%),
-    radial-gradient(70% 50% at 50% 0%, rgb(3 237 249 / 0.14), transparent 55%),
-    /* alt zemine doğru koyulaşan synthwave gökyüzü (#241b2f → #171520) */
-    linear-gradient(to bottom, rgb(var(--c-bg)) 0%, rgb(36 27 47) 45%, rgb(28 21 40) 70%, rgb(var(--c-bg)) 100%),
+    /* üstte vaporwave sunset: pembe + cyan + mor parıltı */
+    radial-gradient(75% 50% at 30% 6%, rgb(255 113 206 / 0.30), transparent 55%),
+    radial-gradient(70% 50% at 70% 4%, rgb(1 205 254 / 0.22), transparent 55%),
+    radial-gradient(90% 60% at 50% 0%, rgb(185 103 255 / 0.18), transparent 60%),
+    /* alt zemine doğru koyulaşan mor gökyüzü */
+    linear-gradient(to bottom, rgb(var(--c-bg)) 0%, rgb(46 30 86) 45%, rgb(34 24 64) 72%, rgb(var(--c-bg)) 100%),
     /* ince pixel grid */
     repeating-linear-gradient(0deg, rgb(var(--c-primary) / 0.05) 0 1px, transparent 1px 8px),
     repeating-linear-gradient(90deg, rgb(var(--c-primary) / 0.05) 0 1px, transparent 1px 8px);
@@ -122,9 +124,9 @@ html, body {
   pointer-events: none;
   background: repeating-linear-gradient(to bottom,
     rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-    rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 4px);
+    rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
   mix-blend-mode: multiply;
-  opacity: 0.45;
+  opacity: 0.25;
 }
 
 /* =================== PIXEL bileşen davranışları =================== */
