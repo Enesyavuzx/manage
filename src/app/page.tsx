@@ -2,7 +2,9 @@
 import dynamic from 'next/dynamic'
 import { LevelHero } from '@/components/profile/level-hero'
 import { TodayHabits } from '@/components/dashboard/today-habits'
-import { ContextGreeting } from '@/components/dashboard/context-greeting'
+import { BrixHero } from '@/components/dashboard/brix-hero'
+import { BrixShowcase } from '@/components/dashboard/brix-showcase'
+import { BrixFolders } from '@/components/dashboard/brix-folders'
 import { AdvisorCard } from '@/components/advisor/advisor-card'
 import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { SkeletonCard } from '@/components/ui/skeleton'
@@ -28,7 +30,9 @@ const DopamineSprites  = dynamic(() => import('@/components/dashboard/dopamine-s
 export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <ContextGreeting />
+      <BrixHero />
+      <BrixShowcase />
+      <BrixFolders />
       <AdvisorCard />
       <LevelHero />
       <QuestsPanel />

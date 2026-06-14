@@ -10,7 +10,7 @@ export function defaultData(): StoreData {
   return {
     habits: [],
     completions: [],
-    profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'pro' },
+    profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'brix' },
     rewards: [...DEFAULT_REWARDS, ...EXTRA_REWARDS].map(r => ({ ...r })),
     moods: [],
     energyLogs: [],
@@ -60,9 +60,9 @@ export function loadStore(): StoreData {
   }
 }
 
-// Geçerli temalar: pro (koyu), pixel (vaporwave), brix (aydınlık). Gerisi pro'ya düşer.
+// Geçerli temalar: brix (aydınlık, varsayılan sistem), pro (koyu), pixel (vaporwave).
 function normalizeTheme(theme: unknown): StoreData['profile']['theme'] {
-  return theme === 'pixel' || theme === 'brix' ? theme : 'pro'
+  return theme === 'pixel' || theme === 'pro' ? theme : 'brix'
 }
 
 function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
