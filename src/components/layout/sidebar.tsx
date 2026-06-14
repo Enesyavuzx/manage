@@ -129,7 +129,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-border bg-surface">
+    <aside className="app-sidebar flex h-full w-60 flex-col border-r border-border bg-surface">
       {/* Logo */}
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div className="flex items-center gap-2">

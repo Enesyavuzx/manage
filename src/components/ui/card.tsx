@@ -13,7 +13,7 @@ export function Card({ className, glow, interactive, bordered = true, children, 
     <div
       {...props}
       className={cn(
-        'relative rounded-xl bg-surface pixel-shadow',
+        'ui-card relative rounded-xl bg-surface pixel-shadow',
         bordered && 'border border-border',
         glow && 'aurora-border',
         interactive && 'transition-all duration-200 hover:border-border-hover hover:-translate-y-0.5',

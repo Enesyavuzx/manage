@@ -142,6 +142,70 @@
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* ============================================================
+   BRIX: tüm uygulamaya pixel-retro giydirme (yan panel → en alta)
+   ============================================================ */
+
+/* Köşeleri sertleştir (yuvarlak rozet/halka/nokta hariç) */
+[data-theme='brix'] .rounded,
+[data-theme='brix'] .rounded-sm,
+[data-theme='brix'] .rounded-md,
+[data-theme='brix'] .rounded-lg,
+[data-theme='brix'] .rounded-xl,
+[data-theme='brix'] .rounded-2xl,
+[data-theme='brix'] .rounded-3xl { border-radius: 4px; }
+
+/* Kartlar: kalın koyu çerçeve (chunky offset gölge .pixel-shadow'dan gelir) */
+[data-theme='brix'] .ui-card.border { border-width: 2px; }
+
+/* Butonlar: pixel-bevel; hover'da kalkar, basınca içeri girer */
+[data-theme='brix'] .ui-btn { border-radius: 4px; }
+[data-theme='brix'] .ui-btn-solid {
+  border: 2px solid rgb(var(--c-border));
+  box-shadow: 3px 3px 0 0 rgb(var(--c-border));
+  transition: transform .08s ease, box-shadow .08s ease,
+    background-color .15s ease, color .15s ease, border-color .15s ease, filter .15s ease;
+}
+[data-theme='brix'] .ui-btn-solid:hover:not(:disabled) {
+  transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 rgb(var(--c-border));
+}
+[data-theme='brix'] .ui-btn-solid:active:not(:disabled) {
+  transform: translate(2px, 2px); box-shadow: 1px 1px 0 0 rgb(var(--c-border));
+}
+
+/* Form alanları: pixel çerçeve + turuncu pixel odak gölgesi */
+[data-theme='brix'] input:not([type='range']):not([type='checkbox']):not([type='radio']),
+[data-theme='brix'] textarea,
+[data-theme='brix'] select {
+  border: 2px solid rgb(var(--c-border));
+  border-radius: 4px;
+}
+[data-theme='brix'] input:not([type='range']):focus,
+[data-theme='brix'] textarea:focus,
+[data-theme='brix'] select:focus {
+  outline: none;
+  box-shadow: 3px 3px 0 0 rgb(var(--c-primary));
+}
+
+/* Yan panel: kalın pixel ayraç + bağlantılarda kayan hover */
+[data-theme='brix'] .app-sidebar { border-right: 3px solid rgb(var(--c-border)); }
+[data-theme='brix'] .app-sidebar a,
+[data-theme='brix'] .app-sidebar nav button {
+  transition: transform .12s ease, background-color .12s ease, color .12s ease;
+}
+[data-theme='brix'] .app-sidebar a:hover,
+[data-theme='brix'] .app-sidebar nav button:hover { transform: translateX(3px); }
+
+/* Modal/overlay: koyu yerine sıcak karartma */
+[data-theme='brix'] .bg-black\/75,
+[data-theme='brix'] .bg-black\/60 { background-color: rgb(40 28 20 / 0.55) !important; }
+
+/* Scrollbar: pixel (köşesiz) */
+[data-theme='brix'] ::-webkit-scrollbar-thumb { border-radius: 0; }
+
+/* Kart hover (interactive) biraz daha "kayan" his */
+[data-theme='brix'] .ui-card.transition-all:hover { transform: translateY(-3px); }
+
 /* ---------- ortak token'lar ---------- */
 :root {
   --chart-primary: rgb(var(--c-primary));
