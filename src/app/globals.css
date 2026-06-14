@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Press+Start+2P&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Pixelify+Sans:wght@400;500;600;700&family=Press+Start+2P&family=VT323&display=swap');
 
 /* ============================================================
    İKİ TEMA
@@ -81,8 +81,8 @@
   --c-danger: 230 70 70;
 
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-display: 'VT323', 'Inter', monospace;
-  --radius: 0.25rem;
+  --font-display: 'Pixelify Sans', 'Inter', sans-serif;
+  --radius: 0px;
   --shadow-color: 40 40 40;
   --shadow-strength: 0.25;
 }
@@ -146,14 +146,15 @@
    BRIX: tüm uygulamaya pixel-retro giydirme (yan panel → en alta)
    ============================================================ */
 
-/* Köşeleri sertleştir (yuvarlak rozet/halka/nokta hariç) */
+/* Köşeleri TAMAMEN sertleştir (sert pixel — her şey köşeli) */
 [data-theme='brix'] .rounded,
 [data-theme='brix'] .rounded-sm,
 [data-theme='brix'] .rounded-md,
 [data-theme='brix'] .rounded-lg,
 [data-theme='brix'] .rounded-xl,
 [data-theme='brix'] .rounded-2xl,
-[data-theme='brix'] .rounded-3xl { border-radius: 4px; }
+[data-theme='brix'] .rounded-3xl,
+[data-theme='brix'] .rounded-full { border-radius: 0 !important; }
 
 /* Kartlar: kalın koyu çerçeve (chunky offset gölge .pixel-shadow'dan gelir) */
 [data-theme='brix'] .ui-card.border { border-width: 2px; }
@@ -205,6 +206,16 @@
 
 /* Kart hover (interactive) biraz daha "kayan" his */
 [data-theme='brix'] .ui-card.transition-all:hover { transform: translateY(-3px); }
+
+/* Erişilebilirlik: hareketi azalt tercihinde tüm animasyonları sustur */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ---------- ortak token'lar ---------- */
 :root {
