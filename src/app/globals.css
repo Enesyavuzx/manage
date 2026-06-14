@@ -60,6 +60,33 @@
   --radius: 0px;
 }
 
+/* ---------- BRIX (aydınlık) ----------
+   Referans: Brix Webflow şablonu — temiz, ferah, beyaz zeminli SaaS estetiği.
+   Açık gri sayfa zemini üzerinde beyaz kartlar; canlı camgöbeği (cyan) marka rengi,
+   yumuşak nötr gölgeler, hafif yuvarlak köşeler. */
+[data-theme='brix'] {
+  --c-bg: 246 248 251;        /* ferah açık gri zemin #f6f8fb */
+  --c-surface: 255 255 255;   /* beyaz kart */
+  --c-surface2: 241 245 249;  /* slate-100 inset */
+  --c-border: 226 232 240;    /* slate-200 yumuşak ayraç */
+  --c-border-hover: 203 213 225; /* slate-300 */
+  --c-text: 15 23 42;         /* slate-900 #0f172a */
+  --c-muted: 100 116 139;     /* slate-500 #64748b */
+  --c-muted2: 148 163 184;    /* slate-400 #94a3b8 */
+  --c-primary: 6 182 212;     /* cyan-500 #06b6d4 — Brix camgöbeği */
+  --c-primary2: 8 145 178;    /* cyan-600 #0891b2 (açık zeminde kontrast) */
+  --c-accent: 14 165 233;     /* sky-500 #0ea5e9 */
+  --c-xp: 217 119 6;          /* amber-600 #d97706 (açık zeminde okunur) */
+  --c-success: 22 163 74;     /* green-600 #16a34a */
+  --c-danger: 220 38 38;      /* red-600 #dc2626 */
+
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem;
+  --shadow-color: 30 41 59;   /* slate-800 — gölgeler nötr, saf siyah değil */
+  --shadow-strength: 0.5;
+}
+
 /* ---------- ortak token'lar ---------- */
 :root {
   --chart-primary: rgb(var(--c-primary));
@@ -127,6 +154,16 @@ html, body {
     rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
   mix-blend-mode: multiply;
   opacity: 0.25;
+}
+
+/* =================== BRIX arka plan ===================
+   Ferah beyaz zemin + üstte hafif camgöbeği/sky parıltıları (Brix hero hissi).
+   :root body::before ile aynı özgüllükte olduğundan sonra gelir ve kazanır. */
+[data-theme='brix'] body::before {
+  background:
+    radial-gradient(55% 42% at 50% -8%, rgb(var(--c-primary) / 0.10), transparent 70%),
+    radial-gradient(45% 38% at 88% 0%, rgb(var(--c-accent) / 0.08), transparent 70%),
+    radial-gradient(42% 34% at 8% 2%, rgb(var(--c-primary2) / 0.06), transparent 72%);
 }
 
 /* =================== PIXEL bileşen davranışları =================== */
@@ -222,6 +259,13 @@ input[type='range']::-webkit-slider-thumb {
   color: rgb(var(--c-primary));
   -webkit-text-fill-color: rgb(var(--c-primary));
   text-shadow: 2px 2px 0 rgb(var(--c-accent) / 0.6);
+}
+/* Brix: koyu metinden derin camgöbeğine — beyaz zeminde canlı durur */
+[data-theme='brix'] .text-gradient {
+  background: linear-gradient(100deg, rgb(var(--c-text)), rgb(var(--c-primary)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .shimmer {
