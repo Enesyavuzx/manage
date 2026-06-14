@@ -10,6 +10,7 @@ import { NotificationManager } from '@/components/layout/notification-manager'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { ScrollReveal } from '@/components/ui/scroll-reveal'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
@@ -59,7 +60,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-y-auto p-4 lg:p-6" id="main-content">
             {ready ? (
               <ErrorBoundary>
-                <div className="animate-fade-in">{children}</div>
+                <ScrollReveal>{children}</ScrollReveal>
               </ErrorBoundary>
             ) : (
               <DashboardSkeleton />
