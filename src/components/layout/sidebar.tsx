@@ -203,6 +203,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Progress value={info.xpInLevel} max={info.xpNeeded} color="xp" size="sm" />
         </div>
 
+        {/* brix: zemin boyunca yürüyen karakter */}
+        <div className="brix-only relative h-9 overflow-hidden border-y-2 border-border/60">
+          <div className="absolute bottom-0 left-1" style={{ animation: 'brixWalkAcross 9s linear infinite', ['--walk' as string]: '150px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brix/walk.gif" alt="" width={22} height={35} className="pixelated" style={{ imageRendering: 'pixelated' }} />
+          </div>
+        </div>
+
         {/* pixel mascots */}
         <div className="pixel-only flex items-center justify-center gap-3 py-1 opacity-90">
           <PixelSprite name="heart" pixel={3} className="pixelated animate-float" style={{ animationDelay: '0.2s' }} />

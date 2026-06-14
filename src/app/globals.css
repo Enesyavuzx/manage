@@ -431,3 +431,7 @@ input[type='range']::-webkit-slider-thumb {
 
 /* Yalnızca pixel temasında görünen dekoratif öğeler */
 [data-theme='pro'] .pixel-only { display: none !important; }
+
+/* Yalnızca Brix temasında görünen öğeler */
+.brix-only { display: none !important; }
+[data-theme='brix'] .brix-only { display: block !important; }
