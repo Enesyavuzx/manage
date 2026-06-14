@@ -1,11 +1,12 @@
 'use client'
-import { LayoutDashboard, ArrowLeftRight, BarChart3, Wallet } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, BarChart3, Wallet, FileBarChart } from 'lucide-react'
 import { BudgetOverview } from '@/components/budget/budget-overview'
 import { AccountManager } from '@/components/budget/account-manager'
 import { TransactionForm } from '@/components/budget/transaction-form'
 import { TransactionList } from '@/components/budget/transaction-list'
 import { BudgetCharts } from '@/components/budget/budget-charts'
 import { BudgetGoals } from '@/components/budget/budget-goals'
+import { BudgetReport } from '@/components/budget/budget-report'
 import { Tabs } from '@/components/ui/tabs'
 
 export default function BudgetPage() {
@@ -32,6 +33,7 @@ export default function BudgetPage() {
             ),
           },
           { id: 'grafik', label: 'Grafikler', icon: BarChart3, content: <BudgetCharts /> },
+          { id: 'rapor', label: 'Raporlar', icon: FileBarChart, content: <BudgetReport /> },
           { id: 'hesap', label: 'Hesaplar', icon: Wallet, content: <AccountManager /> },
         ]}
       />

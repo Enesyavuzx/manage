@@ -1,9 +1,11 @@
 'use client'
+import { Award, Crown, Settings } from 'lucide-react'
 import { LevelHero } from '@/components/profile/level-hero'
 import { ProfileSettings } from '@/components/profile/profile-settings'
 import { TitlesPanel } from '@/components/profile/titles-panel'
 import { RanksLadder } from '@/components/profile/ranks-ladder'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { Tabs } from '@/components/ui/tabs'
 
 export default function ProfilePage() {
   usePageTitle('Profil')
@@ -13,14 +15,16 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold text-fg text-gradient">Profil</h1>
         <p className="mt-0.5 text-sm text-muted">Rütben, ünvanların ve ayarların</p>
       </div>
+
       <LevelHero />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <RanksLadder />
-        <div className="space-y-4">
-          <ProfileSettings />
-          <TitlesPanel />
-        </div>
-      </div>
+
+      <Tabs
+        tabs={[
+          { id: 'rutbe', label: 'Rütbeler', icon: Award, content: <RanksLadder /> },
+          { id: 'unvan', label: 'Ünvanlar', icon: Crown, content: <TitlesPanel /> },
+          { id: 'ayar', label: 'Ayarlar', icon: Settings, content: <ProfileSettings /> },
+        ]}
+      />
     </div>
   )
 }
