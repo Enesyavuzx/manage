@@ -2,10 +2,22 @@
 
 DEHB zihni için tasarlanmış, oyunlaştırılmış alışkanlık takipçisi. Alışkanlık takip et, streak yap, XP kazan, seviye atla, rütbe/ünvan yükselt, 90 başarımı topla, ödülleri aç.
 
+## Ekran görüntüleri
+
+| Tema galerisi (13 tema) | Klasör penceresi (mini-OS) |
+| --- | --- |
+| ![Tema galerisi](docs/screenshots/theme-gallery.png) | ![Klasör penceresi](docs/screenshots/folder-window.png) |
+
+| Botanik (varsayılan) | Okyanus (koyu) |
+| --- | --- |
+| ![Botanik](docs/screenshots/botanic-dashboard.png) | ![Okyanus](docs/screenshots/ocean-theme.png) |
+
 ## Öne çıkanlar
 
-- **3 canlı tema:** Aurora (akışkan/teknolojik), Neon (sıcak/iç açıcı), Pixel (8-bit retro arcade).
-- **Yanlarda pixel-art figürler:** geniş ekranlarda yan sütunlarda yüzen 8-bit sprite'lar.
+- **13 tema, tek tıkla:** Botanik (varsayılan), Orman, Altın Saat, Gün Batımı, Çöl Gülü, Arktik, Minimal, Okyanus, Galaksi, Teknoloji, Brix (pixel-retro), Pro, Vapor — renk önizlemeli galeriden seçilir. (theme-factory preset'leri token sistemine uyarlandı.)
+- **Klasör "mini-OS":** panelde açılan bilgisayar (%100 boot) → sürüklenebilir klasör ikonları → tıklayınca taşınabilir/büyütülebilir pencere; içinde gerçek dosyaların (alışkanlık, ruh hali, odak, hesaplar).
+- **Kayan animasyonlar:** scroll-reveal, hover etkileşimleri, liste kademeli giriş; `prefers-reduced-motion` destekli.
+- **Yürüyen pixel karakter & figürler:** hero'da ve yan panelde 8-bit sprite'lar.
 - **Odak (Pomodoro):** 15/25/45/60 dk seanslar, dakika başına XP, odak istatistiği.
 - **Ruh Hali:** günlük 5 seviyeli ruh hali kaydı, son 14 gün renkli izleme, günlük XP.
 - **Genişletilmiş ödül mağazası:** 5 seviyeli (Küçük → Mitik) ödüller, kilitli ödüllerde ilerleme barı.
