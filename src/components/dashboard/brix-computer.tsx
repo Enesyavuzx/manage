@@ -6,6 +6,7 @@ import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
+import { playOpen, playClose, playBootDone } from '@/lib/sound'
 
 interface FileItem { id: string; emoji: string; label: string; meta?: string; href: string }
 interface FolderDef { id: string; label: string; accent: string; desc: string; href: string; files: FileItem[] }
@@ -66,6 +67,7 @@ export function BrixComputer() {
 
   const folderById = (id: string) => folders.find(f => f.id === id)
   const topId = wins.filter(w => !w.min).sort((a, b) => b.z - a.z)[0]?.id
+  const sfx = (fn: () => void) => { if (data.profile.soundEnabled !== false) fn() }
 
   useEffect(() => {
     let saved: Record<string, Pos> = {}
@@ -77,6 +79,28 @@ export function BrixComputer() {
   }, [folders.length])
 
   useEffect(() => { const s = () => setClock(format(new Date(), 'HH:mm')); s(); const t = setInterval(s, 30000); return () => clearInterval(t) }, [])
+
+  // OS klavye kısayolları (yalnızca bir pencere açıkken)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (!t || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return
+      const open = wins.filter(w => !w.min).sort((a, b) => a.z - b.z)
+      if (open.length === 0) return
+      if (e.key === 'Escape') {
+        const top = open[open.length - 1]
+        setWins(ws => ws.filter(w => w.id !== top.id)); sfx(playClose)
+      } else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && open.length > 1) {
+        e.preventDefault()
+        const dir = e.key === 'ArrowRight' ? 1 : -1
+        const next = open[(open.length - 1 + dir + open.length) % open.length]
+        focusWin(next.id)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wins])
 
   // scroll-driven "bilgisayarın içine gir" zoom: kaydırdıkça monitör büyür + düzleşir
   useEffect(() => {
@@ -121,7 +145,7 @@ export function BrixComputer() {
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     if (reduce) { setPct(100); const t = setTimeout(() => setPhase('desktop'), 200); return () => clearTimeout(t) }
     let raf = 0; const start = performance.now(); const DUR = 2100
-    const tick = (now: number) => { const t = Math.min(1, (now - start) / DUR); setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100)); if (t < 1) raf = requestAnimationFrame(tick); else setTimeout(() => setPhase('desktop'), 480) }
+    const tick = (now: number) => { const t = Math.min(1, (now - start) / DUR); setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100)); if (t < 1) raf = requestAnimationFrame(tick); else setTimeout(() => { setPhase('desktop'); sfx(playBootDone) }, 480) }
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf)
   }, [started, phase])
 
@@ -134,10 +158,11 @@ export function BrixComputer() {
       const idx = ws.length
       return [...ws, { id, x: 8 + (idx % 5) * 5, y: 8 + (idx % 5) * 5, z, max: false, min: false, ox, oy }]
     })
+    sfx(playOpen)
   }
   function patchWin(id: string, patch: Partial<WinState>) { setWins(ws => ws.map(w => w.id === id ? { ...w, ...patch } : w)) }
   function focusWin(id: string) { patchWin(id, { z: (zRef.current += 1) }) }
-  function closeWin(id: string) { setWins(ws => ws.filter(w => w.id !== id)) }
+  function closeWin(id: string) { setWins(ws => ws.filter(w => w.id !== id)); sfx(playClose) }
   function taskbarClick(id: string) {
     const w = wins.find(x => x.id === id); if (!w) return
     if (w.min) { patchWin(id, { min: false, z: (zRef.current += 1) }) }
@@ -299,6 +324,7 @@ export function BrixComputer() {
                     )
                   })}
                 </div>
+                {wins.length > 0 && <span className="hidden shrink-0 font-display text-[10px] text-muted-2 lg:inline">Esc kapat · ←/→ pencere</span>}
                 <span className="ml-auto shrink-0 font-display text-xs font-bold text-fg tabular-nums">{clock}</span>
               </div>
             </div>

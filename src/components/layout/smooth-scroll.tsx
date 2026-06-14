@@ -18,7 +18,7 @@ export function SmoothScroll() {
     const lenis = new Lenis({
       wrapper,
       content,
-      lerp: 0.12,
+      lerp: 0.1,
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 1.5,
