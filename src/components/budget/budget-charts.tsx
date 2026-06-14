@@ -22,11 +22,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_COLORS = [
-  '#3b82f6',
-  '#8b5cf6',
-  '#f59e0b',
-  '#10b981',
-  '#ef4444',
+  '#ffa447', // turuncu
+  '#7b95ff', // periwinkle
+  '#f57e2e', // derin turuncu
+  '#3caa6e', // yeşil
+  '#ec6ea0', // pembe
 ]
 
 function categoryLabel(id: string): string {

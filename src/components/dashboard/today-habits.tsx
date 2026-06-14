@@ -36,7 +36,7 @@ export function TodayHabits() {
           </Button>
         </CardHeader>
 
-        <div className="space-y-2 p-4">
+        <div className="brix-stagger space-y-2 p-4">
           {total === 0 && (
             <div className="py-10 text-center">
               <p className="text-sm text-muted">Bugün için planlanmış alışkanlık yok.</p>

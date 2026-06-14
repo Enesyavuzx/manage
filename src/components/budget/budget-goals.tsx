@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { cn, formatMoney } from '@/lib/utils'
 
 const GOAL_EMOJIS = ['🎯', '🏖️', '🚗', '🏠', '💻', '🎓', '✈️', '💍', '🎁', '🛟']
-const GOAL_COLORS = ['#22c55e', '#3b82f6', '#a855f7', '#f59e0b', '#ec4899', '#06b6d4']
+const GOAL_COLORS = ['#ffa447', '#7b95ff', '#b482ff', '#3caa6e', '#ec6ea0', '#f5b942']
 const EXPENSE_CATS = TX_CATEGORIES.filter(c => c.type === 'expense')
 
 export function BudgetGoals() {

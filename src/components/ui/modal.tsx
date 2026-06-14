@@ -29,7 +29,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm animate-fade-in" onClick={onClose} />
       <div className={cn(
-        'relative z-10 w-full max-w-lg rounded-xl border border-border bg-surface shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto',
+        'ui-card relative z-10 w-full max-w-lg rounded-xl border border-border bg-surface shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto',
         className,
       )}>
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-surface px-5 py-4 z-10">
