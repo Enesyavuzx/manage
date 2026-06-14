@@ -40,16 +40,16 @@ export function ScrollReveal({ children }: { children: React.ReactNode }) {
     // Başlangıç durumu (boyamadan önce gizle — flash olmaz).
     for (const el of targets) {
       el.style.opacity = '0'
-      el.style.transform = 'translateY(18px)'
+      el.style.transform = 'translateY(22px) scale(0.985)'
       el.style.willChange = 'opacity, transform'
     }
 
     const reveal = (el: HTMLElement, stagger: number) => {
-      const delay = Math.min(stagger, 8) * 70
+      const delay = Math.min(stagger, 8) * 75
       el.style.transition =
-        `opacity .55s ${EASE} ${delay}ms, transform .55s ${EASE} ${delay}ms`
+        `opacity .6s ${EASE} ${delay}ms, transform .6s ${EASE} ${delay}ms`
       el.style.opacity = '1'
-      el.style.transform = 'translateY(0)'
+      el.style.transform = 'translateY(0) scale(1)'
       const cleanup = (e: TransitionEvent) => {
         if (e.target !== el) return
         el.style.transition = ''
