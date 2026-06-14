@@ -1,4 +1,5 @@
 import type { StoreData, Habit, Completion, WeeklyReview, Routine, FutureLetter, Zincir } from './types'
+import { THEME_IDS } from './themes'
 import { DEFAULT_REWARDS, EXTRA_REWARDS, WATER_GOAL } from './constants'
 import { ACHIEVEMENTS } from './achievements'
 import { getLevelInfo } from './gamification'
@@ -60,9 +61,11 @@ export function loadStore(): StoreData {
   }
 }
 
-// Geçerli temalar: botanic (varsayılan), brix (pixel), pro (koyu), pixel (vaporwave).
+// Geçerli temalar themes.ts'teki kayıtlardan; bilinmeyen -> botanic (varsayılan).
 function normalizeTheme(theme: unknown): StoreData['profile']['theme'] {
-  return theme === 'pixel' || theme === 'pro' || theme === 'brix' ? theme : 'botanic'
+  return typeof theme === 'string' && (THEME_IDS as string[]).includes(theme)
+    ? (theme as StoreData['profile']['theme'])
+    : 'botanic'
 }
 
 function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {

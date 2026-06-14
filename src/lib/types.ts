@@ -4,7 +4,9 @@ export type Category =
 
 export type Difficulty = 'trivial' | 'easy' | 'medium' | 'hard' | 'epic'
 
-export type ThemeName = 'pro' | 'pixel' | 'brix' | 'botanic'
+export type ThemeName =
+  | 'pro' | 'pixel' | 'brix' | 'botanic'
+  | 'ocean' | 'galaxy' | 'tech' | 'arctic' | 'desert' | 'forest' | 'golden' | 'minimal' | 'sunset'
 
 export interface HabitStep {
   id: string

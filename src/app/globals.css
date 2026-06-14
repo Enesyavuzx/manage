@@ -131,6 +131,103 @@
   letter-spacing: -0.01em;
 }
 
+/* ===== theme-factory presetleri (ComposioHQ) — token eşlemesi ===== */
+/* Ocean Depths — koyu denizci */
+[data-theme='ocean'] {
+  --c-bg: 26 35 50; --c-surface: 34 45 64; --c-surface2: 43 56 80;
+  --c-border: 56 70 94; --c-border-hover: 74 91 120;
+  --c-text: 241 250 238; --c-muted: 159 179 200; --c-muted2: 107 126 149;
+  --c-primary: 45 139 139; --c-primary2: 63 163 163; --c-accent: 168 218 220;
+  --c-xp: 233 196 106; --c-success: 63 174 143; --c-danger: 231 111 111;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 0 0 0; --shadow-strength: 1;
+}
+/* Midnight Galaxy — kozmik mor */
+[data-theme='galaxy'] {
+  --c-bg: 43 30 62; --c-surface: 53 39 72; --c-surface2: 65 51 90;
+  --c-border: 79 63 107; --c-border-hover: 107 90 138;
+  --c-text: 230 230 250; --c-muted: 164 144 194; --c-muted2: 124 107 154;
+  --c-primary: 107 111 192; --c-primary2: 164 144 194; --c-accent: 164 144 194;
+  --c-xp: 230 200 74; --c-success: 95 185 138; --c-danger: 226 113 143;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 0 0 0; --shadow-strength: 1;
+}
+/* Tech Innovation — yüksek kontrast koyu */
+[data-theme='tech'] {
+  --c-bg: 30 30 30; --c-surface: 38 38 38; --c-surface2: 48 48 48;
+  --c-border: 61 61 61; --c-border-hover: 86 86 86;
+  --c-text: 245 245 245; --c-muted: 160 160 160; --c-muted2: 110 110 110;
+  --c-primary: 0 102 255; --c-primary2: 0 255 255; --c-accent: 0 255 255;
+  --c-xp: 255 209 102; --c-success: 0 224 138; --c-danger: 255 77 109;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.5rem; --shadow-color: 0 0 0; --shadow-strength: 1;
+}
+/* Arctic Frost — buz mavisi açık */
+[data-theme='arctic'] {
+  --c-bg: 243 247 252; --c-surface: 255 255 255; --c-surface2: 238 244 251;
+  --c-border: 212 224 238; --c-border-hover: 179 198 223;
+  --c-text: 31 45 61; --c-muted: 94 113 138; --c-muted2: 147 163 184;
+  --c-primary: 74 111 165; --c-primary2: 91 132 192; --c-accent: 106 160 224;
+  --c-xp: 199 154 58; --c-success: 63 163 122; --c-danger: 217 83 79;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 31 45 61; --shadow-strength: 0.4;
+}
+/* Desert Rose — tozlu pembe açık */
+[data-theme='desert'] {
+  --c-bg: 243 231 218; --c-surface: 251 244 236; --c-surface2: 239 224 210;
+  --c-border: 221 198 180; --c-border-hover: 199 169 148;
+  --c-text: 93 46 70; --c-muted: 138 107 116; --c-muted2: 176 154 160;
+  --c-primary: 184 125 109; --c-primary2: 165 104 90; --c-accent: 212 165 165;
+  --c-xp: 201 138 58; --c-success: 122 154 109; --c-danger: 157 68 82;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 93 46 70; --shadow-strength: 0.35;
+}
+/* Forest Canopy — orman yeşili açık (serif başlık) */
+[data-theme='forest'] {
+  --c-bg: 250 249 246; --c-surface: 255 255 255; --c-surface2: 240 239 232;
+  --c-border: 221 224 210; --c-border-hover: 185 192 166;
+  --c-text: 45 74 43; --c-muted: 107 117 97; --c-muted2: 154 164 139;
+  --c-primary: 45 74 43; --c-primary2: 63 107 60; --c-accent: 164 172 134;
+  --c-xp: 176 138 46; --c-success: 74 124 80; --c-danger: 168 81 46;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Lora', Georgia, serif;
+  --radius: 0.625rem; --shadow-color: 45 74 43; --shadow-strength: 0.35;
+}
+/* Golden Hour — sıcak sonbahar açık */
+[data-theme='golden'] {
+  --c-bg: 239 226 207; --c-surface: 253 248 240; --c-surface2: 236 220 196;
+  --c-border: 220 198 164; --c-border-hover: 194 165 120;
+  --c-text: 74 64 58; --c-muted: 125 111 99; --c-muted2: 171 154 136;
+  --c-primary: 244 169 0; --c-primary2: 217 142 43; --c-accent: 193 102 107;
+  --c-xp: 244 169 0; --c-success: 122 140 58; --c-danger: 179 71 63;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 74 64 58; --shadow-strength: 0.35;
+}
+/* Modern Minimalist — gri tonlu açık */
+[data-theme='minimal'] {
+  --c-bg: 247 247 248; --c-surface: 255 255 255; --c-surface2: 238 238 240;
+  --c-border: 211 211 211; --c-border-hover: 176 176 179;
+  --c-text: 54 69 79; --c-muted: 112 128 144; --c-muted2: 154 163 173;
+  --c-primary: 54 69 79; --c-primary2: 79 98 113; --c-accent: 112 128 144;
+  --c-xp: 184 134 43; --c-success: 74 140 106; --c-danger: 192 82 79;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.4rem; --shadow-color: 54 69 79; --shadow-strength: 0.3;
+}
+/* Sunset Boulevard — gün batımı açık (serif başlık) */
+[data-theme='sunset'] {
+  --c-bg: 253 244 234; --c-surface: 255 250 244; --c-surface2: 246 230 210;
+  --c-border: 239 215 189; --c-border-hover: 224 185 143;
+  --c-text: 38 70 83; --c-muted: 110 123 128; --c-muted2: 154 166 168;
+  --c-primary: 231 111 81; --c-primary2: 244 162 97; --c-accent: 233 196 106;
+  --c-xp: 233 196 106; --c-success: 42 157 143; --c-danger: 209 73 91;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Lora', Georgia, serif;
+  --radius: 0.625rem; --shadow-color: 38 70 83; --shadow-strength: 0.35;
+}
+/* serif başlık temaları */
+[data-theme='forest'] h1, [data-theme='forest'] h2, [data-theme='forest'] h3, [data-theme='forest'] .font-display,
+[data-theme='sunset'] h1, [data-theme='sunset'] h2, [data-theme='sunset'] h3, [data-theme='sunset'] .font-display {
+  font-family: var(--font-display); letter-spacing: -0.01em;
+}
+
 /* Brix: kartlara hafif "pixel" offset gölge */
 [data-theme='brix'] .pixel-shadow {
   box-shadow: 3px 3px 0 0 rgb(40 40 40 / 0.16);
