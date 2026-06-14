@@ -11,6 +11,7 @@ import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
+import { SmoothScroll } from '@/components/layout/smooth-scroll'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
@@ -26,6 +27,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ThemeApplier />
+      <SmoothScroll />
       <NotificationManager />
       <div className="relative z-10 flex h-screen overflow-hidden">
         {sideOpen && (
@@ -58,13 +60,15 @@ function Shell({ children }: { children: React.ReactNode }) {
           </div>
 
           <main className="flex-1 overflow-y-auto p-4 lg:p-6" id="main-content">
-            {ready ? (
-              <ErrorBoundary>
-                <ScrollReveal>{children}</ScrollReveal>
-              </ErrorBoundary>
-            ) : (
-              <DashboardSkeleton />
-            )}
+            <div id="scroll-content">
+              {ready ? (
+                <ErrorBoundary>
+                  <ScrollReveal>{children}</ScrollReveal>
+                </ErrorBoundary>
+              ) : (
+                <DashboardSkeleton />
+              )}
+            </div>
           </main>
         </div>
       </div>
