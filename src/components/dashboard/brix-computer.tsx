@@ -15,8 +15,8 @@ interface WinState { id: string; x: number; y: number; z: number; max: boolean; 
 const MOOD_EMOJI = ['', '😞', '😕', '😐', '🙂', '😄']
 const ICONS_KEY = 'manage_os_icon_pos'
 const DEFAULT_POS: Pos[] = [
-  { x: 17, y: 30 }, { x: 50, y: 30 }, { x: 83, y: 30 },
-  { x: 17, y: 72 }, { x: 50, y: 72 }, { x: 83, y: 72 },
+  { x: 16, y: 30 }, { x: 39, y: 30 }, { x: 61, y: 30 }, { x: 84, y: 30 },
+  { x: 16, y: 72 }, { x: 39, y: 72 }, { x: 61, y: 72 }, { x: 84, y: 72 },
 ]
 
 function fmtDay(iso: string): string {
@@ -51,6 +51,8 @@ export function BrixComputer() {
         files: [{ id: 'new-f', emoji: '⏱️', label: 'Yeni odak seansı', href: '/focus' }, ...focus.map(s => ({ id: s.id, emoji: '🎯', label: `${s.minutes} dk seans`, meta: fmtDay(s.completedAt), href: '/focus' })), { id: 'flow', emoji: '🌊', label: 'Akış durumu', href: '/bugun' }] },
       { id: 'oyun', label: 'Macera', accent: '180 130 255', href: '/seferler', desc: 'XP, rütbe, seferler, ödüller.',
         files: [{ id: 's', emoji: '🚩', label: 'Seferler', href: '/seferler' }, { id: 'a', emoji: '🏆', label: 'Başarımlar', href: '/achievements' }, { id: 'sk', emoji: '🌐', label: 'Beceri Ağacı', href: '/skills' }, { id: 'r', emoji: '🎁', label: 'Ödüller', href: '/rewards' }, { id: 'g', emoji: '🎮', label: 'Mini Oyun', href: '/arcade' }] },
+      { id: 'diyar', label: 'Diyar', accent: '224 179 65', href: '/diyar', desc: 'Tutarlılığınla büyüyen şehrin, seferlerin ve sezonların.',
+        files: [{ id: 'realm', emoji: '🏰', label: 'Diyarım', href: '/diyar' }, { id: 'sefer', emoji: '🚩', label: 'Seferler', href: '/seferler' }, { id: 'wonder', emoji: '🏛️', label: 'Harikalar', href: '/seferler' }, { id: 'share', emoji: '📤', label: 'Paylaş', href: '/diyar' }] },
       { id: 'ruh', label: 'Ruh Hali', accent: '63 143 90', href: '/mood', desc: 'Son ruh hali kayıtların.',
         files: [{ id: 'new-m', emoji: '＋', label: 'Bugünü kaydet', href: '/mood' }, ...moods.map(m => ({ id: m.id, emoji: MOOD_EMOJI[m.level] || '🙂', label: (m.note && m.note.slice(0, 18)) || 'Kayıt', meta: fmtDay(m.createdAt), href: '/mood' }))] },
       { id: 'gelisim', label: 'Gelişim', accent: '249 166 32', href: '/insights', desc: 'Koç, haftalık bakış, içgörüler.',
