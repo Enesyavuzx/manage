@@ -38,18 +38,20 @@ export function ScrollReveal({ children }: { children: React.ReactNode }) {
     const EASE = 'cubic-bezier(.16,1,.3,1)'
 
     // Başlangıç durumu (boyamadan önce gizle — flash olmaz).
-    for (const el of targets) {
+    // alternating slide-in: çift index soldan, tek index sağdan kayar
+    targets.forEach((el, i) => {
+      const dir = i % 2 === 0 ? -1 : 1
       el.style.opacity = '0'
-      el.style.transform = 'translateY(22px) scale(0.985)'
+      el.style.transform = `translate(${dir * 24}px, 16px) scale(0.985)`
       el.style.willChange = 'opacity, transform'
-    }
+    })
 
     const reveal = (el: HTMLElement, stagger: number) => {
       const delay = Math.min(stagger, 8) * 75
       el.style.transition =
         `opacity .6s ${EASE} ${delay}ms, transform .6s ${EASE} ${delay}ms`
       el.style.opacity = '1'
-      el.style.transform = 'translateY(0) scale(1)'
+      el.style.transform = 'translate(0px, 0px) scale(1)'
       const cleanup = (e: TransitionEvent) => {
         if (e.target !== el) return
         el.style.transition = ''

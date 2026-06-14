@@ -60,7 +60,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           </div>
 
           <main className="flex-1 overflow-y-auto p-4 lg:p-6" id="main-content">
-            <div id="scroll-content">
+            <div id="scroll-content" className="overflow-x-clip">
               {ready ? (
                 <ErrorBoundary>
                   <ScrollReveal>{children}</ScrollReveal>

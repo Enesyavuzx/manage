@@ -4,6 +4,7 @@ import { LevelHero } from '@/components/profile/level-hero'
 import { TodayHabits } from '@/components/dashboard/today-habits'
 import { BrixHero } from '@/components/dashboard/brix-hero'
 import { BrixComputer } from '@/components/dashboard/brix-computer'
+import { FeatureCarousel } from '@/components/dashboard/feature-carousel'
 import { AdvisorCard } from '@/components/advisor/advisor-card'
 import { DailyRewards } from '@/components/dashboard/daily-rewards'
 import { SkeletonCard } from '@/components/ui/skeleton'
@@ -31,6 +32,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <BrixHero />
       <BrixComputer />
+      <FeatureCarousel />
       <AdvisorCard />
       <LevelHero />
       <QuestsPanel />

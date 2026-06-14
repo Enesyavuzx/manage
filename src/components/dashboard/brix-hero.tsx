@@ -6,6 +6,7 @@ import { useStore } from '@/hooks/useStore'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { getLevelInfo, getRank } from '@/lib/gamification'
+import { ParticleField } from '@/components/ui/particle-field'
 
 function timeContext(): { greeting: string; nudge: string } {
   const h = new Date().getHours()
@@ -48,6 +49,8 @@ export function BrixHero() {
             'radial-gradient(60% 80% at 100% 0%, rgb(var(--c-primary) / 0.16), transparent 60%), radial-gradient(55% 70% at 0% 100%, rgb(var(--c-accent) / 0.14), transparent 60%)',
         }}
       />
+      {/* hareketli partiküller */}
+      <ParticleField className="pointer-events-none absolute inset-0 h-full w-full opacity-70" />
 
       <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
         {/* Sol: metin + CTA */}
