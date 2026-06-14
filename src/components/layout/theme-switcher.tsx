@@ -1,11 +1,12 @@
 'use client'
-import { Sparkles, Gamepad2 } from 'lucide-react'
+import { Sparkles, Gamepad2, Sun } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import type { ThemeName } from '@/lib/types'
 
 const OPTIONS: { id: ThemeName; label: string; icon: React.ElementType }[] = [
   { id: 'pro',   label: 'Pro',   icon: Sparkles },
+  { id: 'brix',  label: 'Brix',  icon: Sun },
   { id: 'pixel', label: 'Vapor', icon: Gamepad2 },
 ]
 

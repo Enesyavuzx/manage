@@ -60,9 +60,9 @@ export function loadStore(): StoreData {
   }
 }
 
-// Eski tema adları iki yeni temaya eşlenir. Yalnızca pixel "oyunsu"; gerisi pro.
+// Geçerli temalar: pro (koyu), pixel (vaporwave), brix (aydınlık). Gerisi pro'ya düşer.
 function normalizeTheme(theme: unknown): StoreData['profile']['theme'] {
-  return theme === 'pixel' ? 'pixel' : 'pro'
+  return theme === 'pixel' || theme === 'brix' ? theme : 'pro'
 }
 
 function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
