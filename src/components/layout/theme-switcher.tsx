@@ -6,7 +6,7 @@ import type { ThemeName } from '@/lib/types'
 
 const OPTIONS: { id: ThemeName; label: string; icon: React.ElementType }[] = [
   { id: 'pro',   label: 'Pro',   icon: Sparkles },
-  { id: 'pixel', label: 'Pixel', icon: Gamepad2 },
+  { id: 'pixel', label: 'Vapor', icon: Gamepad2 },
 ]
 
 export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
