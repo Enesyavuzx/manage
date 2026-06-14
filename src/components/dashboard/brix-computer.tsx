@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, X, Power, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
+import { ArrowRight, X, Power, ChevronRight, Maximize2, Minimize2, Minus } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -9,11 +9,11 @@ import { tr } from 'date-fns/locale'
 
 interface FileItem { id: string; emoji: string; label: string; meta?: string; href: string }
 interface FolderDef { id: string; label: string; accent: string; desc: string; href: string; files: FileItem[] }
-interface Pos { x: number; y: number } // yüzde (0-100), masaüstü alanına göre
+interface Pos { x: number; y: number }
+interface WinState { id: string; x: number; y: number; z: number; max: boolean; min: boolean; ox: number; oy: number }
 
 const MOOD_EMOJI = ['', '😞', '😕', '😐', '🙂', '😄']
 const ICONS_KEY = 'manage_os_icon_pos'
-// varsayılan ızgara konumları (3 sütun x 2 satır), %
 const DEFAULT_POS: Pos[] = [
   { x: 17, y: 30 }, { x: 50, y: 30 }, { x: 83, y: 30 },
   { x: 17, y: 72 }, { x: 50, y: 72 }, { x: 83, y: 72 },
@@ -29,17 +29,15 @@ export function BrixComputer() {
   const { data } = useStore()
   const screenRef = useRef<HTMLDivElement>(null)
   const deskRef = useRef<HTMLDivElement>(null)
+  const zRef = useRef(10)
 
   const [phase, setPhase] = useState<Phase>('boot')
   const [pct, setPct] = useState(0)
   const [started, setStarted] = useState(false)
-  const [openId, setOpenId] = useState<string | null>(null)
-  const [origin, setOrigin] = useState({ x: 50, y: 50 })
   const [hover, setHover] = useState<string | null>(null)
   const [clock, setClock] = useState('')
   const [positions, setPositions] = useState<Record<string, Pos>>({})
-  const [win, setWin] = useState({ x: 0, y: 0 })
-  const [maximized, setMaximized] = useState(false)
+  const [wins, setWins] = useState<WinState[]>([])
 
   const folders = useMemo<FolderDef[]>(() => {
     const habits = (data.habits ?? []).filter(h => !h.archived)
@@ -62,9 +60,9 @@ export function BrixComputer() {
     ]
   }, [data])
 
-  const openFolder = folders.find(f => f.id === openId) ?? null
+  const folderById = (id: string) => folders.find(f => f.id === id)
+  const topId = wins.filter(w => !w.min).sort((a, b) => b.z - a.z)[0]?.id
 
-  // ikon konumlarını yükle (yoksa varsayılan ızgara)
   useEffect(() => {
     let saved: Record<string, Pos> = {}
     try { saved = JSON.parse(localStorage.getItem(ICONS_KEY) || '{}') } catch {}
@@ -74,10 +72,7 @@ export function BrixComputer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folders.length])
 
-  useEffect(() => {
-    const set = () => setClock(format(new Date(), 'HH:mm'))
-    set(); const t = setInterval(set, 30000); return () => clearInterval(t)
-  }, [])
+  useEffect(() => { const s = () => setClock(format(new Date(), 'HH:mm')); s(); const t = setInterval(s, 30000); return () => clearInterval(t) }, [])
 
   useEffect(() => {
     const el = screenRef.current
@@ -92,61 +87,72 @@ export function BrixComputer() {
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     if (reduce) { setPct(100); const t = setTimeout(() => setPhase('desktop'), 200); return () => clearTimeout(t) }
     let raf = 0; const start = performance.now(); const DUR = 2100
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / DUR)
-      setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100))
-      if (t < 1) raf = requestAnimationFrame(tick); else setTimeout(() => setPhase('desktop'), 480)
-    }
+    const tick = (now: number) => { const t = Math.min(1, (now - start) / DUR); setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100)); if (t < 1) raf = requestAnimationFrame(tick); else setTimeout(() => setPhase('desktop'), 480) }
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf)
   }, [started, phase])
 
-  // ----- ikon sürükleme -----
+  // ----- pencere yönetimi -----
+  function openWindow(id: string, ox: number, oy: number) {
+    const z = (zRef.current += 1)
+    setWins(ws => {
+      const ex = ws.find(w => w.id === id)
+      if (ex) return ws.map(w => w.id === id ? { ...w, min: false, z } : w)
+      const idx = ws.length
+      return [...ws, { id, x: 8 + (idx % 5) * 5, y: 8 + (idx % 5) * 5, z, max: false, min: false, ox, oy }]
+    })
+  }
+  function patchWin(id: string, patch: Partial<WinState>) { setWins(ws => ws.map(w => w.id === id ? { ...w, ...patch } : w)) }
+  function focusWin(id: string) { patchWin(id, { z: (zRef.current += 1) }) }
+  function closeWin(id: string) { setWins(ws => ws.filter(w => w.id !== id)) }
+  function taskbarClick(id: string) {
+    const w = wins.find(x => x.id === id); if (!w) return
+    if (w.min) { patchWin(id, { min: false, z: (zRef.current += 1) }) }
+    else if (topId === id) { patchWin(id, { min: true }) }
+    else { focusWin(id) }
+  }
+
+  // ----- ikon sürükleme / tıklama -----
   function startIconDrag(id: string, e: React.PointerEvent) {
     e.preventDefault()
-    const desk = deskRef.current
-    if (!desk) return
+    const desk = deskRef.current; if (!desk) return
     const rect = desk.getBoundingClientRect()
     const startX = e.clientX, startY = e.clientY
     const base = positions[id] || { x: 50, y: 50 }
     let moved = false
     const onMove = (ev: PointerEvent) => {
+      if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 5) moved = true
       const dx = (ev.clientX - startX) / rect.width * 100
       const dy = (ev.clientY - startY) / rect.height * 100
-      if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 5) moved = true
       setPositions(p => ({ ...p, [id]: { x: Math.max(8, Math.min(92, base.x + dx)), y: Math.max(12, Math.min(88, base.y + dy)) } }))
     }
     const onUp = (ev: PointerEvent) => {
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp)
       if (!moved) {
-        // tıklama = klasörü aç (ikon konumundan)
-        const desk2 = deskRef.current
-        if (desk2) {
-          const r = desk2.getBoundingClientRect()
-          setOrigin({ x: Math.round((ev.clientX - r.left) / r.width * 100), y: Math.round((ev.clientY - r.top) / r.height * 100) })
-        }
-        setWin({ x: 0, y: 0 }); setMaximized(false); setOpenId(id)
-      } else {
-        setPositions(p => { try { localStorage.setItem(ICONS_KEY, JSON.stringify(p)) } catch {} ; return p })
-      }
+        const r = desk.getBoundingClientRect()
+        openWindow(id, Math.round((ev.clientX - r.left) / r.width * 100), Math.round((ev.clientY - r.top) / r.height * 100))
+      } else setPositions(p => { try { localStorage.setItem(ICONS_KEY, JSON.stringify(p)) } catch {} ; return p })
     }
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp)
   }
 
   // ----- pencere sürükleme -----
-  function startWinDrag(e: React.PointerEvent) {
-    if (maximized) return
-    e.preventDefault()
+  function startWinDrag(id: string, e: React.PointerEvent) {
+    const w = wins.find(x => x.id === id); if (!w || w.max) return
+    e.preventDefault(); focusWin(id)
+    const desk = deskRef.current; if (!desk) return
+    const rect = desk.getBoundingClientRect()
     const startX = e.clientX, startY = e.clientY
-    const base = { ...win }
-    const onMove = (ev: PointerEvent) => setWin({ x: base.x + (ev.clientX - startX), y: base.y + (ev.clientY - startY) })
+    const base = { x: w.x, y: w.y }
+    const onMove = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startX) / rect.width * 100
+      const dy = (ev.clientY - startY) / rect.height * 100
+      patchWin(id, { x: Math.max(0, Math.min(60, base.x + dx)), y: Math.max(0, Math.min(60, base.y + dy)) })
+    }
     const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp)
   }
 
-  function reboot() { setPhase('boot'); setPct(0); setStarted(false); setOpenId(null) }
+  function reboot() { setPhase('boot'); setPct(0); setStarted(false); setWins([]) }
 
   const bootLines = ['manage_os başlatılıyor…', 'modüller yükleniyor…', 'klasörler hazırlanıyor…', 'hazır!']
   const bootStep = Math.min(bootLines.length - 1, Math.floor(pct / 27))
@@ -156,7 +162,7 @@ export function BrixComputer() {
       <div className="mb-4">
         <span className="inline-flex items-center gap-1.5 rounded border-2 border-border bg-accent/20 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-fg font-display">Sistem</span>
         <h2 className="mt-3 text-2xl font-bold text-fg sm:text-3xl">Bilgisayarı aç, klasörüne gir</h2>
-        <p className="mt-1 text-sm text-muted">Klasörleri sürükleyebilir, tıklayınca açılan pencereyi taşıyıp büyütebilirsin.</p>
+        <p className="mt-1 text-sm text-muted">Birden çok klasör aç, pencereleri taşı/büyüt, görev çubuğundan küçült.</p>
       </div>
 
       <div className="mx-auto w-full max-w-3xl">
@@ -184,81 +190,79 @@ export function BrixComputer() {
                 <span className="ml-auto font-display text-sm text-muted">{folders.length} klasör</span>
               </div>
 
-              {/* sürüklenebilir ikonlar */}
+              {/* ikon + pencere alanı */}
               <div ref={deskRef} className="relative flex-1 overflow-hidden">
+                {/* ikonlar */}
                 {folders.map(f => {
                   const p = positions[f.id] || { x: 50, y: 50 }
                   return (
-                    <button
-                      key={f.id}
-                      onPointerDown={(e) => startIconDrag(f.id, e)}
-                      onMouseEnter={() => setHover(f.id)}
-                      onMouseLeave={() => setHover(h => (h === f.id ? null : h))}
-                      className="absolute flex w-20 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none flex-col items-center gap-1 rounded p-1 active:cursor-grabbing"
-                      style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                    >
+                    <button key={f.id} onPointerDown={(e) => startIconDrag(f.id, e)} onMouseEnter={() => setHover(f.id)} onMouseLeave={() => setHover(h => (h === f.id ? null : h))}
+                      className="absolute z-0 flex w-20 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none flex-col items-center gap-1 rounded p-1 active:cursor-grabbing" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={hover === f.id || openId === f.id ? '/brix/folder-open.png' : '/brix/folder.png'} alt="" width={52} height={52} className="pixelated h-11 w-11 sm:h-12 sm:w-12" style={{ imageRendering: 'pixelated' }} draggable={false} />
+                      <img src={hover === f.id || wins.some(w => w.id === f.id) ? '/brix/folder-open.png' : '/brix/folder.png'} alt="" width={52} height={52} className="pixelated h-11 w-11 sm:h-12 sm:w-12" style={{ imageRendering: 'pixelated' }} draggable={false} />
                       <span className="max-w-full truncate rounded border-2 border-border bg-surface px-1.5 py-0.5 font-display text-[11px] font-semibold text-fg" style={{ boxShadow: `2px 2px 0 0 rgb(${f.accent})` }}>{f.label}</span>
                     </button>
                   )
                 })}
+
+                {/* pencereler */}
+                {wins.map(w => {
+                  const f = folderById(w.id); if (!f || w.min) return null
+                  return (
+                    <div key={w.id} onPointerDown={() => focusWin(w.id)}
+                      className={cn('absolute flex flex-col overflow-hidden rounded bg-surface brix-bevel', w.max ? 'inset-1' : '')}
+                      style={w.max ? { zIndex: w.z } : { left: `${w.x}%`, top: `${w.y}%`, width: '74%', height: '82%', zIndex: w.z, transformOrigin: `${w.ox}% ${w.oy}%`, animation: 'brixWindowOpen .26s cubic-bezier(.16,1,.3,1)' }}>
+                      {/* başlık çubuğu */}
+                      <div onPointerDown={(e) => startWinDrag(w.id, e)} className={cn('flex items-center gap-2 border-b-2 border-border px-2.5 py-1.5', w.max ? '' : 'cursor-move')} style={{ background: `rgb(${f.accent} / 0.18)` }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/brix/folder-open.png" alt="" width={18} height={18} className="pixelated" style={{ imageRendering: 'pixelated' }} draggable={false} />
+                        <span className="truncate font-display text-xs font-bold text-fg">{f.label}</span>
+                        <div className="ml-auto flex items-center gap-1">
+                          <button onClick={() => patchWin(w.id, { min: true })} className="flex h-5 w-5 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px" aria-label="Küçült"><Minus size={11} /></button>
+                          <button onClick={() => patchWin(w.id, { max: !w.max })} className="flex h-5 w-5 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px" aria-label={w.max ? 'Küçült' : 'Büyüt'}>{w.max ? <Minimize2 size={10} /> : <Maximize2 size={10} />}</button>
+                          <button onClick={() => closeWin(w.id)} className="flex h-5 w-5 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px" aria-label="Kapat"><X size={11} /></button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 border-b border-border/60 px-2.5 py-1 text-[11px] text-muted font-display"><span>⌂</span><ChevronRight size={11} /><span className="text-fg">{f.label}</span></div>
+                      <div className="flex-1 overflow-y-auto p-3">
+                        <p className="mb-2.5 text-[11px] text-muted">{f.desc}</p>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {f.files.map((file, i) => (
+                            <Link key={file.id} href={file.href} className="flex flex-col items-center gap-1 rounded border-2 border-border bg-surface-2 p-2 text-center transition-transform hover:-translate-y-0.5 hover:border-border-hover" style={{ animation: 'brixFileIn .3s ease-out both', animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+                              <span className="text-xl leading-none">{file.emoji}</span>
+                              <span className="w-full truncate text-[11px] font-medium text-fg">{file.label}</span>
+                              {file.meta && <span className="text-[10px] text-muted-2">{file.meta}</span>}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="border-t-2 border-border bg-surface px-2.5 py-1.5">
+                        <Link href={f.href} className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold text-bg brix-bevel-sm hover:-translate-y-px font-display" style={{ background: `rgb(${f.accent})` }}>Tümünü aç <ArrowRight size={13} /></Link>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
 
-              <div className="flex items-center gap-2 border-t-2 border-border bg-surface px-3 py-1.5">
+              {/* görev çubuğu */}
+              <div className="flex items-center gap-1.5 border-t-2 border-border bg-surface px-2 py-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/brix/walk.gif" alt="" width={18} height={29} className="pixelated" style={{ imageRendering: 'pixelated' }} />
-                <span className="font-display text-xs text-muted">hazır</span>
-                <span className="ml-auto font-display text-xs font-bold text-fg tabular-nums">{clock}</span>
+                <img src="/brix/walk.gif" alt="" width={16} height={26} className="pixelated shrink-0" style={{ imageRendering: 'pixelated' }} />
+                <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+                  {wins.map(w => {
+                    const f = folderById(w.id); if (!f) return null
+                    const active = topId === w.id && !w.min
+                    return (
+                      <button key={w.id} data-win={w.id} onClick={() => taskbarClick(w.id)} className={cn('flex shrink-0 items-center gap-1.5 rounded border-2 px-2 py-0.5 font-display text-[11px] font-semibold transition-colors', active ? 'border-border bg-surface-2 text-fg' : 'border-border/60 text-muted hover:text-fg', w.min && 'opacity-60')}>
+                        <span className="h-2 w-2 rounded-sm" style={{ background: `rgb(${f.accent})` }} />
+                        {f.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <span className="ml-auto shrink-0 font-display text-xs font-bold text-fg tabular-nums">{clock}</span>
               </div>
             </div>
-
-            {/* PENCERE */}
-            {openFolder && (
-              <div className="absolute inset-0 z-40">
-                <div className="absolute inset-0 bg-black/40" onClick={() => setOpenId(null)} />
-                <div
-                  className={cn('absolute flex flex-col overflow-hidden rounded bg-surface brix-bevel', maximized ? 'inset-1' : 'inset-x-2 inset-y-3 sm:inset-x-8')}
-                  style={{ transformOrigin: `${origin.x}% ${origin.y}%`, transform: maximized ? undefined : `translate(${win.x}px, ${win.y}px)`, animation: 'brixWindowOpen .28s cubic-bezier(.16,1,.3,1)' }}
-                >
-                  {/* başlık çubuğu (sürükle) */}
-                  <div onPointerDown={startWinDrag} className={cn('flex items-center gap-2 border-b-2 border-border px-3 py-2', maximized ? '' : 'cursor-move')} style={{ background: `rgb(${openFolder.accent} / 0.16)` }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/brix/folder-open.png" alt="" width={22} height={22} className="pixelated" style={{ imageRendering: 'pixelated' }} draggable={false} />
-                    <span className="font-display text-sm font-bold text-fg">{openFolder.label}</span>
-                    <div className="ml-auto flex items-center gap-1.5">
-                      <button onClick={() => setMaximized(m => !m)} className="flex h-6 w-6 items-center justify-center rounded border-2 border-border bg-surface text-fg transition-transform hover:-translate-y-0.5" aria-label={maximized ? 'Küçült' : 'Büyüt'}>
-                        {maximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-                      </button>
-                      <button onClick={() => setOpenId(null)} className="flex h-6 w-6 items-center justify-center rounded border-2 border-border bg-surface text-fg transition-transform hover:-translate-y-0.5" aria-label="Kapat"><X size={13} /></button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 border-b border-border/60 px-3 py-1.5 text-xs text-muted font-display">
-                    <span>⌂ Masaüstü</span><ChevronRight size={12} /><span className="text-fg">{openFolder.label}</span>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-                    <p className="mb-3 text-xs text-muted">{openFolder.desc}</p>
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
-                      {openFolder.files.map((file, i) => (
-                        <Link key={file.id} href={file.href} className="flex flex-col items-center gap-1 rounded border-2 border-border bg-surface-2 p-2 text-center transition-transform hover:-translate-y-0.5 hover:border-border-hover" style={{ animation: `brixFileIn .3s ease-out both`, animationDelay: `${Math.min(i, 10) * 35}ms` }}>
-                          <span className="text-2xl leading-none">{file.emoji}</span>
-                          <span className="w-full truncate text-[11px] font-medium text-fg">{file.label}</span>
-                          {file.meta && <span className="text-[10px] text-muted-2">{file.meta}</span>}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="border-t-2 border-border bg-surface px-3 py-2">
-                    <Link href={openFolder.href} className="inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-bold text-bg brix-bevel-sm transition-transform hover:-translate-y-0.5 font-display" style={{ background: `rgb(${openFolder.accent})` }}>
-                      Tümünü aç <ArrowRight size={15} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
