@@ -10,22 +10,24 @@
    2) PIXEL — synthwave arcade, 8-bit, oyunsu
    ============================================================ */
 
-/* ---------- PRO (varsayılan) ---------- */
+/* ---------- PRO (varsayılan) ----------
+   Referans: Linear + Vercel Geist. Near-black nötr zemin, oslo-gray metin,
+   desatüre indigo marka rengi. Yüzeyler %5-7 luminans adımlarıyla yükselir. */
 :root, [data-theme='pro'] {
-  --c-bg: 9 9 11;
-  --c-surface: 21 21 25;
-  --c-surface2: 31 31 37;
-  --c-border: 39 39 46;
-  --c-border-hover: 63 63 73;
-  --c-text: 237 237 241;
-  --c-muted: 161 161 172;
-  --c-muted2: 110 110 122;
-  --c-primary: 108 99 255;
-  --c-primary2: 142 134 255;
-  --c-accent: 56 189 248;
-  --c-xp: 245 197 100;
-  --c-success: 52 199 123;
-  --c-danger: 244 78 96;
+  --c-bg: 8 9 10;            /* Linear woodsmoke #08090a */
+  --c-surface: 16 17 19;     /* surface-base */
+  --c-surface2: 24 25 28;    /* surface-raised */
+  --c-border: 36 38 43;      /* ince ayraç */
+  --c-border-hover: 58 61 68;
+  --c-text: 247 248 248;     /* #f7f8f8 */
+  --c-muted: 138 143 152;    /* oslo gray #8a8f98 */
+  --c-muted2: 98 102 111;
+  --c-primary: 94 106 210;   /* Linear indigo #5e6ad2 */
+  --c-primary2: 126 140 224; /* #7e8ce0 */
+  --c-accent: 98 192 245;    /* sky #62c0f5 */
+  --c-xp: 226 179 64;        /* amber */
+  --c-success: 76 183 130;   /* #4cb782 */
+  --c-danger: 235 87 87;     /* #eb5757 */
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Inter', system-ui, sans-serif;
@@ -34,22 +36,23 @@
   --shadow-strength: 1;
 }
 
-/* ---------- PIXEL (synthwave arcade) ---------- */
+/* ---------- PIXEL (synthwave arcade) ----------
+   Referans: Synthwave '84 (robb0wen). Resmi paletten birebir hex değerler. */
 [data-theme='pixel'] {
-  --c-bg: 17 11 38;
-  --c-surface: 30 19 64;
-  --c-surface2: 46 29 92;
-  --c-border: 86 56 150;
-  --c-border-hover: 255 92 196;   /* chunky gölge rengi: hot magenta */
+  --c-bg: 23 21 32;          /* activity bar #171520 */
+  --c-surface: 36 27 47;     /* sidebar #241b2f */
+  --c-surface2: 42 33 57;    /* input #2a2139 */
+  --c-border: 70 52 101;     /* menu #463465 */
+  --c-border-hover: 255 126 219;  /* chunky gölge: hot pink #ff7edb */
   --c-text: 246 240 255;
-  --c-muted: 188 168 230;
-  --c-muted2: 138 116 184;
-  --c-primary: 48 226 232;        /* electric cyan */
-  --c-primary2: 130 255 246;
-  --c-accent: 255 92 196;         /* hot magenta */
-  --c-xp: 255 210 64;             /* arcade gold */
-  --c-success: 80 240 138;
-  --c-danger: 255 84 112;
+  --c-muted: 132 139 189;    /* yorum mavisi #848bbd */
+  --c-muted2: 105 110 150;
+  --c-primary: 3 237 249;    /* electric cyan #03edf9 */
+  --c-primary2: 126 245 251; /* açık cyan */
+  --c-accent: 255 126 219;   /* hot pink #ff7edb */
+  --c-xp: 254 222 93;        /* sarı #fede5d */
+  --c-success: 114 241 184;  /* #72f1b8 */
+  --c-danger: 254 68 80;     /* #fe4450 */
 
   --font-body: 'VT323', monospace;
   --font-display: 'Press Start 2P', monospace;
@@ -100,11 +103,11 @@ html, body {
   z-index: -1;
   pointer-events: none;
   background:
-    /* üstte yumuşak güneş ışıması */
-    radial-gradient(80% 55% at 50% 8%, rgb(255 92 196 / 0.22), transparent 60%),
-    radial-gradient(70% 50% at 50% 0%, rgb(48 226 232 / 0.14), transparent 55%),
-    /* alt zemine doğru koyulaşan synthwave gökyüzü */
-    linear-gradient(to bottom, rgb(var(--c-bg)) 0%, rgb(34 14 70) 45%, rgb(20 10 48) 70%, rgb(var(--c-bg)) 100%),
+    /* üstte yumuşak güneş ışıması (hot pink + cyan) */
+    radial-gradient(80% 55% at 50% 8%, rgb(255 126 219 / 0.22), transparent 60%),
+    radial-gradient(70% 50% at 50% 0%, rgb(3 237 249 / 0.14), transparent 55%),
+    /* alt zemine doğru koyulaşan synthwave gökyüzü (#241b2f → #171520) */
+    linear-gradient(to bottom, rgb(var(--c-bg)) 0%, rgb(36 27 47) 45%, rgb(28 21 40) 70%, rgb(var(--c-bg)) 100%),
     /* ince pixel grid */
     repeating-linear-gradient(0deg, rgb(var(--c-primary) / 0.05) 0 1px, transparent 1px 8px),
     repeating-linear-gradient(90deg, rgb(var(--c-primary) / 0.05) 0 1px, transparent 1px 8px);
