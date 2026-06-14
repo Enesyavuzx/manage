@@ -31,7 +31,7 @@ export function ScrollReveal({ children }: { children: React.ReactNode }) {
     // Hedefler = o kapsayıcının doğrudan çocukları (bölümler).
     const container = root.firstElementChild as HTMLElement | null
     const targets = container
-      ? (Array.from(container.children) as HTMLElement[])
+      ? (Array.from(container.children) as HTMLElement[]).filter(el => !('noReveal' in el.dataset))
       : []
     if (targets.length === 0) return
 

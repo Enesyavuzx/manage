@@ -29,6 +29,8 @@ export function BrixComputer() {
   const { data } = useStore()
   const screenRef = useRef<HTMLDivElement>(null)
   const deskRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLElement>(null)
+  const monitorRef = useRef<HTMLDivElement>(null)
   const zRef = useRef(10)
 
   const [phase, setPhase] = useState<Phase>('boot')
@@ -75,6 +77,36 @@ export function BrixComputer() {
   }, [folders.length])
 
   useEffect(() => { const s = () => setClock(format(new Date(), 'HH:mm')); s(); const t = setInterval(s, 30000); return () => clearInterval(t) }, [])
+
+  // scroll-driven "bilgisayarın içine gir" zoom: kaydırdıkça monitör büyür + düzleşir
+  useEffect(() => {
+    const stage = stageRef.current, mon = monitorRef.current
+    if (!stage || !mon) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    mon.style.transformOrigin = 'center 42%'
+    const scroller = document.getElementById('main-content')
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const r = stage.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      let p = (vh * 0.9 - r.top) / (vh * 0.6)
+      p = Math.max(0, Math.min(1, p))
+      const e = 1 - Math.pow(1 - p, 3) // ease-out-cubic
+      mon.style.transform = `perspective(1100px) rotateX(${(1 - e) * 14}deg) scale(${0.8 + e * 0.34})`
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    scroller?.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      scroller?.removeEventListener('scroll', onScroll)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
 
   useEffect(() => {
     const el = screenRef.current
@@ -160,14 +192,14 @@ export function BrixComputer() {
   const bootStep = Math.min(bootLines.length - 1, Math.floor(pct / 27))
 
   return (
-    <section className="relative">
+    <section ref={stageRef} data-no-reveal className="relative overflow-x-clip">
       <div className="mb-4">
         <span className="inline-flex items-center gap-1.5 rounded border-2 border-border bg-accent/20 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-fg font-display">Sistem</span>
         <h2 className="mt-3 text-2xl font-bold text-fg sm:text-3xl">Bilgisayarı aç, klasörüne gir</h2>
         <p className="mt-1 text-sm text-muted">Birden çok klasör aç, pencereleri taşı/büyüt, görev çubuğundan küçült.</p>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl">
+      <div ref={monitorRef} className="mx-auto w-full max-w-3xl" style={{ willChange: 'transform' }}>
         <div className="rounded-lg bg-surface-2 p-3 brix-bevel sm:p-4">
           <div className="mb-2 flex items-center gap-2 px-1">
             <span className="h-3 w-3 rounded-full border-2 border-border" style={{ background: phase === 'boot' ? 'rgb(var(--c-danger))' : 'rgb(var(--c-success))' }} />
