@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, X, Power, ChevronRight, Maximize2, Minimize2, Minus } from 'lucide-react'
+import { ArrowRight, X, Power, ChevronRight, Maximize2, Minimize2, Minus, RotateCcw, LayoutGrid } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -41,6 +41,8 @@ export function BrixComputer() {
   const [clock, setClock] = useState('')
   const [positions, setPositions] = useState<Record<string, Pos>>({})
   const [wins, setWins] = useState<WinState[]>([])
+  const [startOpen, setStartOpen] = useState(false)
+  const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null)
 
   const folders = useMemo<FolderDef[]>(() => {
     const habits = (data.habits ?? []).filter(h => !h.archived)
@@ -213,6 +215,20 @@ export function BrixComputer() {
 
   function reboot() { setPhase('boot'); setPct(0); setStarted(false); setWins([]) }
 
+  function resetIcons() {
+    const next: Record<string, Pos> = {}
+    folders.forEach((f, i) => { next[f.id] = DEFAULT_POS[i] || { x: 50, y: 50 } })
+    setPositions(next)
+    try { localStorage.removeItem(ICONS_KEY) } catch {}
+  }
+  function deskContext(e: React.MouseEvent) {
+    e.preventDefault()
+    const desk = deskRef.current; if (!desk) return
+    const r = desk.getBoundingClientRect()
+    setCtx({ x: Math.min(e.clientX - r.left, r.width - 184), y: Math.min(e.clientY - r.top, r.height - 130) })
+    setStartOpen(false)
+  }
+
   const bootLines = ['manage_os başlatılıyor…', 'modüller yükleniyor…', 'klasörler hazırlanıyor…', 'hazır!']
   const bootStep = Math.min(bootLines.length - 1, Math.floor(pct / 27))
 
@@ -250,7 +266,7 @@ export function BrixComputer() {
               </div>
 
               {/* ikon + pencere alanı */}
-              <div ref={deskRef} className="relative flex-1 overflow-hidden">
+              <div ref={deskRef} onContextMenu={deskContext} className="relative flex-1 overflow-hidden">
                 {/* temaya uyumlu duvar kâğıdı */}
                 <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(85% 60% at 50% -5%, rgb(var(--c-primary) / 0.12), transparent 70%), radial-gradient(70% 60% at 100% 100%, rgb(var(--c-accent) / 0.10), transparent 70%)' }} />
                 <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(rgb(var(--c-border) / 0.55) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
@@ -306,10 +322,49 @@ export function BrixComputer() {
                     </div>
                   )
                 })}
+
+                {/* Başlat menüsü */}
+                {startOpen && (
+                  <>
+                    <div className="absolute inset-0 z-[90]" onClick={() => setStartOpen(false)} />
+                    <div className="absolute bottom-2 left-2 z-[91] w-56 rounded bg-surface p-2 brix-bevel animate-slide-up">
+                      <div className="mb-2 flex items-center gap-2 border-b-2 border-border px-1 pb-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/brix/walk.gif" alt="" width={18} height={29} className="pixelated" style={{ imageRendering: 'pixelated' }} />
+                        <span className="font-display text-sm font-bold text-fg">manage_os</span>
+                      </div>
+                      <div className="max-h-44 space-y-0.5 overflow-y-auto">
+                        {folders.map(f => (
+                          <button key={f.id} onClick={() => { openWindow(f.id, 50, 92); setStartOpen(false) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: `rgb(${f.accent})` }} />
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-1 space-y-0.5 border-t-2 border-border pt-1">
+                        <button onClick={() => { resetIcons(); setStartOpen(false) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted hover:bg-surface-2 hover:text-fg"><RotateCcw size={13} /> İkonları sıfırla</button>
+                        <button onClick={() => { reboot(); setStartOpen(false) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-danger hover:bg-danger/10"><Power size={13} /> Yeniden başlat</button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* sağ-tık bağlam menüsü */}
+                {ctx && (
+                  <>
+                    <div className="absolute inset-0 z-[90]" onClick={() => setCtx(null)} onContextMenu={(e) => { e.preventDefault(); setCtx(null) }} />
+                    <div className="absolute z-[91] w-44 rounded bg-surface p-1 brix-bevel animate-fade-in" style={{ left: ctx.x, top: ctx.y }}>
+                      <button onClick={() => { reboot(); setCtx(null) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2"><RotateCcw size={13} /> Yenile (boot)</button>
+                      <button onClick={() => { resetIcons(); setCtx(null) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2"><LayoutGrid size={13} /> İkonları sırala</button>
+                      <button onClick={() => { setWins([]); setCtx(null) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2"><X size={13} /> Pencereleri kapat</button>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* görev çubuğu */}
               <div className="flex items-center gap-1.5 border-t-2 border-border bg-surface px-2 py-1.5">
+                <button onClick={() => { setStartOpen(o => !o); setCtx(null) }} className={cn('flex shrink-0 items-center gap-1 rounded border-2 border-border px-2 py-0.5 font-display text-[11px] font-bold transition-colors', startOpen ? 'bg-primary text-bg' : 'text-fg hover:bg-surface-2')}>⊞ Başlat</button>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brix/walk.gif" alt="" width={16} height={26} className="pixelated shrink-0" style={{ imageRendering: 'pixelated' }} />
                 <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
