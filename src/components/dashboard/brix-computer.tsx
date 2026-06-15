@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { playOpen, playClose, playBootDone } from '@/lib/sound'
+import { getLevelInfo } from '@/lib/gamification'
 
 interface FileItem { id: string; emoji: string; label: string; meta?: string; href: string }
 interface FolderDef { id: string; label: string; accent: string; desc: string; href: string; files: FileItem[] }
@@ -27,7 +28,7 @@ function fmtDay(iso: string): string {
 type Phase = 'boot' | 'desktop'
 
 export function BrixComputer() {
-  const { data } = useStore()
+  const { data, habitsToday, todayCompletedIds } = useStore()
   const screenRef = useRef<HTMLDivElement>(null)
   const deskRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLElement>(null)
@@ -39,6 +40,7 @@ export function BrixComputer() {
   const [started, setStarted] = useState(false)
   const [hover, setHover] = useState<string | null>(null)
   const [clock, setClock] = useState('')
+  const [today, setToday] = useState('')
   const [positions, setPositions] = useState<Record<string, Pos>>({})
   const [wins, setWins] = useState<WinState[]>([])
   const [startOpen, setStartOpen] = useState(false)
@@ -71,6 +73,11 @@ export function BrixComputer() {
   const topId = wins.filter(w => !w.min).sort((a, b) => b.z - a.z)[0]?.id
   const sfx = (fn: () => void) => { if (data.profile.soundEnabled !== false) fn() }
 
+  const wDone = habitsToday.filter(h => todayCompletedIds.has(h.id)).length
+  const wTotal = habitsToday.length
+  const wPct = wTotal > 0 ? Math.round((wDone / wTotal) * 100) : 100
+  const wLvl = getLevelInfo(data.profile.totalXP).level
+
   useEffect(() => {
     let saved: Record<string, Pos> = {}
     try { saved = JSON.parse(localStorage.getItem(ICONS_KEY) || '{}') } catch {}
@@ -80,7 +87,10 @@ export function BrixComputer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folders.length])
 
-  useEffect(() => { const s = () => setClock(format(new Date(), 'HH:mm')); s(); const t = setInterval(s, 30000); return () => clearInterval(t) }, [])
+  useEffect(() => {
+    const s = () => { const d = new Date(); setClock(format(d, 'HH:mm')); setToday(format(d, 'd MMM EEE', { locale: tr })) }
+    s(); const t = setInterval(s, 30000); return () => clearInterval(t)
+  }, [])
 
   // OS klavye kısayolları (yalnızca bir pencere açıkken)
   useEffect(() => {
@@ -271,6 +281,24 @@ export function BrixComputer() {
                 <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(85% 60% at 50% -5%, rgb(var(--c-primary) / 0.12), transparent 70%), radial-gradient(70% 60% at 100% 100%, rgb(var(--c-accent) / 0.10), transparent 70%)' }} />
                 <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(rgb(var(--c-border) / 0.55) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
                 <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 font-display text-[10px] uppercase tracking-[0.3em] text-muted/40">manage_os</span>
+
+                {/* widget: saat + tarih (sağ üst) */}
+                <div className="pointer-events-none absolute right-3 top-2 z-0 text-right">
+                  <p className="font-display text-2xl font-bold leading-none text-fg tabular-nums">{clock}</p>
+                  <p className="font-display text-[10px] text-muted">{today}</p>
+                </div>
+
+                {/* widget: bugünün ilerlemesi + seviye (sol üst) */}
+                <div className="pointer-events-none absolute left-3 top-2 z-0 rounded bg-surface/80 px-3 py-2 brix-bevel-sm">
+                  <p className="font-display text-[10px] uppercase tracking-wide text-muted">Bugün · Lv {wLvl}</p>
+                  <div className="mt-0.5 flex items-baseline gap-1">
+                    <span className="font-display text-lg font-bold leading-none text-fg">%{wPct}</span>
+                    <span className="text-[10px] text-muted">{wDone}/{wTotal}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-surface-2">
+                    <div className="h-full rounded-full bg-success transition-[width] duration-500" style={{ width: `${wPct}%` }} />
+                  </div>
+                </div>
 
                 {/* ikonlar */}
                 {folders.map(f => {
