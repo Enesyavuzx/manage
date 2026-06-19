@@ -12,7 +12,6 @@ export interface TabDef {
 /** Tema-uyumlu, sade sekme bileşeni. İçerik sekme değişince yumuşak geçer. */
 export function Tabs({ tabs, initial, className }: { tabs: TabDef[]; initial?: string; className?: string }) {
   const [active, setActive] = useState(initial ?? tabs[0]?.id)
-  const current = tabs.find(t => t.id === active) ?? tabs[0]
   return (
     <div className={className}>
       <div className="mb-5 flex flex-wrap gap-1 rounded-lg border border-border bg-surface-2 p-1">
@@ -34,7 +33,11 @@ export function Tabs({ tabs, initial, className }: { tabs: TabDef[]; initial?: s
           )
         })}
       </div>
-      <div key={current?.id} className="animate-fade-in">{current?.content}</div>
+      {/* Tüm paneller canlı kalır (form/yerel state korunur); yalnızca aktif görünür.
+          display:none -> block geçişi animate-fade-in'i yeniden tetikler. */}
+      {tabs.map(t => (
+        <div key={t.id} className={cn(t.id === active ? 'animate-fade-in' : 'hidden')}>{t.content}</div>
+      ))}
     </div>
   )
 }

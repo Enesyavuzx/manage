@@ -162,9 +162,9 @@ export function BrixComputer() {
     if (!started || phase !== 'boot') return
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     if (reduce) { setPct(100); const t = setTimeout(() => setPhase('desktop'), 200); return () => clearTimeout(t) }
-    let raf = 0; const start = performance.now(); const DUR = 2100
-    const tick = (now: number) => { const t = Math.min(1, (now - start) / DUR); setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100)); if (t < 1) raf = requestAnimationFrame(tick); else setTimeout(() => { setPhase('desktop'); sfx(playBootDone) }, 480) }
-    raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf)
+    let raf = 0; let done: ReturnType<typeof setTimeout> | undefined; const start = performance.now(); const DUR = 2100
+    const tick = (now: number) => { const t = Math.min(1, (now - start) / DUR); setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100)); if (t < 1) raf = requestAnimationFrame(tick); else done = setTimeout(() => { setPhase('desktop'); sfx(playBootDone) }, 480) }
+    raf = requestAnimationFrame(tick); return () => { cancelAnimationFrame(raf); if (done) clearTimeout(done) }
   }, [started, phase])
 
   // ----- pencere yönetimi -----
@@ -235,6 +235,8 @@ export function BrixComputer() {
     setFullscreen(v => {
       const nv = !v
       if (monitorRef.current) monitorRef.current.style.transform = nv ? 'none' : ''
+      // çıkışta scroll-zoom transform'unu hemen yeniden hesapla (bir sonraki scroll'u bekleme)
+      if (!nv) requestAnimationFrame(() => window.dispatchEvent(new Event('scroll')))
       return nv
     })
   }

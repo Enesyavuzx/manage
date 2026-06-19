@@ -40,6 +40,7 @@ export function CommandPalette() {
   const [idx, setIdx] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const openRef = useRef(false)
 
   const results = useMemo(() => {
     const s = q.trim().toLowerCase()
@@ -51,6 +52,8 @@ export function CommandPalette() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault(); setOpen(o => !o); setQ(''); setIdx(0)
+      } else if (e.key === 'Escape' && openRef.current) {
+        e.preventDefault(); setOpen(false)
       }
     }
     const onOpen = () => { setOpen(true); setQ(''); setIdx(0) }
@@ -59,12 +62,18 @@ export function CommandPalette() {
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('open-cmdk', onOpen) }
   }, [])
 
-  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 30) }, [open])
+  useEffect(() => { openRef.current = open; if (open) setTimeout(() => inputRef.current?.focus(), 30) }, [open])
   useEffect(() => { setIdx(0) }, [q])
   useEffect(() => {
     if (!open) return
-    const el = listRef.current?.children[idx] as HTMLElement | undefined
-    el?.scrollIntoView({ block: 'nearest' })
+    const list = listRef.current
+    const el = list?.children[idx] as HTMLElement | undefined
+    if (!list || !el) return
+    // yalnızca liste kabını kaydır (arka plandaki sayfayı değil)
+    const top = el.offsetTop
+    const bottom = top + el.offsetHeight
+    if (top < list.scrollTop) list.scrollTop = top
+    else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight
   }, [idx, open])
 
   if (!open) return null

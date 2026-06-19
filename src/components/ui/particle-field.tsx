@@ -34,7 +34,8 @@ export function ParticleField({ className, density = 0.00009 }: { className?: st
     }
 
     readColor(); resize()
-    const ro = new ResizeObserver(resize); ro.observe(canvas)
+    // reduced-motion'da rAF döngüsü yok; resize sonrası tek sefer yeniden boya
+    const ro = new ResizeObserver(() => { resize(); if (reduce) draw() }); ro.observe(canvas)
     const mo = new MutationObserver(readColor)
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
 
