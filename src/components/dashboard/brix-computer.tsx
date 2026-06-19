@@ -45,6 +45,9 @@ export function BrixComputer() {
   const [wins, setWins] = useState<WinState[]>([])
   const [startOpen, setStartOpen] = useState(false)
   const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+  const fsRef = useRef(false)
+  useEffect(() => { fsRef.current = fullscreen }, [fullscreen])
 
   const folders = useMemo<FolderDef[]>(() => {
     const habits = (data.habits ?? []).filter(h => !h.archived)
@@ -98,11 +101,13 @@ export function BrixComputer() {
       const t = e.target as HTMLElement | null
       if (!t || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return
       const open = wins.filter(w => !w.min).sort((a, b) => a.z - b.z)
-      if (open.length === 0) return
       if (e.key === 'Escape') {
-        const top = open[open.length - 1]
-        setWins(ws => ws.filter(w => w.id !== top.id)); sfx(playClose)
-      } else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && open.length > 1) {
+        if (open.length > 0) { const top = open[open.length - 1]; setWins(ws => ws.filter(w => w.id !== top.id)); sfx(playClose) }
+        else if (fsRef.current) setFullscreen(false)
+        return
+      }
+      if (open.length < 2) return
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault()
         const dir = e.key === 'ArrowRight' ? 1 : -1
         const next = open[(open.length - 1 + dir + open.length) % open.length]
@@ -124,6 +129,7 @@ export function BrixComputer() {
     let raf = 0
     const update = () => {
       raf = 0
+      if (fsRef.current) { mon.style.transform = 'none'; return }
       const r = stage.getBoundingClientRect()
       const vh = window.innerHeight || 1
       let p = (vh * 0.9 - r.top) / (vh * 0.6)
@@ -225,6 +231,14 @@ export function BrixComputer() {
 
   function reboot() { setPhase('boot'); setPct(0); setStarted(false); setWins([]) }
 
+  function toggleFs() {
+    setFullscreen(v => {
+      const nv = !v
+      if (monitorRef.current) monitorRef.current.style.transform = nv ? 'none' : ''
+      return nv
+    })
+  }
+
   function resetIcons() {
     const next: Record<string, Pos> = {}
     folders.forEach((f, i) => { next[f.id] = DEFAULT_POS[i] || { x: 50, y: 50 } })
@@ -250,15 +264,16 @@ export function BrixComputer() {
         <p className="mt-1 text-sm text-muted">Birden çok klasör aç, pencereleri taşı/büyüt, görev çubuğundan küçült.</p>
       </div>
 
-      <div ref={monitorRef} className="mx-auto w-full max-w-3xl" style={{ willChange: 'transform' }}>
-        <div className="rounded-lg bg-surface-2 p-3 brix-bevel sm:p-4">
+      <div ref={monitorRef} className={cn('mx-auto w-full max-w-3xl', fullscreen && 'fixed inset-0 z-[120] max-w-none')} style={fullscreen ? undefined : { willChange: 'transform' }}>
+        <div className={cn('rounded-lg bg-surface-2 p-3 brix-bevel sm:p-4', fullscreen && 'flex h-full flex-col rounded-none border-0')}>
           <div className="mb-2 flex items-center gap-2 px-1">
             <span className="h-3 w-3 rounded-full border-2 border-border" style={{ background: phase === 'boot' ? 'rgb(var(--c-danger))' : 'rgb(var(--c-success))' }} />
             <span className="font-display text-sm text-muted">manage_os v1.0</span>
-            <button onClick={reboot} title="Yeniden başlat" className="ml-auto text-muted hover:text-fg"><Power size={15} /></button>
+            <button onClick={toggleFs} title={fullscreen ? 'Küçült' : 'Tam ekran'} className="ml-auto text-muted hover:text-fg">{fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
+            <button onClick={reboot} title="Yeniden başlat" className="text-muted hover:text-fg"><Power size={15} /></button>
           </div>
 
-          <div ref={screenRef} className="brix-screen brix-crt relative aspect-[16/10] select-none overflow-hidden rounded-md" style={{ background: 'rgb(var(--c-bg))' }}>
+          <div ref={screenRef} className={cn('brix-screen brix-crt relative select-none overflow-hidden rounded-md', fullscreen ? 'min-h-0 flex-1' : 'aspect-[16/10]')} style={{ background: 'rgb(var(--c-bg))' }}>
             {/* BOOT */}
             <div className={cn('absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 transition-opacity duration-500', phase === 'boot' ? 'opacity-100' : 'pointer-events-none opacity-0')} style={{ background: '#1b1410' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -414,8 +429,12 @@ export function BrixComputer() {
           </div>
         </div>
 
-        <div className="mx-auto -mt-px h-5 w-16 brix-bevel-sm" style={{ background: 'rgb(var(--c-surface2))', borderTopWidth: 0 }} />
-        <div className="mx-auto h-2 w-40 rounded-b bg-border-hover/70" />
+        {!fullscreen && (
+          <>
+            <div className="mx-auto -mt-px h-5 w-16 brix-bevel-sm" style={{ background: 'rgb(var(--c-surface2))', borderTopWidth: 0 }} />
+            <div className="mx-auto h-2 w-40 rounded-b bg-border-hover/70" />
+          </>
+        )}
       </div>
     </section>
   )
