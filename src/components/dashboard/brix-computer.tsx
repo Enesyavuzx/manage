@@ -298,13 +298,13 @@ export function BrixComputer() {
                 <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 font-display text-[10px] uppercase tracking-[0.3em] text-muted/40">manage_os</span>
 
                 {/* widget: saat + tarih (sağ üst) */}
-                <div className="pointer-events-none absolute right-3 top-2 z-0 text-right">
+                <div className="pointer-events-none absolute right-3 top-2 z-0 hidden text-right sm:block">
                   <p className="font-display text-2xl font-bold leading-none text-fg tabular-nums">{clock}</p>
                   <p className="font-display text-[10px] text-muted">{today}</p>
                 </div>
 
                 {/* widget: bugünün ilerlemesi + seviye (sol üst) */}
-                <div className="pointer-events-none absolute left-3 top-2 z-0 rounded bg-surface/80 px-3 py-2 brix-bevel-sm">
+                <div className="pointer-events-none absolute left-3 top-2 z-0 hidden rounded bg-surface/80 px-3 py-2 brix-bevel-sm sm:block">
                   <p className="font-display text-[10px] uppercase tracking-wide text-muted">Bugün · Lv {wLvl}</p>
                   <div className="mt-0.5 flex items-baseline gap-1">
                     <span className="font-display text-lg font-bold leading-none text-fg">%{wPct}</span>
