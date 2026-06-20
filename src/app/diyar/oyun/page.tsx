@@ -32,7 +32,7 @@ export default function DiyarOyunPage() {
     return { items, W, H }
   }, [structs])
 
-  // "Second mind" grafı: alışkanlık + not düğümleri; rutin/zincir/kategori/istif/not kenarları
+  // "Second mind" grafı: alışkanlık + not + rutin/zincir/harika hub düğümleri
   const mind = useMemo(() => {
     const habitNodes: GNode[] = structs.map(s => ({ id: s.habitId, type: 'habit', label: s.name, emoji: s.emoji, color: s.color, stage: s.stage }))
     const habitSet = new Set(habitNodes.map(n => n.id))
@@ -46,15 +46,36 @@ export default function DiyarOyunPage() {
       if (seen.has(key)) return
       seen.add(key); edges.push({ a, b, kind })
     }
-    for (const r of data.routines || []) { const ids = (r.habitIds || []).filter(id => habitSet.has(id)); for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'rutin') }
-    for (const z of data.zincirs || []) { const ids = (z.steps || []).map(s => s.habitId).filter((id): id is string => !!id && habitSet.has(id)); for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'zincir') }
+    // Rutin hub düğümleri
+    for (const r of data.routines || []) {
+      const ids = (r.habitIds || []).filter(id => habitSet.has(id))
+      if (ids.length === 0) continue
+      const nid = 'rt:' + r.id
+      nodes.push({ id: nid, type: 'rutin', label: r.name, emoji: r.emoji || '📋', color: '#7b95ff' })
+      for (const id of ids) add(nid, id, 'rutin')
+    }
+    // Zincir hub düğümleri
+    for (const z of data.zincirs || []) {
+      const ids = (z.steps || []).map(s => s.habitId).filter((id): id is string => !!id && habitSet.has(id))
+      if (ids.length === 0) continue
+      const nid = 'zn:' + z.id
+      nodes.push({ id: nid, type: 'zincir', label: z.name, emoji: z.emoji || '🔗', color: '#ffa447' })
+      for (const id of ids) add(nid, id, 'zincir')
+    }
+    // Harika (Wonder) hub düğümleri
+    for (const w of data.wonders || []) {
+      const nid = 'wd:' + w.id
+      nodes.push({ id: nid, type: 'wonder', label: w.name, emoji: w.emoji || '🏛️', color: '#e0b341' })
+      if (w.habitId && habitSet.has(w.habitId)) add(nid, w.habitId, 'wonder')
+    }
+    // Kategori
     const byCat = new Map<string, string[]>()
     for (const h of habitList) { const a = byCat.get(h.cat) || []; a.push(h.id); byCat.set(h.cat, a) }
     for (const arr of byCat.values()) for (let i = 0; i < arr.length - 1; i++) add(arr[i], arr[i + 1], 'kategori')
-    // habit stacking: cue başka bir alışkanlık adını içeriyorsa o -> bu
+    // Habit stacking (cue)
     for (const h of habitList) { if (!h.cue) continue; for (const o of habitList) { if (o.id === h.id || o.name.length < 3) continue; if (h.cue.includes(o.nl)) add(o.id, h.id, 'istif') } }
-    // beyin-boşalt notları: bir alışkanlık adını içeren son notlar düğüm olur ve ona bağlanır
-    for (const it of [...(data.brainDump || [])].slice(-20).reverse()) {
+    // Beyin-boşalt notları
+    for (const it of [...(data.brainDump || [])].slice(-24).reverse()) {
       const t = (it.text || '').toLowerCase()
       const links = habitList.filter(o => o.name.length >= 3 && t.includes(o.nl))
       if (links.length === 0) continue
@@ -63,10 +84,27 @@ export default function DiyarOyunPage() {
       for (const o of links) add(nid, o.id, 'not')
     }
     return { nodes, edges }
-  }, [structs, data.routines, data.zincirs, data.habits, data.brainDump])
+  }, [structs, data.routines, data.zincirs, data.wonders, data.habits, data.brainDump])
+
+  // Keşif (yürüme) görünümü için habit-habit kenarları (zincir/rutin sıralı + istif + kategori)
+  const explorerEdges = useMemo(() => {
+    const set = new Set(structs.map(s => s.habitId))
+    const out: GEdge[] = []; const seen = new Set<string>()
+    const add = (a: string | null, b: string | null, kind: GEdge['kind']) => {
+      if (!a || !b || a === b || !set.has(a) || !set.has(b)) return
+      const k = [a, b].sort().join('|') + kind; if (seen.has(k)) return; seen.add(k); out.push({ a, b, kind })
+    }
+    for (const r of data.routines || []) { const ids = (r.habitIds || []).filter(id => set.has(id)); for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'rutin') }
+    for (const z of data.zincirs || []) { const ids = (z.steps || []).map(s => s.habitId).filter((id): id is string => !!id && set.has(id)); for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'zincir') }
+    const hl = (data.habits || []).filter(h => set.has(h.id)).map(h => ({ id: h.id, nl: h.name.toLowerCase(), cue: (h.cue || '').toLowerCase(), name: h.name, cat: h.category }))
+    for (const h of hl) { if (!h.cue) continue; for (const o of hl) { if (o.id === h.id || o.name.length < 3) continue; if (h.cue.includes(o.nl)) add(o.id, h.id, 'istif') } }
+    const byCat = new Map<string, string[]>(); for (const h of hl) { const a = byCat.get(h.cat) || []; a.push(h.id); byCat.set(h.cat, a) }
+    for (const arr of byCat.values()) for (let i = 0; i < arr.length - 1; i++) add(arr[i], arr[i + 1], 'kategori')
+    return out
+  }, [structs, data.routines, data.zincirs, data.habits])
 
   const posMap = useMemo(() => new Map(layout.items.map(it => [it.s.habitId, { x: it.x, y: it.y }])), [layout])
-  const habitEdges = mind.edges.filter(e => posMap.has(e.a) && posMap.has(e.b))
+  const habitEdges = explorerEdges
   const labelOf = (id: string) => mind.nodes.find(n => n.id === id)?.label ?? id
   const connOf = (id: string) => mind.edges.filter(e => e.a === id || e.b === id).map(e => ({ other: e.a === id ? e.b : e.a, kind: e.kind }))
 
