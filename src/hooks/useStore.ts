@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
 import type { StoreData, Habit, CustomReward, ThemeName, MoodLevel, MoodLog, EnergyLog, Medication, MedicationDose, FocusSession, WaterLog, BudgetAccount, BudgetTransaction, BudgetGoal, TemplatePack, WeeklyReview, Routine, PetType, Wonder, FutureLetter, FutureLetterDelay, Zincir, ZincirStep } from '@/lib/types'
 import {
-  loadStore, saveStore, todayKey, isHabitDueToday, isHabitDueOnDate,
+  loadStore, saveStore, mergeStoreData, todayKey, isHabitDueToday, isHabitDueOnDate,
   getStreak, evaluateAchievements, subtaskKey, wonderProgress,
 } from '@/lib/store'
 import { loginBonusXP, challengeForToday } from '@/lib/daily'
@@ -175,22 +175,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     ;(async () => {
       if (isSupabaseConfigured) {
         const cloud = await cloudLoad()
-        if (!cancelled && cloud) setData(prev => mergeRemote(prev, cloud))
+        if (!cancelled && cloud) setData(prev => mergeStoreData(prev, cloud))
       }
       if (!cancelled) setReady(true)
     })()
     return () => { cancelled = true }
   }, [])
 
-  // persist on every change
+  // Persist after cloud hydration — erken cloudSave, yüklenmeden önce eski bulutu yazabilir.
   useEffect(() => {
+    if (!ready) return
     saveStore(data)
     cloudSaveDebounced(data)
-  }, [data])
+  }, [data, ready])
 
   // Update the daily-visit streak once per calendar day (first render of the day).
   // Every 7th consecutive day also grants a streak-freeze token.
   useEffect(() => {
+    if (!ready) return
     setData(d => {
       const today = todayKey()
       if (d.profile.lastLoginDate === today) return d
@@ -203,7 +205,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         profile: { ...d.profile, lastLoginDate: today, loginStreak: streak },
       }
     })
-  }, [])
+  }, [ready])
 
   const pushNotifications = useCallback((items: GameNotification[]) => {
     if (items.length === 0) return
@@ -1022,18 +1024,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }
 
   return React.createElement(Ctx.Provider, { value }, children)
-}
-
-// Remote wins for profile/xp if it has more progress; merge unlocks.
-function mergeRemote(local: StoreData, remote: StoreData): StoreData {
-  const remoteXP = remote.profile?.totalXP ?? 0
-  const localXP = local.profile?.totalXP ?? 0
-  const base = remoteXP >= localXP ? remote : local
-  return {
-    ...base,
-    unlockedAchievements: { ...local.unlockedAchievements, ...remote.unlockedAchievements },
-    unlockedTitles: { ...local.unlockedTitles, ...remote.unlockedTitles },
-  }
 }
 
 export function useStore(): StoreContextType {
