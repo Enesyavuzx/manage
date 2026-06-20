@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ZoomIn, ZoomOut, Crosshair, Search } from 'lucide-react'
 
-export type GNodeType = 'habit' | 'note' | 'rutin' | 'zincir' | 'wonder' | 'hero' | 'kategori' | 'basari' | 'mektup' | 'soz'
-export interface GNode { id: string; type: GNodeType; label: string; emoji: string; color: string; stage?: number }
+export type GNodeType = 'habit' | 'note' | 'rutin' | 'zincir' | 'wonder' | 'hero' | 'kategori' | 'basari' | 'mektup' | 'soz' | 'modul'
+export interface GNode { id: string; type: GNodeType; label: string; emoji: string; color: string; stage?: number; href?: string }
 export interface GEdge { a: string; b: string; kind: 'rutin' | 'zincir' | 'kategori' | 'istif' | 'not' | 'wonder' | 'kok' }
 
 const EDGE_COL: Record<GEdge['kind'], string> = {

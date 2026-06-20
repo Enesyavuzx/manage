@@ -11,7 +11,7 @@ import { RealmGraph, type GNode, type GEdge } from '@/components/realm/realm-gra
 const CAT_LABEL: Record<string, string> = { health: 'Sağlık', productivity: 'Üretkenlik', mindfulness: 'Zihin', learning: 'Öğrenme', fitness: 'Spor', social: 'Sosyal', creativity: 'Yaratıcılık', other: 'Diğer' }
 const CAT_EMOJI: Record<string, string> = { health: '🩺', productivity: '⚡', mindfulness: '🧠', learning: '📖', fitness: '💪', social: '🤝', creativity: '🎨', other: '📦' }
 const INFO_HREF: Record<string, string> = { hero: '/profile', kategori: '/habits', rutin: '/routines', zincir: '/zincir', wonder: '/seferler', basari: '/achievements', mektup: '/gelecek', soz: '/diyar' }
-const TYPE_LABEL: Record<string, string> = { hero: 'Kahraman', kategori: 'Kategori', rutin: 'Rutin', zincir: 'Zincir', wonder: 'Harika', basari: 'Başarım', mektup: 'Gelecek mektubu', soz: 'Söz' }
+const TYPE_LABEL: Record<string, string> = { hero: 'Kahraman', kategori: 'Kategori', rutin: 'Rutin', zincir: 'Zincir', wonder: 'Harika', basari: 'Başarım', mektup: 'Gelecek mektubu', soz: 'Söz', modul: 'Modül' }
 
 const STAGE_LABEL: Record<number, string> = { 0: 'Boş arsa', 1: 'Kulübe', 2: 'Küçük ev', 3: 'Ev', 4: 'Kule', 5: 'Kale' }
 const STAGE_NEXT = [5, 15, 40, 100]
@@ -20,7 +20,7 @@ const SEASON_EMOJI: Record<string, string> = { kış: '❄️', ilkbahar: '🌸'
 const WEATHER_EMOJI: Record<string, string> = { sunny: '☀️', normal: '🌤', cloudy: '☁️', rainy: '🌧' }
 
 export default function DiyarOyunPage() {
-  const { data } = useStore()
+  const { data, toggleHabit } = useStore()
   const world = useMemo(() => buildRealm(data), [data])
   const structs = world.structures
 
@@ -54,7 +54,7 @@ export default function DiyarOyunPage() {
     // Merkez: Kahraman
     const HERO = 'hero'
     const lvl = getLevelInfo(data.profile.totalXP).level
-    nodes.push({ id: HERO, type: 'hero', label: `${data.profile.name || 'Kahraman'} · Lv${lvl}`, emoji: '👤', color: '#7b5cff' })
+    nodes.push({ id: HERO, type: 'hero', label: `${data.profile.name || 'Kahraman'} · Lv${lvl}`, emoji: '👤', color: '#7b5cff', href: '/profile' })
 
     // Alışkanlıklar
     const habitNodes: GNode[] = structs.map(s => ({ id: s.habitId, type: 'habit', label: s.name, emoji: s.emoji, color: s.color, stage: s.stage }))
@@ -67,7 +67,7 @@ export default function DiyarOyunPage() {
     for (const h of habitList) { const a = byCat.get(h.cat) || []; a.push(h.id); byCat.set(h.cat, a) }
     for (const [cat, ids] of byCat) {
       const cid = 'cat:' + cat
-      nodes.push({ id: cid, type: 'kategori', label: CAT_LABEL[cat] || cat, emoji: CAT_EMOJI[cat] || '📦', color: '#8a8f98' })
+      nodes.push({ id: cid, type: 'kategori', label: CAT_LABEL[cat] || cat, emoji: CAT_EMOJI[cat] || '📦', color: '#8a8f98', href: '/habits' })
       add(HERO, cid, 'kok')
       for (const id of ids) add(cid, id, 'kategori')
     }
@@ -75,16 +75,16 @@ export default function DiyarOyunPage() {
     // Rutin / Zincir / Harika hub'ları (Kahraman'a ve üyelerine bağlı)
     for (const r of data.routines || []) {
       const ids = (r.habitIds || []).filter(id => habitSet.has(id)); if (!ids.length) continue
-      const nid = 'rt:' + r.id; nodes.push({ id: nid, type: 'rutin', label: r.name, emoji: r.emoji || '📋', color: '#7b95ff' })
+      const nid = 'rt:' + r.id; nodes.push({ id: nid, type: 'rutin', label: r.name, emoji: r.emoji || '📋', color: '#7b95ff', href: '/routines' })
       add(HERO, nid, 'kok'); for (const id of ids) add(nid, id, 'rutin')
     }
     for (const z of data.zincirs || []) {
       const ids = (z.steps || []).map(s => s.habitId).filter((id): id is string => !!id && habitSet.has(id)); if (!ids.length) continue
-      const nid = 'zn:' + z.id; nodes.push({ id: nid, type: 'zincir', label: z.name, emoji: z.emoji || '🔗', color: '#ffa447' })
+      const nid = 'zn:' + z.id; nodes.push({ id: nid, type: 'zincir', label: z.name, emoji: z.emoji || '🔗', color: '#ffa447', href: '/zincir' })
       add(HERO, nid, 'kok'); for (const id of ids) add(nid, id, 'zincir')
     }
     for (const w of data.wonders || []) {
-      const nid = 'wd:' + w.id; nodes.push({ id: nid, type: 'wonder', label: w.name, emoji: w.emoji || '🏛️', color: '#e0b341' })
+      const nid = 'wd:' + w.id; nodes.push({ id: nid, type: 'wonder', label: w.name, emoji: w.emoji || '🏛️', color: '#e0b341', href: '/seferler' })
       add(HERO, nid, 'kok'); if (w.habitId && habitSet.has(w.habitId)) add(nid, w.habitId, 'wonder')
     }
 
@@ -104,16 +104,27 @@ export default function DiyarOyunPage() {
     const unlocked = Object.entries(data.unlockedAchievements || {}).sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, 10)
     for (const [aid] of unlocked) {
       const def = ACHIEVEMENTS.find(a => a.id === aid); if (!def) continue
-      const nid = 'ach:' + aid; nodes.push({ id: nid, type: 'basari', label: def.name, emoji: def.emoji || '🏆', color: '#e0b341' }); add(HERO, nid, 'kok')
+      const nid = 'ach:' + aid; nodes.push({ id: nid, type: 'basari', label: def.name, emoji: def.emoji || '🏆', color: '#e0b341', href: '/achievements' }); add(HERO, nid, 'kok')
     }
     // Gelecek mektupları -> Kahraman
     for (const lt of [...(data.futureLetters || [])].slice(-6).reverse()) {
-      const nid = 'lt:' + lt.id; nodes.push({ id: nid, type: 'mektup', label: lt.context || 'Gelecek mektubu', emoji: '✉️', color: '#62c0f5' }); add(HERO, nid, 'kok')
+      const nid = 'lt:' + lt.id; nodes.push({ id: nid, type: 'mektup', label: lt.context || 'Gelecek mektubu', emoji: '✉️', color: '#62c0f5', href: '/gelecek' }); add(HERO, nid, 'kok')
     }
     // Kayıtlı sözler -> Kahraman
     ;[...(data.savedQuotes || [])].slice(-8).forEach((qt, i) => {
-      const nid = 'qt:' + i; nodes.push({ id: nid, type: 'soz', label: qt.slice(0, 24), emoji: '📜', color: '#2d8b8b' }); add(HERO, nid, 'kok')
+      const nid = 'qt:' + i; nodes.push({ id: nid, type: 'soz', label: qt.slice(0, 24), emoji: '📜', color: '#2d8b8b', href: '/diyar' }); add(HERO, nid, 'kok')
     })
+
+    // Modüller (uygulamanın diğer bölümleri) -> Kahraman
+    const MODULES: { id: string; label: string; emoji: string; href: string }[] = [
+      { id: 'm-focus', label: 'Odak', emoji: '⏱️', href: '/focus' },
+      { id: 'm-mood', label: 'Ruh Hali', emoji: '🙂', href: '/mood' },
+      { id: 'm-budget', label: 'Bütçe', emoji: '📒', href: '/budget' },
+      { id: 'm-coach', label: 'Koç', emoji: '💬', href: '/coach' },
+      { id: 'm-stats', label: 'İstatistik', emoji: '📊', href: '/stats' },
+      { id: 'm-rewards', label: 'Ödüller', emoji: '🎁', href: '/rewards' },
+    ]
+    for (const m of MODULES) { nodes.push({ id: m.id, type: 'modul', label: m.label, emoji: m.emoji, color: '#6b6fc0', href: m.href }); add(HERO, m.id, 'kok') }
 
     return { nodes, edges }
   }, [structs, data.profile.name, data.profile.totalXP, data.routines, data.zincirs, data.wonders, data.habits, data.brainDump, data.unlockedAchievements, data.futureLetters, data.savedQuotes])
@@ -153,7 +164,7 @@ export default function DiyarOyunPage() {
   const [reduce, setReduce] = useState(false)
   const [mode, setMode] = useState<'explore' | 'graph'>('explore')
   const [openNote, setOpenNote] = useState<string | null>(null)
-  const [openInfo, setOpenInfo] = useState<{ label: string; type: string } | null>(null)
+  const [openInfo, setOpenInfo] = useState<{ label: string; type: string; href?: string } | null>(null)
   useEffect(() => { openRef.current = openId }, [openId])
   useEffect(() => { setReduce(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false) }, [])
 
@@ -331,7 +342,7 @@ export default function DiyarOyunPage() {
             onOpen={(n) => {
               if (n.type === 'habit') setOpenId(n.id)
               else if (n.type === 'note') { const it = (data.brainDump || []).find(x => 'note:' + x.id === n.id); setOpenNote(it?.text || n.label) }
-              else setOpenInfo({ label: n.label, type: n.type })
+              else setOpenInfo({ label: n.label, type: n.type, href: n.href })
             }}
           />
         )}
@@ -446,8 +457,15 @@ export default function DiyarOyunPage() {
                     </div>
                   )
                 })()}
+                <button
+                  onClick={() => toggleHabit(open.habitId)}
+                  className={`w-full rounded px-3 py-2.5 text-center text-sm font-bold font-display brix-bevel-sm transition-transform hover:-translate-y-px active:translate-y-0 ${open.doneToday ? 'border-2 border-border bg-surface text-fg' : 'text-bg'}`}
+                  style={open.doneToday ? undefined : { background: open.color }}
+                >
+                  {open.doneToday ? '↩ Bugünü geri al' : '✓ Bugün tamamla — tuğla koy'}
+                </button>
                 <div className="flex gap-2">
-                  <Link href={`/diyar/${open.habitId}`} className="flex-1 rounded px-3 py-2 text-center text-sm font-bold text-bg brix-bevel-sm font-display" style={{ background: open.color }}>Detay sayfası</Link>
+                  <Link href={`/diyar/${open.habitId}`} className="flex-1 rounded border-2 border-border bg-surface px-3 py-2 text-center text-sm font-bold text-fg brix-bevel-sm font-display hover:-translate-y-px">Detay sayfası</Link>
                   <button onClick={() => setOpenId(null)} className="rounded border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg font-display hover:-translate-y-px">Devam</button>
                 </div>
               </div>
@@ -488,7 +506,7 @@ export default function DiyarOyunPage() {
               <div className="space-y-3 p-4">
                 <p className="text-base font-semibold text-fg">{openInfo.label}</p>
                 <div className="flex gap-2">
-                  <Link href={INFO_HREF[openInfo.type] || '/'} className="flex-1 rounded bg-primary px-3 py-2 text-center text-sm font-bold text-bg brix-bevel-sm font-display">Aç</Link>
+                  <Link href={openInfo.href || INFO_HREF[openInfo.type] || '/'} className="flex-1 rounded bg-primary px-3 py-2 text-center text-sm font-bold text-bg brix-bevel-sm font-display">Aç</Link>
                   <button onClick={() => setOpenInfo(null)} className="rounded border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg font-display hover:-translate-y-px">Kapat</button>
                 </div>
               </div>
