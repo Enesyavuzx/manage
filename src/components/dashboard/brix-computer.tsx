@@ -1,0 +1,443 @@
+'use client'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import { ArrowRight, X, Power, ChevronRight, Maximize2, Minimize2, Minus, RotateCcw, LayoutGrid } from 'lucide-react'
+import { useStore } from '@/hooks/useStore'
+import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale'
+import { playOpen, playClose, playBootDone } from '@/lib/sound'
+import { getLevelInfo } from '@/lib/gamification'
+
+interface FileItem { id: string; emoji: string; label: string; meta?: string; href: string }
+interface FolderDef { id: string; label: string; accent: string; desc: string; href: string; files: FileItem[] }
+interface Pos { x: number; y: number }
+interface WinState { id: string; x: number; y: number; z: number; max: boolean; min: boolean; ox: number; oy: number }
+
+const MOOD_EMOJI = ['', '😞', '😕', '😐', '🙂', '😄']
+const ICONS_KEY = 'manage_os_icon_pos'
+const DEFAULT_POS: Pos[] = [
+  { x: 16, y: 30 }, { x: 39, y: 30 }, { x: 61, y: 30 }, { x: 84, y: 30 },
+  { x: 16, y: 72 }, { x: 39, y: 72 }, { x: 61, y: 72 }, { x: 84, y: 72 },
+]
+
+function fmtDay(iso: string): string {
+  try { return format(new Date(iso), 'd MMM', { locale: tr }) } catch { return '' }
+}
+
+type Phase = 'boot' | 'desktop'
+
+export function BrixComputer() {
+  const { data, habitsToday, todayCompletedIds } = useStore()
+  const screenRef = useRef<HTMLDivElement>(null)
+  const deskRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLElement>(null)
+  const monitorRef = useRef<HTMLDivElement>(null)
+  const zRef = useRef(10)
+
+  const [phase, setPhase] = useState<Phase>('boot')
+  const [pct, setPct] = useState(0)
+  const [started, setStarted] = useState(false)
+  const [hover, setHover] = useState<string | null>(null)
+  const [clock, setClock] = useState('')
+  const [today, setToday] = useState('')
+  const [positions, setPositions] = useState<Record<string, Pos>>({})
+  const [wins, setWins] = useState<WinState[]>([])
+  const [startOpen, setStartOpen] = useState(false)
+  const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+  const fsRef = useRef(false)
+  useEffect(() => { fsRef.current = fullscreen }, [fullscreen])
+
+  const folders = useMemo<FolderDef[]>(() => {
+    const habits = (data.habits ?? []).filter(h => !h.archived)
+    const moods = [...(data.moods ?? [])].slice(-6).reverse()
+    const focus = [...(data.focusSessions ?? [])].slice(-6).reverse()
+    const accounts = data.budgetAccounts ?? []
+    return [
+      { id: 'aliskanlik', label: 'Alışkanlıklar', accent: '74 124 89', href: '/habits', desc: 'Alışkanlıkların burada. Bir dosyaya dokun, takibe geç.',
+        files: [{ id: 'new-h', emoji: '＋', label: 'Yeni alışkanlık', href: '/habits' }, ...habits.slice(0, 8).map(h => ({ id: h.id, emoji: h.emoji || '✅', label: h.name, meta: 'alışkanlık', href: '/habits' }))] },
+      { id: 'odak', label: 'Odak', accent: '123 149 255', href: '/focus', desc: 'Derin çalışma seansların.',
+        files: [{ id: 'new-f', emoji: '⏱️', label: 'Yeni odak seansı', href: '/focus' }, ...focus.map(s => ({ id: s.id, emoji: '🎯', label: `${s.minutes} dk seans`, meta: fmtDay(s.completedAt), href: '/focus' })), { id: 'flow', emoji: '🌊', label: 'Akış durumu', href: '/bugun' }] },
+      { id: 'oyun', label: 'Macera', accent: '180 130 255', href: '/seferler', desc: 'XP, rütbe, seferler, ödüller.',
+        files: [{ id: 's', emoji: '🚩', label: 'Seferler', href: '/seferler' }, { id: 'a', emoji: '🏆', label: 'Başarımlar', href: '/achievements' }, { id: 'sk', emoji: '🌐', label: 'Beceri Ağacı', href: '/skills' }, { id: 'r', emoji: '🎁', label: 'Ödüller', href: '/rewards' }, { id: 'g', emoji: '🎮', label: 'Mini Oyun', href: '/arcade' }] },
+      { id: 'diyar', label: 'Diyar', accent: '224 179 65', href: '/diyar', desc: 'Tutarlılığınla büyüyen şehrin, seferlerin ve sezonların.',
+        files: [{ id: 'realm', emoji: '🏰', label: 'Diyarım', href: '/diyar' }, { id: 'sefer', emoji: '🚩', label: 'Seferler', href: '/seferler' }, { id: 'wonder', emoji: '🏛️', label: 'Harikalar', href: '/seferler' }, { id: 'share', emoji: '📤', label: 'Paylaş', href: '/diyar' }] },
+      { id: 'ruh', label: 'Ruh Hali', accent: '63 143 90', href: '/mood', desc: 'Son ruh hali kayıtların.',
+        files: [{ id: 'new-m', emoji: '＋', label: 'Bugünü kaydet', href: '/mood' }, ...moods.map(m => ({ id: m.id, emoji: MOOD_EMOJI[m.level] || '🙂', label: (m.note && m.note.slice(0, 18)) || 'Kayıt', meta: fmtDay(m.createdAt), href: '/mood' }))] },
+      { id: 'gelisim', label: 'Gelişim', accent: '249 166 32', href: '/insights', desc: 'Koç, haftalık bakış, içgörüler.',
+        files: [{ id: 'c', emoji: '💬', label: 'Koç', href: '/coach' }, { id: 'w', emoji: '🗓️', label: 'Haftalık Bakış', href: '/weekly-review' }, { id: 'i', emoji: '💡', label: 'İçgörüler', href: '/insights' }, { id: 'st', emoji: '📊', label: 'İstatistik', href: '/stats' }, { id: 'fl', emoji: '✉️', label: 'Gelecek Benlik', href: '/gelecek' }] },
+      { id: 'finans', label: 'Finans', accent: '183 71 42', href: '/budget', desc: 'Hesapların ve bütçen.',
+        files: [{ id: 'bud', emoji: '📒', label: 'Bütçeyi aç', href: '/budget' }, ...accounts.slice(0, 6).map(a => ({ id: a.id, emoji: a.type === 'cash' ? '💵' : a.type === 'card' ? '💳' : '🏦', label: a.name, meta: 'hesap', href: '/budget' }))] },
+    ]
+  }, [data])
+
+  const folderById = (id: string) => folders.find(f => f.id === id)
+  const topId = wins.filter(w => !w.min).sort((a, b) => b.z - a.z)[0]?.id
+  const sfx = (fn: () => void) => { if (data.profile.soundEnabled !== false) fn() }
+
+  const wDone = habitsToday.filter(h => todayCompletedIds.has(h.id)).length
+  const wTotal = habitsToday.length
+  const wPct = wTotal > 0 ? Math.round((wDone / wTotal) * 100) : 100
+  const wLvl = getLevelInfo(data.profile.totalXP).level
+
+  useEffect(() => {
+    let saved: Record<string, Pos> = {}
+    try { saved = JSON.parse(localStorage.getItem(ICONS_KEY) || '{}') } catch {}
+    const next: Record<string, Pos> = {}
+    folders.forEach((f, i) => { next[f.id] = saved[f.id] || DEFAULT_POS[i] || { x: 50, y: 50 } })
+    setPositions(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folders.length])
+
+  useEffect(() => {
+    const s = () => { const d = new Date(); setClock(format(d, 'HH:mm')); setToday(format(d, 'd MMM EEE', { locale: tr })) }
+    s(); const t = setInterval(s, 30000); return () => clearInterval(t)
+  }, [])
+
+  // OS klavye kısayolları (yalnızca bir pencere açıkken)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (!t || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return
+      const open = wins.filter(w => !w.min).sort((a, b) => a.z - b.z)
+      if (e.key === 'Escape') {
+        if (open.length > 0) { const top = open[open.length - 1]; setWins(ws => ws.filter(w => w.id !== top.id)); sfx(playClose) }
+        else if (fsRef.current) setFullscreen(false)
+        return
+      }
+      if (open.length < 2) return
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault()
+        const dir = e.key === 'ArrowRight' ? 1 : -1
+        const next = open[(open.length - 1 + dir + open.length) % open.length]
+        focusWin(next.id)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wins])
+
+  // scroll-driven "bilgisayarın içine gir" zoom: kaydırdıkça monitör büyür + düzleşir
+  useEffect(() => {
+    const stage = stageRef.current, mon = monitorRef.current
+    if (!stage || !mon) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    mon.style.transformOrigin = 'center 42%'
+    const scroller = document.getElementById('main-content')
+    let raf = 0
+    const update = () => {
+      raf = 0
+      if (fsRef.current) { mon.style.transform = 'none'; return }
+      const r = stage.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      let p = (vh * 0.9 - r.top) / (vh * 0.6)
+      p = Math.max(0, Math.min(1, p))
+      const e = 1 - Math.pow(1 - p, 3) // ease-out-cubic
+      mon.style.transform = `perspective(1100px) rotateX(${(1 - e) * 14}deg) scale(${0.8 + e * 0.34})`
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    scroller?.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      scroller?.removeEventListener('scroll', onScroll)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = screenRef.current
+    if (!el || started) return
+    if (!('IntersectionObserver' in window)) { setStarted(true); return }
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setStarted(true); io.disconnect() } }, { threshold: 0.3 })
+    io.observe(el); return () => io.disconnect()
+  }, [started])
+
+  useEffect(() => {
+    if (!started || phase !== 'boot') return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce) { setPct(100); const t = setTimeout(() => setPhase('desktop'), 200); return () => clearTimeout(t) }
+    let raf = 0; let done: ReturnType<typeof setTimeout> | undefined; const start = performance.now(); const DUR = 2100
+    const tick = (now: number) => { const t = Math.min(1, (now - start) / DUR); setPct(Math.round((1 - Math.pow(1 - t, 2)) * 100)); if (t < 1) raf = requestAnimationFrame(tick); else done = setTimeout(() => { setPhase('desktop'); sfx(playBootDone) }, 480) }
+    raf = requestAnimationFrame(tick); return () => { cancelAnimationFrame(raf); if (done) clearTimeout(done) }
+  }, [started, phase])
+
+  // ----- pencere yönetimi -----
+  function openWindow(id: string, ox: number, oy: number) {
+    const z = (zRef.current += 1)
+    setWins(ws => {
+      const ex = ws.find(w => w.id === id)
+      if (ex) return ws.map(w => w.id === id ? { ...w, min: false, z } : w)
+      const idx = ws.length
+      return [...ws, { id, x: 8 + (idx % 5) * 5, y: 8 + (idx % 5) * 5, z, max: false, min: false, ox, oy }]
+    })
+    sfx(playOpen)
+  }
+  function patchWin(id: string, patch: Partial<WinState>) { setWins(ws => ws.map(w => w.id === id ? { ...w, ...patch } : w)) }
+  function focusWin(id: string) { patchWin(id, { z: (zRef.current += 1) }) }
+  function closeWin(id: string) { setWins(ws => ws.filter(w => w.id !== id)); sfx(playClose) }
+  function taskbarClick(id: string) {
+    const w = wins.find(x => x.id === id); if (!w) return
+    if (w.min) { patchWin(id, { min: false, z: (zRef.current += 1) }) }
+    else if (topId === id) { patchWin(id, { min: true }) }
+    else { focusWin(id) }
+  }
+
+  // ----- ikon sürükleme / tıklama -----
+  function startIconDrag(id: string, e: React.PointerEvent) {
+    e.preventDefault()
+    const desk = deskRef.current; if (!desk) return
+    const rect = desk.getBoundingClientRect()
+    const startX = e.clientX, startY = e.clientY
+    const base = positions[id] || { x: 50, y: 50 }
+    let moved = false
+    const onMove = (ev: PointerEvent) => {
+      if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 5) moved = true
+      const dx = (ev.clientX - startX) / rect.width * 100
+      const dy = (ev.clientY - startY) / rect.height * 100
+      setPositions(p => ({ ...p, [id]: { x: Math.max(8, Math.min(92, base.x + dx)), y: Math.max(12, Math.min(88, base.y + dy)) } }))
+    }
+    const onUp = (ev: PointerEvent) => {
+      window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp)
+      if (!moved) {
+        const r = desk.getBoundingClientRect()
+        openWindow(id, Math.round((ev.clientX - r.left) / r.width * 100), Math.round((ev.clientY - r.top) / r.height * 100))
+      } else setPositions(p => { try { localStorage.setItem(ICONS_KEY, JSON.stringify(p)) } catch {} ; return p })
+    }
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp)
+  }
+
+  // ----- pencere sürükleme -----
+  function startWinDrag(id: string, e: React.PointerEvent) {
+    const w = wins.find(x => x.id === id); if (!w || w.max) return
+    e.preventDefault(); focusWin(id)
+    const desk = deskRef.current; if (!desk) return
+    const rect = desk.getBoundingClientRect()
+    const startX = e.clientX, startY = e.clientY
+    const base = { x: w.x, y: w.y }
+    const onMove = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startX) / rect.width * 100
+      const dy = (ev.clientY - startY) / rect.height * 100
+      patchWin(id, { x: Math.max(0, Math.min(60, base.x + dx)), y: Math.max(0, Math.min(60, base.y + dy)) })
+    }
+    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp)
+  }
+
+  function reboot() { setPhase('boot'); setPct(0); setStarted(false); setWins([]) }
+
+  function toggleFs() {
+    setFullscreen(v => {
+      const nv = !v
+      if (monitorRef.current) monitorRef.current.style.transform = nv ? 'none' : ''
+      // çıkışta scroll-zoom transform'unu hemen yeniden hesapla (bir sonraki scroll'u bekleme)
+      if (!nv) requestAnimationFrame(() => window.dispatchEvent(new Event('scroll')))
+      return nv
+    })
+  }
+
+  function resetIcons() {
+    const next: Record<string, Pos> = {}
+    folders.forEach((f, i) => { next[f.id] = DEFAULT_POS[i] || { x: 50, y: 50 } })
+    setPositions(next)
+    try { localStorage.removeItem(ICONS_KEY) } catch {}
+  }
+  function deskContext(e: React.MouseEvent) {
+    e.preventDefault()
+    const desk = deskRef.current; if (!desk) return
+    const r = desk.getBoundingClientRect()
+    setCtx({ x: Math.min(e.clientX - r.left, r.width - 184), y: Math.min(e.clientY - r.top, r.height - 130) })
+    setStartOpen(false)
+  }
+
+  const bootLines = ['manage_os başlatılıyor…', 'modüller yükleniyor…', 'klasörler hazırlanıyor…', 'hazır!']
+  const bootStep = Math.min(bootLines.length - 1, Math.floor(pct / 27))
+
+  return (
+    <section ref={stageRef} data-no-reveal className="relative overflow-x-clip">
+      <div className="mb-4">
+        <span className="inline-flex items-center gap-1.5 rounded border-2 border-border bg-accent/20 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-fg font-display">Sistem</span>
+        <h2 className="mt-3 text-2xl font-bold text-fg sm:text-3xl">Bilgisayarı aç, klasörüne gir</h2>
+        <p className="mt-1 text-sm text-muted">Birden çok klasör aç, pencereleri taşı/büyüt, görev çubuğundan küçült.</p>
+      </div>
+
+      <div ref={monitorRef} className={cn('mx-auto w-full max-w-3xl', fullscreen && 'fixed inset-0 z-[120] max-w-none')} style={fullscreen ? undefined : { willChange: 'transform' }}>
+        <div className={cn('rounded-lg bg-surface-2 p-3 brix-bevel sm:p-4', fullscreen && 'flex h-full flex-col rounded-none border-0')}>
+          <div className="mb-2 flex items-center gap-2 px-1">
+            <span className="h-3 w-3 rounded-full border-2 border-border" style={{ background: phase === 'boot' ? 'rgb(var(--c-danger))' : 'rgb(var(--c-success))' }} />
+            <span className="font-display text-sm text-muted">manage_os v1.0</span>
+            <button onClick={toggleFs} title={fullscreen ? 'Küçült' : 'Tam ekran'} className="ml-auto text-muted hover:text-fg">{fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
+            <button onClick={reboot} title="Yeniden başlat" className="text-muted hover:text-fg"><Power size={15} /></button>
+          </div>
+
+          <div ref={screenRef} className={cn('brix-screen brix-crt relative select-none overflow-hidden rounded-md', fullscreen ? 'min-h-0 flex-1' : 'aspect-[16/10]')} style={{ background: 'rgb(var(--c-bg))' }}>
+            {/* BOOT */}
+            <div className={cn('absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 transition-opacity duration-500', phase === 'boot' ? 'opacity-100' : 'pointer-events-none opacity-0')} style={{ background: '#1b1410' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brix/walk.gif" alt="" width={56} height={90} className="pixelated" style={{ imageRendering: 'pixelated' }} />
+              <p className="font-display text-base tracking-widest text-[#ffd9b3]" style={{ animation: 'brixBootBlink 1s steps(2) infinite' }}>{bootLines[bootStep]}</p>
+              <div className="h-4 w-2/3 max-w-xs overflow-hidden rounded border-2 border-[#ffd9b3]/70 bg-black/40"><div className="h-full bg-[#f9a620] transition-[width] duration-100" style={{ width: `${pct}%` }} /></div>
+              <p className="font-display text-3xl font-bold tabular-nums text-[#f9a620]">%{pct}</p>
+            </div>
+
+            {/* DESKTOP */}
+            <div className={cn('absolute inset-0 flex flex-col transition-all duration-500', phase === 'desktop' ? 'opacity-100' : 'pointer-events-none scale-95 opacity-0')}>
+              <div className="flex items-center gap-2 border-b-2 border-border bg-surface px-3 py-1.5">
+                <span className="font-display text-sm font-bold text-fg">⌂ Masaüstü</span>
+                <span className="ml-auto font-display text-sm text-muted">{folders.length} klasör</span>
+              </div>
+
+              {/* ikon + pencere alanı */}
+              <div ref={deskRef} onContextMenu={deskContext} className="relative flex-1 overflow-hidden">
+                {/* temaya uyumlu duvar kâğıdı */}
+                <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(85% 60% at 50% -5%, rgb(var(--c-primary) / 0.12), transparent 70%), radial-gradient(70% 60% at 100% 100%, rgb(var(--c-accent) / 0.10), transparent 70%)' }} />
+                <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(rgb(var(--c-border) / 0.55) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+                <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 font-display text-[10px] uppercase tracking-[0.3em] text-muted/40">manage_os</span>
+
+                {/* widget: saat + tarih (sağ üst) */}
+                <div className="pointer-events-none absolute right-3 top-2 z-0 hidden text-right sm:block">
+                  <p className="font-display text-2xl font-bold leading-none text-fg tabular-nums">{clock}</p>
+                  <p className="font-display text-[10px] text-muted">{today}</p>
+                </div>
+
+                {/* widget: bugünün ilerlemesi + seviye (sol üst) */}
+                <div className="pointer-events-none absolute left-3 top-2 z-0 hidden rounded bg-surface/80 px-3 py-2 brix-bevel-sm sm:block">
+                  <p className="font-display text-[10px] uppercase tracking-wide text-muted">Bugün · Lv {wLvl}</p>
+                  <div className="mt-0.5 flex items-baseline gap-1">
+                    <span className="font-display text-lg font-bold leading-none text-fg">%{wPct}</span>
+                    <span className="text-[10px] text-muted">{wDone}/{wTotal}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-surface-2">
+                    <div className="h-full rounded-full bg-success transition-[width] duration-500" style={{ width: `${wPct}%` }} />
+                  </div>
+                </div>
+
+                {/* ikonlar */}
+                {folders.map(f => {
+                  const p = positions[f.id] || { x: 50, y: 50 }
+                  return (
+                    <button key={f.id} onPointerDown={(e) => startIconDrag(f.id, e)} onMouseEnter={() => setHover(f.id)} onMouseLeave={() => setHover(h => (h === f.id ? null : h))}
+                      className="absolute z-0 flex w-20 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none flex-col items-center gap-1 rounded p-1 active:cursor-grabbing" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={hover === f.id || wins.some(w => w.id === f.id) ? '/brix/folder-open.png' : '/brix/folder.png'} alt="" width={52} height={52} className="pixelated h-11 w-11 sm:h-12 sm:w-12" style={{ imageRendering: 'pixelated' }} draggable={false} />
+                      <span className="max-w-full truncate rounded border-2 border-border bg-surface px-1.5 py-0.5 font-display text-[11px] font-semibold text-fg" style={{ boxShadow: `2px 2px 0 0 rgb(${f.accent})` }}>{f.label}</span>
+                    </button>
+                  )
+                })}
+
+                {/* pencereler */}
+                {wins.map(w => {
+                  const f = folderById(w.id); if (!f || w.min) return null
+                  return (
+                    <div key={w.id} onPointerDown={() => focusWin(w.id)}
+                      className={cn('absolute flex flex-col overflow-hidden rounded bg-surface brix-bevel', w.max ? 'inset-1' : '')}
+                      style={w.max ? { zIndex: w.z } : { left: `${w.x}%`, top: `${w.y}%`, width: '74%', height: '82%', zIndex: w.z, transformOrigin: `${w.ox}% ${w.oy}%`, animation: 'brixWindowOpen .26s cubic-bezier(.16,1,.3,1)' }}>
+                      {/* başlık çubuğu */}
+                      <div onPointerDown={(e) => startWinDrag(w.id, e)} className={cn('flex items-center gap-2 border-b-2 border-border px-2.5 py-1.5', w.max ? '' : 'cursor-move')} style={{ background: `rgb(${f.accent} / 0.18)` }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/brix/folder-open.png" alt="" width={18} height={18} className="pixelated" style={{ imageRendering: 'pixelated' }} draggable={false} />
+                        <span className="truncate font-display text-xs font-bold text-fg">{f.label}</span>
+                        <div className="ml-auto flex items-center gap-1">
+                          <button onClick={() => patchWin(w.id, { min: true })} className="flex h-5 w-5 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px" aria-label="Küçült"><Minus size={11} /></button>
+                          <button onClick={() => patchWin(w.id, { max: !w.max })} className="flex h-5 w-5 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px" aria-label={w.max ? 'Küçült' : 'Büyüt'}>{w.max ? <Minimize2 size={10} /> : <Maximize2 size={10} />}</button>
+                          <button onClick={() => closeWin(w.id)} className="flex h-5 w-5 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px" aria-label="Kapat"><X size={11} /></button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 border-b border-border/60 px-2.5 py-1 text-[11px] text-muted font-display"><span>⌂</span><ChevronRight size={11} /><span className="text-fg">{f.label}</span></div>
+                      <div className="flex-1 overflow-y-auto p-3">
+                        <p className="mb-2.5 text-[11px] text-muted">{f.desc}</p>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {f.files.map((file, i) => (
+                            <Link key={file.id} href={file.href} className="flex flex-col items-center gap-1 rounded border-2 border-border bg-surface-2 p-2 text-center transition-transform hover:-translate-y-0.5 hover:border-border-hover" style={{ animation: 'brixFileIn .3s ease-out both', animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+                              <span className="text-xl leading-none">{file.emoji}</span>
+                              <span className="w-full truncate text-[11px] font-medium text-fg">{file.label}</span>
+                              {file.meta && <span className="text-[10px] text-muted-2">{file.meta}</span>}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="border-t-2 border-border bg-surface px-2.5 py-1.5">
+                        <Link href={f.href} className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold text-bg brix-bevel-sm hover:-translate-y-px font-display" style={{ background: `rgb(${f.accent})` }}>Tümünü aç <ArrowRight size={13} /></Link>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* Başlat menüsü */}
+                {startOpen && (
+                  <>
+                    <div className="absolute inset-0 z-[90]" onClick={() => setStartOpen(false)} />
+                    <div className="absolute bottom-2 left-2 z-[91] w-56 rounded bg-surface p-2 brix-bevel animate-slide-up">
+                      <div className="mb-2 flex items-center gap-2 border-b-2 border-border px-1 pb-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/brix/walk.gif" alt="" width={18} height={29} className="pixelated" style={{ imageRendering: 'pixelated' }} />
+                        <span className="font-display text-sm font-bold text-fg">manage_os</span>
+                      </div>
+                      <div className="max-h-44 space-y-0.5 overflow-y-auto">
+                        {folders.map(f => (
+                          <button key={f.id} onClick={() => { openWindow(f.id, 50, 92); setStartOpen(false) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: `rgb(${f.accent})` }} />
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-1 space-y-0.5 border-t-2 border-border pt-1">
+                        <button onClick={() => { resetIcons(); setStartOpen(false) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted hover:bg-surface-2 hover:text-fg"><RotateCcw size={13} /> İkonları sıfırla</button>
+                        <button onClick={() => { reboot(); setStartOpen(false) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-danger hover:bg-danger/10"><Power size={13} /> Yeniden başlat</button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* sağ-tık bağlam menüsü */}
+                {ctx && (
+                  <>
+                    <div className="absolute inset-0 z-[90]" onClick={() => setCtx(null)} onContextMenu={(e) => { e.preventDefault(); setCtx(null) }} />
+                    <div className="absolute z-[91] w-44 rounded bg-surface p-1 brix-bevel animate-fade-in" style={{ left: ctx.x, top: ctx.y }}>
+                      <button onClick={() => { reboot(); setCtx(null) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2"><RotateCcw size={13} /> Yenile (boot)</button>
+                      <button onClick={() => { resetIcons(); setCtx(null) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2"><LayoutGrid size={13} /> İkonları sırala</button>
+                      <button onClick={() => { setWins([]); setCtx(null) }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-fg hover:bg-surface-2"><X size={13} /> Pencereleri kapat</button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* görev çubuğu */}
+              <div className="flex items-center gap-1.5 border-t-2 border-border bg-surface px-2 py-1.5">
+                <button onClick={() => { setStartOpen(o => !o); setCtx(null) }} className={cn('flex shrink-0 items-center gap-1 rounded border-2 border-border px-2 py-0.5 font-display text-[11px] font-bold transition-colors', startOpen ? 'bg-primary text-bg' : 'text-fg hover:bg-surface-2')}>⊞ Başlat</button>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/brix/walk.gif" alt="" width={16} height={26} className="pixelated shrink-0" style={{ imageRendering: 'pixelated' }} />
+                <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+                  {wins.map(w => {
+                    const f = folderById(w.id); if (!f) return null
+                    const active = topId === w.id && !w.min
+                    return (
+                      <button key={w.id} data-win={w.id} onClick={() => taskbarClick(w.id)} className={cn('flex shrink-0 items-center gap-1.5 rounded border-2 px-2 py-0.5 font-display text-[11px] font-semibold transition-colors', active ? 'border-border bg-surface-2 text-fg' : 'border-border/60 text-muted hover:text-fg', w.min && 'opacity-60')}>
+                        <span className="h-2 w-2 rounded-sm" style={{ background: `rgb(${f.accent})` }} />
+                        {f.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {wins.length > 0 && <span className="hidden shrink-0 font-display text-[10px] text-muted-2 lg:inline">Esc kapat · ←/→ pencere</span>}
+                <span className="ml-auto shrink-0 font-display text-xs font-bold text-fg tabular-nums">{clock}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {!fullscreen && (
+          <>
+            <div className="mx-auto -mt-px h-5 w-16 brix-bevel-sm" style={{ background: 'rgb(var(--c-surface2))', borderTopWidth: 0 }} />
+            <div className="mx-auto h-2 w-40 rounded-b bg-border-hover/70" />
+          </>
+        )}
+      </div>
+    </section>
+  )
+}

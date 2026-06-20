@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle, Brain, Network, CalendarCheck, ListOrdered, Lightbulb, Castle, Flag, Sparkles, Send, ChevronDown, TrendingUp, Link2, Candy } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Gift, Trophy, BarChart3, User, Zap, Cloud, HardDrive, Target, Smile, Crosshair, Wallet, Gamepad2, MessageCircle, Brain, Network, CalendarCheck, ListOrdered, Lightbulb, Castle, Flag, Sparkles, Send, ChevronDown, TrendingUp, Link2, Candy, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/hooks/useStore'
 import { getLevelInfo, getRank } from '@/lib/gamification'
@@ -129,7 +129,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-border bg-surface">
+    <aside className="app-sidebar flex h-full w-60 flex-col border-r border-border bg-surface">
       {/* Logo */}
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div className="flex items-center gap-2">
@@ -143,6 +143,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
+        {/* Komut paleti */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-cmdk'))}
+          className="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted transition-all hover:bg-surface-2 hover:text-fg"
+        >
+          <Search size={17} />
+          <span className="flex-1 text-left">Ara</span>
+          <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+        </button>
+
         {/* Sabit üst */}
         {PINNED.map(item => (
           <NavLink key={item.href} {...item} active={pathname === item.href} onNavigate={onNavigate} />
@@ -201,6 +211,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <span className="text-xs text-xp font-medium">{formatXP(available)} XP</span>
           </div>
           <Progress value={info.xpInLevel} max={info.xpNeeded} color="xp" size="sm" />
+        </div>
+
+        {/* brix: zemin boyunca yürüyen karakter */}
+        <div className="brix-only relative h-9 overflow-hidden border-y-2 border-border/60">
+          <div className="absolute bottom-0 left-1" style={{ animation: 'brixWalkAcross 9s linear infinite', ['--walk' as string]: '150px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brix/walk.gif" alt="" width={22} height={35} className="pixelated" style={{ imageRendering: 'pixelated' }} />
+          </div>
         </div>
 
         {/* pixel mascots */}

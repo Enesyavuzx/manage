@@ -106,6 +106,24 @@ export const SPRITES: Record<string, SpriteDef> = {
       '.kk...kk.',
     ],
   },
+  // Brix imza "yürüyen karakter" — bizim pixel diline uyarlanmış küçük kahraman.
+  hero: {
+    palette: { k: '#14233b', s: '#f3c79a', h: '#7a4a1f', c: '#06b6d4', d: '#0e7490', p: '#334155', b: '#0f172a' },
+    rows: [
+      '..kkkk..',
+      '.khhhhk.',
+      '.kssssk.',
+      '.kskssk.',
+      '.kssssk.',
+      '..kcck..',
+      'kccddcck',
+      'kccddcck',
+      '.kcccsk.',
+      '.kp..pk.',
+      '.kp..pk.',
+      '.bb..bb.',
+    ],
+  },
 }
 
 export function PixelSprite({

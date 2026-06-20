@@ -106,7 +106,7 @@ export default function HabitsPage() {
                   <p className="py-6 text-center text-sm text-muted">"{query}" ile eşleşen alışkanlık yok.</p>
                 )}
 
-                <div className="space-y-2">{filtered.map(h => <HabitCard key={h.id} habit={h} showCheck canReorder={reorderable} />)}</div>
+                <div className="brix-stagger space-y-2">{filtered.map(h => <HabitCard key={h.id} habit={h} showCheck canReorder={reorderable} />)}</div>
               </>
             )}
 

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pixelify+Sans:wght@400;500;600;700&family=Press+Start+2P&family=VT323&display=swap');
 
 /* ============================================================
    İKİ TEMA
@@ -60,31 +60,312 @@
   --radius: 0px;
 }
 
-/* ---------- BRIX (aydınlık) ----------
-   Referans: Brix Webflow şablonu — temiz, ferah, beyaz zeminli SaaS estetiği.
-   Açık gri sayfa zemini üzerinde beyaz kartlar; canlı camgöbeği (cyan) marka rengi,
-   yumuşak nötr gölgeler, hafif yuvarlak köşeler. */
+/* ---------- BRIX (pixel-retro / sıcak) ----------
+   Referans: brix-zh Webflow şablonunun GERÇEK değerleri.
+   Sıcak krem zemin (#fff7f1), metin #282828, turuncu #ffa447 + periwinkle #7b95ff,
+   pixel-bevel paneller (#757575 gölge / #eaeaea highlight), pixel/dot başlık fontu. */
 [data-theme='brix'] {
-  --c-bg: 246 248 251;        /* ferah açık gri zemin #f6f8fb */
+  --c-bg: 255 247 241;        /* sıcak krem #fff7f1 */
   --c-surface: 255 255 255;   /* beyaz kart */
-  --c-surface2: 241 245 249;  /* slate-100 inset */
-  --c-border: 226 232 240;    /* slate-200 yumuşak ayraç */
-  --c-border-hover: 203 213 225; /* slate-300 */
-  --c-text: 15 23 42;         /* slate-900 #0f172a */
-  --c-muted: 100 116 139;     /* slate-500 #64748b */
-  --c-muted2: 148 163 184;    /* slate-400 #94a3b8 */
-  --c-primary: 6 182 212;     /* cyan-500 #06b6d4 — Brix camgöbeği */
-  --c-primary2: 8 145 178;    /* cyan-600 #0891b2 (açık zeminde kontrast) */
-  --c-accent: 14 165 233;     /* sky-500 #0ea5e9 */
-  --c-xp: 217 119 6;          /* amber-600 #d97706 (açık zeminde okunur) */
-  --c-success: 22 163 74;     /* green-600 #16a34a */
-  --c-danger: 220 38 38;      /* red-600 #dc2626 */
+  --c-surface2: 250 243 236;  /* sıcak açık #faf3ec */
+  --c-border: 40 40 40;       /* pixel hatları: koyu #282828 */
+  --c-border-hover: 117 117 117; /* pixel gölge grisi #757575 */
+  --c-text: 40 40 40;         /* #282828 */
+  --c-muted: 117 117 117;     /* #757575 */
+  --c-muted2: 153 153 153;    /* #999 */
+  --c-primary: 255 164 71;    /* turuncu #ffa447 */
+  --c-primary2: 245 126 46;   /* derin turuncu #f57e2e */
+  --c-accent: 123 149 255;    /* periwinkle #7b95ff */
+  --c-xp: 245 126 46;         /* turuncu xp */
+  --c-success: 60 170 110;
+  --c-danger: 230 70 70;
 
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-display: 'Inter', system-ui, sans-serif;
-  --radius: 0.625rem;
-  --shadow-color: 30 41 59;   /* slate-800 — gölgeler nötr, saf siyah değil */
-  --shadow-strength: 0.5;
+  --font-display: 'Pixelify Sans', 'Inter', sans-serif;
+  --radius: 0px;
+  --shadow-color: 40 40 40;
+  --shadow-strength: 0.25;
+}
+
+/* Brix: başlıklar pixel/dot font, biraz büyütülmüş ve seyrek (okunur kalsın) */
+[data-theme='brix'] h1,
+[data-theme='brix'] h2,
+[data-theme='brix'] h3,
+[data-theme='brix'] .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+[data-theme='brix'] h1 { font-size: 2.4rem; line-height: 1.05; }
+[data-theme='brix'] h2 { font-size: 1.8rem; line-height: 1.1; }
+
+/* ---------- BOTANICAL GARDEN ----------
+   theme-factory (ComposioHQ) preset'i: Fern Green / Marigold / Terracotta / Cream.
+   Organik & ferah; serif başlık (DejaVu Serif → web'de Lora) + temiz sans gövde. */
+[data-theme='botanic'] {
+  --c-bg: 245 243 237;        /* Cream #f5f3ed */
+  --c-surface: 255 255 255;
+  --c-surface2: 240 237 228;  /* #f0ede4 */
+  --c-border: 224 218 204;    /* #e0dacc yumuşak */
+  --c-border-hover: 196 188 168;
+  --c-text: 36 48 41;         /* derin orman #243029 */
+  --c-muted: 107 122 111;     /* yeşilimsi gri */
+  --c-muted2: 150 160 148;
+  --c-primary: 74 124 89;     /* Fern Green #4a7c59 */
+  --c-primary2: 58 100 71;    /* daha koyu yeşil */
+  --c-accent: 249 166 32;     /* Marigold #f9a620 */
+  --c-xp: 249 166 32;         /* Marigold */
+  --c-success: 63 143 90;
+  --c-danger: 183 71 42;      /* Terracotta #b7472a */
+
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Lora', 'DejaVu Serif', Georgia, serif;
+  --radius: 0.75rem;
+  --shadow-color: 36 48 41;
+  --shadow-strength: 0.4;
+}
+[data-theme='botanic'] h1,
+[data-theme='botanic'] h2,
+[data-theme='botanic'] h3,
+[data-theme='botanic'] .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* ===== theme-factory presetleri (ComposioHQ) — token eşlemesi ===== */
+/* Ocean Depths — koyu denizci */
+[data-theme='ocean'] {
+  --c-bg: 26 35 50; --c-surface: 34 45 64; --c-surface2: 43 56 80;
+  --c-border: 56 70 94; --c-border-hover: 74 91 120;
+  --c-text: 241 250 238; --c-muted: 159 179 200; --c-muted2: 107 126 149;
+  --c-primary: 45 139 139; --c-primary2: 63 163 163; --c-accent: 168 218 220;
+  --c-xp: 233 196 106; --c-success: 63 174 143; --c-danger: 231 111 111;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 0 0 0; --shadow-strength: 1;
+}
+/* Midnight Galaxy — kozmik mor */
+[data-theme='galaxy'] {
+  --c-bg: 43 30 62; --c-surface: 53 39 72; --c-surface2: 65 51 90;
+  --c-border: 79 63 107; --c-border-hover: 107 90 138;
+  --c-text: 230 230 250; --c-muted: 164 144 194; --c-muted2: 124 107 154;
+  --c-primary: 107 111 192; --c-primary2: 164 144 194; --c-accent: 164 144 194;
+  --c-xp: 230 200 74; --c-success: 95 185 138; --c-danger: 226 113 143;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 0 0 0; --shadow-strength: 1;
+}
+/* Tech Innovation — yüksek kontrast koyu */
+[data-theme='tech'] {
+  --c-bg: 30 30 30; --c-surface: 38 38 38; --c-surface2: 48 48 48;
+  --c-border: 61 61 61; --c-border-hover: 86 86 86;
+  --c-text: 245 245 245; --c-muted: 160 160 160; --c-muted2: 110 110 110;
+  --c-primary: 0 102 255; --c-primary2: 0 255 255; --c-accent: 0 255 255;
+  --c-xp: 255 209 102; --c-success: 0 224 138; --c-danger: 255 77 109;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.5rem; --shadow-color: 0 0 0; --shadow-strength: 1;
+}
+/* Arctic Frost — buz mavisi açık */
+[data-theme='arctic'] {
+  --c-bg: 243 247 252; --c-surface: 255 255 255; --c-surface2: 238 244 251;
+  --c-border: 212 224 238; --c-border-hover: 179 198 223;
+  --c-text: 31 45 61; --c-muted: 94 113 138; --c-muted2: 147 163 184;
+  --c-primary: 74 111 165; --c-primary2: 91 132 192; --c-accent: 106 160 224;
+  --c-xp: 199 154 58; --c-success: 63 163 122; --c-danger: 217 83 79;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 31 45 61; --shadow-strength: 0.4;
+}
+/* Desert Rose — tozlu pembe açık */
+[data-theme='desert'] {
+  --c-bg: 243 231 218; --c-surface: 251 244 236; --c-surface2: 239 224 210;
+  --c-border: 221 198 180; --c-border-hover: 199 169 148;
+  --c-text: 93 46 70; --c-muted: 138 107 116; --c-muted2: 176 154 160;
+  --c-primary: 184 125 109; --c-primary2: 165 104 90; --c-accent: 212 165 165;
+  --c-xp: 201 138 58; --c-success: 122 154 109; --c-danger: 157 68 82;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 93 46 70; --shadow-strength: 0.35;
+}
+/* Forest Canopy — orman yeşili açık (serif başlık) */
+[data-theme='forest'] {
+  --c-bg: 250 249 246; --c-surface: 255 255 255; --c-surface2: 240 239 232;
+  --c-border: 221 224 210; --c-border-hover: 185 192 166;
+  --c-text: 45 74 43; --c-muted: 107 117 97; --c-muted2: 154 164 139;
+  --c-primary: 45 74 43; --c-primary2: 63 107 60; --c-accent: 164 172 134;
+  --c-xp: 176 138 46; --c-success: 74 124 80; --c-danger: 168 81 46;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Lora', Georgia, serif;
+  --radius: 0.625rem; --shadow-color: 45 74 43; --shadow-strength: 0.35;
+}
+/* Golden Hour — sıcak sonbahar açık */
+[data-theme='golden'] {
+  --c-bg: 239 226 207; --c-surface: 253 248 240; --c-surface2: 236 220 196;
+  --c-border: 220 198 164; --c-border-hover: 194 165 120;
+  --c-text: 74 64 58; --c-muted: 125 111 99; --c-muted2: 171 154 136;
+  --c-primary: 244 169 0; --c-primary2: 217 142 43; --c-accent: 193 102 107;
+  --c-xp: 244 169 0; --c-success: 122 140 58; --c-danger: 179 71 63;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.625rem; --shadow-color: 74 64 58; --shadow-strength: 0.35;
+}
+/* Modern Minimalist — gri tonlu açık */
+[data-theme='minimal'] {
+  --c-bg: 247 247 248; --c-surface: 255 255 255; --c-surface2: 238 238 240;
+  --c-border: 211 211 211; --c-border-hover: 176 176 179;
+  --c-text: 54 69 79; --c-muted: 112 128 144; --c-muted2: 154 163 173;
+  --c-primary: 54 69 79; --c-primary2: 79 98 113; --c-accent: 112 128 144;
+  --c-xp: 184 134 43; --c-success: 74 140 106; --c-danger: 192 82 79;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Inter', system-ui, sans-serif;
+  --radius: 0.4rem; --shadow-color: 54 69 79; --shadow-strength: 0.3;
+}
+/* Sunset Boulevard — gün batımı açık (serif başlık) */
+[data-theme='sunset'] {
+  --c-bg: 253 244 234; --c-surface: 255 250 244; --c-surface2: 246 230 210;
+  --c-border: 239 215 189; --c-border-hover: 224 185 143;
+  --c-text: 38 70 83; --c-muted: 110 123 128; --c-muted2: 154 166 168;
+  --c-primary: 231 111 81; --c-primary2: 244 162 97; --c-accent: 233 196 106;
+  --c-xp: 233 196 106; --c-success: 42 157 143; --c-danger: 209 73 91;
+  --font-body: 'Inter', system-ui, sans-serif; --font-display: 'Lora', Georgia, serif;
+  --radius: 0.625rem; --shadow-color: 38 70 83; --shadow-strength: 0.35;
+}
+/* serif başlık temaları */
+[data-theme='forest'] h1, [data-theme='forest'] h2, [data-theme='forest'] h3, [data-theme='forest'] .font-display,
+[data-theme='sunset'] h1, [data-theme='sunset'] h2, [data-theme='sunset'] h3, [data-theme='sunset'] .font-display {
+  font-family: var(--font-display); letter-spacing: -0.01em;
+}
+
+/* Brix: kartlara hafif "pixel" offset gölge */
+[data-theme='brix'] .pixel-shadow {
+  box-shadow: 3px 3px 0 0 rgb(40 40 40 / 0.16);
+}
+
+/* ===== Pixel-bevel yardımcıları (tema bağımsız, Brix bileşenleri için) ===== */
+.brix-bevel {
+  border: 2px solid rgb(var(--c-border));
+  box-shadow:
+    inset 2px 2px 0 0 rgb(255 255 255 / 0.9),
+    inset -2px -2px 0 0 rgb(var(--c-border-hover) / 0.45),
+    4px 4px 0 0 rgb(var(--c-border) / 0.9);
+}
+.brix-bevel-sm {
+  border: 2px solid rgb(var(--c-border));
+  box-shadow: inset 2px 2px 0 0 rgb(255 255 255 / 0.8), inset -2px -2px 0 0 rgb(var(--c-border-hover) / 0.4);
+}
+.brix-screen {
+  border: 3px solid rgb(var(--c-border));
+  box-shadow: inset 0 0 0 2px rgb(var(--c-border-hover) / 0.65), inset 0 0 26px rgb(0 0 0 / 0.35);
+}
+.brix-crt::after {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0) 0 2px, rgb(0 0 0 / 0.10) 3px 4px);
+  opacity: 0.5;
+}
+
+/* Brix karakteri: zemin boyunca yürür (gif zaten adım animasyonu içeriyor) */
+@keyframes brixWalkAcross {
+  0%        { transform: translateX(0) scaleX(1); }
+  47%       { transform: translateX(var(--walk, 180px)) scaleX(1); }
+  50%       { transform: translateX(var(--walk, 180px)) scaleX(-1); }
+  97%       { transform: translateX(0) scaleX(-1); }
+  100%      { transform: translateX(0) scaleX(1); }
+}
+/* Boot ekranı tarama parıltısı */
+@keyframes brixBootBlink { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+/* Klasöre "giriş" pop'u */
+@keyframes brixEnter {
+  0%   { opacity: 0; transform: scale(0.82) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+/* Pencere ikondan büyüyerek açılır */
+@keyframes brixWindowOpen {
+  0%   { opacity: 0; transform: scale(0.18); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes brixFileIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   BRIX: tüm uygulamaya pixel-retro giydirme (yan panel → en alta)
+   ============================================================ */
+
+/* Köşeleri TAMAMEN sertleştir (sert pixel — her şey köşeli) */
+[data-theme='brix'] .rounded,
+[data-theme='brix'] .rounded-sm,
+[data-theme='brix'] .rounded-md,
+[data-theme='brix'] .rounded-lg,
+[data-theme='brix'] .rounded-xl,
+[data-theme='brix'] .rounded-2xl,
+[data-theme='brix'] .rounded-3xl,
+[data-theme='brix'] .rounded-full { border-radius: 0 !important; }
+
+/* Kartlar: kalın koyu çerçeve (chunky offset gölge .pixel-shadow'dan gelir) */
+[data-theme='brix'] .ui-card.border { border-width: 2px; }
+
+/* Butonlar: pixel-bevel; hover'da kalkar, basınca içeri girer */
+[data-theme='brix'] .ui-btn { border-radius: 4px; }
+[data-theme='brix'] .ui-btn-solid {
+  border: 2px solid rgb(var(--c-border));
+  box-shadow: 3px 3px 0 0 rgb(var(--c-border));
+  transition: transform .08s ease, box-shadow .08s ease,
+    background-color .15s ease, color .15s ease, border-color .15s ease, filter .15s ease;
+}
+[data-theme='brix'] .ui-btn-solid:hover:not(:disabled) {
+  transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 rgb(var(--c-border));
+}
+[data-theme='brix'] .ui-btn-solid:active:not(:disabled) {
+  transform: translate(2px, 2px); box-shadow: 1px 1px 0 0 rgb(var(--c-border));
+}
+
+/* Form alanları: pixel çerçeve + turuncu pixel odak gölgesi */
+[data-theme='brix'] input:not([type='range']):not([type='checkbox']):not([type='radio']),
+[data-theme='brix'] textarea,
+[data-theme='brix'] select {
+  border: 2px solid rgb(var(--c-border));
+  border-radius: 4px;
+}
+[data-theme='brix'] input:not([type='range']):focus,
+[data-theme='brix'] textarea:focus,
+[data-theme='brix'] select:focus {
+  outline: none;
+  box-shadow: 3px 3px 0 0 rgb(var(--c-primary));
+}
+
+/* Yan panel: kalın pixel ayraç + bağlantılarda kayan hover */
+[data-theme='brix'] .app-sidebar { border-right: 3px solid rgb(var(--c-border)); }
+[data-theme='brix'] .app-sidebar a,
+[data-theme='brix'] .app-sidebar nav button {
+  transition: transform .12s ease, background-color .12s ease, color .12s ease;
+}
+[data-theme='brix'] .app-sidebar a:hover,
+[data-theme='brix'] .app-sidebar nav button:hover { transform: translateX(3px); }
+
+/* Modal/overlay: koyu yerine sıcak karartma */
+[data-theme='brix'] .bg-black\/75,
+[data-theme='brix'] .bg-black\/60 { background-color: rgb(40 28 20 / 0.55) !important; }
+
+/* Scrollbar: pixel (köşesiz) */
+[data-theme='brix'] ::-webkit-scrollbar-thumb { border-radius: 0; }
+
+/* Kart hover (interactive) biraz daha "kayan" his */
+[data-theme='brix'] .ui-card.transition-all:hover { transform: translateY(-3px); }
+
+/* Liste satırları: kademeli kayan giriş */
+@keyframes brixRowIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+[data-theme='brix'] .brix-stagger > * { animation: brixRowIn .45s cubic-bezier(.16,1,.3,1) both; }
+[data-theme='brix'] .brix-stagger > *:nth-child(1) { animation-delay: .03s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(2) { animation-delay: .08s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(3) { animation-delay: .13s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(4) { animation-delay: .18s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(5) { animation-delay: .23s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(6) { animation-delay: .28s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(7) { animation-delay: .33s; }
+[data-theme='brix'] .brix-stagger > *:nth-child(8) { animation-delay: .38s; }
+
+/* Erişilebilirlik: hareketi azalt tercihinde tüm animasyonları sustur */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---------- ortak token'lar ---------- */
@@ -98,6 +379,11 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Lenis smooth scroll */
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
 
 html, body {
   height: 100%;
@@ -301,3 +587,7 @@ input[type='range']::-webkit-slider-thumb {
 
 /* Yalnızca pixel temasında görünen dekoratif öğeler */
 [data-theme='pro'] .pixel-only { display: none !important; }
+
+/* Yalnızca Brix temasında görünen öğeler */
+.brix-only { display: none !important; }
+[data-theme='brix'] .brix-only { display: block !important; }

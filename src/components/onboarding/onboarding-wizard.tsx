@@ -39,7 +39,7 @@ export function OnboardingWizard() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/95 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl">
+      <div className="ui-card w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl">
         {/* Step dots */}
         <div className="mb-6 flex items-center justify-center gap-2">
           {[0, 1, 2].map(i => (

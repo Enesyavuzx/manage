@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Search } from 'lucide-react'
 import { StoreProvider, useStore } from '@/hooks/useStore'
 import { Sidebar } from '@/components/layout/sidebar'
 import { ThemeApplier } from '@/components/layout/theme-applier'
@@ -11,6 +11,10 @@ import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
+import { SmoothScroll } from '@/components/layout/smooth-scroll'
+import { ScrollProgress } from '@/components/layout/scroll-progress'
+import { BackToTop } from '@/components/layout/back-to-top'
+import { CommandPalette } from '@/components/layout/command-palette'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [sideOpen, setSideOpen] = useState(false)
@@ -26,6 +30,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ThemeApplier />
+      <SmoothScroll />
       <NotificationManager />
       <div className="relative z-10 flex h-screen overflow-hidden">
         {sideOpen && (
@@ -54,21 +59,35 @@ function Shell({ children }: { children: React.ReactNode }) {
               {sideOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <span className="text-sm font-bold text-fg font-display">MANAGE</span>
-            <ThemeSwitcher compact />
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-cmdk'))}
+                className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-fg transition-colors"
+                aria-label="Ara (komut paleti)"
+              >
+                <Search size={18} />
+              </button>
+              <ThemeSwitcher compact />
+            </div>
           </div>
 
           <main className="flex-1 overflow-y-auto p-4 lg:p-6" id="main-content">
-            {ready ? (
-              <ErrorBoundary>
-                <ScrollReveal>{children}</ScrollReveal>
-              </ErrorBoundary>
-            ) : (
-              <DashboardSkeleton />
-            )}
+            <div id="scroll-content" className="overflow-x-clip">
+              {ready ? (
+                <ErrorBoundary>
+                  <ScrollReveal>{children}</ScrollReveal>
+                </ErrorBoundary>
+              ) : (
+                <DashboardSkeleton />
+              )}
+            </div>
           </main>
         </div>
       </div>
       <ToastHost />
+      <ScrollProgress />
+      <BackToTop />
+      <CommandPalette />
       {showOnboarding && <OnboardingWizard />}
     </>
   )

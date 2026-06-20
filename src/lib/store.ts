@@ -1,4 +1,5 @@
 import type { StoreData, Habit, Completion, WeeklyReview, Routine, FutureLetter, Zincir } from './types'
+import { THEME_IDS } from './themes'
 import { DEFAULT_REWARDS, EXTRA_REWARDS, WATER_GOAL } from './constants'
 import { ACHIEVEMENTS } from './achievements'
 import { getLevelInfo } from './gamification'
@@ -10,7 +11,7 @@ export function defaultData(): StoreData {
   return {
     habits: [],
     completions: [],
-    profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'pro' },
+    profile: { name: 'Kahraman', totalXP: 0, redeemedXP: 0, activeTitleId: null, theme: 'botanic' },
     rewards: [...DEFAULT_REWARDS, ...EXTRA_REWARDS].map(r => ({ ...r })),
     moods: [],
     energyLogs: [],
@@ -60,9 +61,11 @@ export function loadStore(): StoreData {
   }
 }
 
-// Geçerli temalar: pro (koyu), pixel (vaporwave), brix (aydınlık). Gerisi pro'ya düşer.
+// Geçerli temalar themes.ts'teki kayıtlardan; bilinmeyen -> botanic (varsayılan).
 function normalizeTheme(theme: unknown): StoreData['profile']['theme'] {
-  return theme === 'pixel' || theme === 'brix' ? theme : 'pro'
+  return typeof theme === 'string' && (THEME_IDS as string[]).includes(theme)
+    ? (theme as StoreData['profile']['theme'])
+    : 'botanic'
 }
 
 function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {

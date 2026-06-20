@@ -29,7 +29,7 @@ export function ToastHost() {
             key={n.id}
             onClick={() => dismissNotification(n.id)}
             className={cn(
-              'pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-glow backdrop-blur-md animate-toast-in',
+              'ui-card pointer-events-auto flex items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-glow backdrop-blur-md animate-toast-in',
               KIND_STYLE[n.kind],
             )}
           >
