@@ -68,6 +68,86 @@ function normalizeTheme(theme: unknown): StoreData['profile']['theme'] {
     : 'botanic'
 }
 
+function unionById<T extends { id: string }>(a: T[], b: T[]): T[] {
+  const map = new Map<string, T>()
+  for (const item of a) map.set(item.id, item)
+  for (const item of b) {
+    const existing = map.get(item.id)
+    map.set(item.id, existing ? { ...existing, ...item } : item)
+  }
+  return [...map.values()]
+}
+
+function mergeRecords(a: Record<string, string>, b: Record<string, string>): Record<string, string> {
+  return { ...a, ...b }
+}
+
+function mergeSubtaskDone(a: Record<string, string[]>, b: Record<string, string[]>): Record<string, string[]> {
+  const out: Record<string, string[]> = { ...a }
+  for (const [key, steps] of Object.entries(b)) {
+    out[key] = out[key] ? [...new Set([...out[key], ...steps])] : [...steps]
+  }
+  return out
+}
+
+function pickLoginProfile(local: StoreData['profile'], remote: StoreData['profile']): StoreData['profile'] {
+  const lDate = local.lastLoginDate
+  const rDate = remote.lastLoginDate
+  if (lDate && rDate) return lDate >= rDate ? local : remote
+  return lDate ? local : remote
+}
+
+// Birleştir local + remote: tüm kayıtları id ile birleştir; XP ve jetonları kaybetme.
+// Eski mergeRemote yalnızca totalXP'ye bakıp tüm store'u seçiyordu — yeni alışkanlıklar
+// ve tamamlamalar silinebiliyordu.
+export function mergeStoreData(local: StoreData, remote: StoreData): StoreData {
+  const login = pickLoginProfile(local.profile, remote.profile)
+  const xpPrimary = remote.profile.totalXP >= local.profile.totalXP ? remote.profile : local.profile
+  const other = remote.profile.totalXP >= local.profile.totalXP ? local.profile : remote.profile
+
+  const profile: StoreData['profile'] = {
+    ...other,
+    ...xpPrimary,
+    totalXP: Math.max(local.profile.totalXP, remote.profile.totalXP),
+    redeemedXP: Math.max(local.profile.redeemedXP, remote.profile.redeemedXP),
+    theme: normalizeTheme(xpPrimary.theme ?? other.theme),
+    lastLoginDate: login.lastLoginDate,
+    loginStreak: login.loginStreak,
+    dailyClaimedDate: login.dailyClaimedDate ?? other.dailyClaimedDate,
+    challengeClaimedDate: login.challengeClaimedDate ?? other.challengeClaimedDate,
+  }
+
+  return {
+    habits: unionById(local.habits, remote.habits),
+    completions: unionById(local.completions, remote.completions),
+    profile,
+    rewards: unionById(local.rewards, remote.rewards),
+    moods: unionById(local.moods, remote.moods),
+    energyLogs: unionById(local.energyLogs, remote.energyLogs),
+    medications: unionById(local.medications, remote.medications),
+    medicationLog: unionById(local.medicationLog, remote.medicationLog),
+    focusSessions: unionById(local.focusSessions, remote.focusSessions),
+    water: unionById(local.water, remote.water),
+    budgetAccounts: unionById(local.budgetAccounts, remote.budgetAccounts),
+    budgetTransactions: unionById(local.budgetTransactions, remote.budgetTransactions),
+    budgetGoals: unionById(local.budgetGoals, remote.budgetGoals),
+    brainDump: unionById(local.brainDump, remote.brainDump),
+    freezeTokens: Math.max(local.freezeTokens, remote.freezeTokens),
+    frozenDates: [...new Set([...local.frozenDates, ...remote.frozenDates])],
+    unlockedSkills: [...new Set([...local.unlockedSkills, ...remote.unlockedSkills])],
+    subtaskDone: mergeSubtaskDone(local.subtaskDone, remote.subtaskDone),
+    unlockedAchievements: mergeRecords(local.unlockedAchievements, remote.unlockedAchievements),
+    unlockedTitles: mergeRecords(local.unlockedTitles, remote.unlockedTitles),
+    weeklyReviews: unionById(local.weeklyReviews, remote.weeklyReviews),
+    routines: unionById(local.routines, remote.routines),
+    savedQuotes: [...new Set([...local.savedQuotes, ...remote.savedQuotes])],
+    claimedQuests: mergeRecords(local.claimedQuests, remote.claimedQuests),
+    wonders: unionById(local.wonders, remote.wonders),
+    futureLetters: unionById(local.futureLetters, remote.futureLetters),
+    zincirs: unionById(local.zincirs, remote.zincirs),
+  }
+}
+
 function mergeWithDefaults(parsed: Partial<StoreData>): StoreData {
   const def = defaultData()
   return {
