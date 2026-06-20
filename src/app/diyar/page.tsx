@@ -1,5 +1,5 @@
 'use client'
-import { Castle, Flag, Share2 } from 'lucide-react'
+import { Castle, Flag, Share2, Gamepad2 } from 'lucide-react'
 import { RealmView } from '@/components/realm/realm-view'
 import { DiyarShareCard } from '@/components/realm/diyar-share-card'
 import { EventsCard } from '@/components/seferler/events-card'
@@ -11,9 +11,19 @@ import { Tabs } from '@/components/ui/tabs'
 export default function DiyarPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-fg text-gradient">Diyar</h1>
-        <p className="mt-0.5 text-sm text-muted">Tutarlılığınla büyüyen şehir. Her alışkanlık bir yapı, her tamamlama bir tuğla.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-fg text-gradient">Diyar</h1>
+          <p className="mt-0.5 text-sm text-muted">Tutarlılığınla büyüyen şehir. Her alışkanlık bir yapı, her tamamlama bir tuğla.</p>
+        </div>
+        <a
+          href="/diyar/oyun"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-bg shadow-glow transition-transform hover:-translate-y-0.5 font-display"
+        >
+          <Gamepad2 size={16} /> Diyarı Keşfet
+        </a>
       </div>
 
       <Tabs

@@ -3,10 +3,12 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const CARDS = [
+interface FCard { emoji: string; label: string; desc: string; href: string; accent: string; newTab?: boolean }
+
+const CARDS: FCard[] = [
   { emoji: '✅', label: 'Alışkanlıklar', desc: 'Streak yap, zincirle', href: '/habits', accent: '74 124 89' },
   { emoji: '🎯', label: 'Odak', desc: 'Derin çalışma, akış', href: '/focus', accent: '123 149 255' },
-  { emoji: '🏰', label: 'Diyar', desc: 'Şehrini büyüt', href: '/diyar', accent: '224 179 65' },
+  { emoji: '🏰', label: 'Diyar', desc: 'Keşfet & oyna 🎮', href: '/diyar/oyun', accent: '224 179 65', newTab: true },
   { emoji: '🚩', label: 'Seferler', desc: 'XP, rütbe, sezon', href: '/seferler', accent: '180 130 255' },
   { emoji: '🙂', label: 'Ruh Hali', desc: 'Mood & enerji', href: '/mood', accent: '63 143 90' },
   { emoji: '💬', label: 'Koç', desc: 'Bilgelik & rehber', href: '/coach', accent: '249 166 32' },
@@ -66,6 +68,8 @@ export function FeatureCarousel() {
           <Link
             key={c.label}
             href={c.href}
+            target={c.newTab ? '_blank' : undefined}
+            rel={c.newTab ? 'noopener noreferrer' : undefined}
             className="ui-card flex min-w-[220px] shrink-0 snap-center flex-col gap-2 rounded-xl border-2 border-border bg-surface p-5 first:ml-[calc(50%-110px)] last:mr-[calc(50%-110px)]"
             style={{ boxShadow: `5px 5px 0 0 rgb(${c.accent})`, willChange: 'transform, opacity' }}
           >
