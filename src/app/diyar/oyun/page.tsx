@@ -31,6 +31,29 @@ export default function DiyarOyunPage() {
     return { items, W, H }
   }, [structs])
 
+  // Obsidian-graph tarzı bağlantılar: aynı rutin / zincir / kategori düğümlerini bağla
+  const graph = useMemo(() => {
+    const pos = new Map(layout.items.map(it => [it.s.habitId, { x: it.x, y: it.y }]))
+    const catOf = new Map((data.habits || []).map(h => [h.id, h.category] as const))
+    const seen = new Set<string>()
+    const edges: { a: string; b: string; kind: 'rutin' | 'zincir' | 'kategori' }[] = []
+    const add = (a: string | null, b: string | null, kind: 'rutin' | 'zincir' | 'kategori') => {
+      if (!a || !b || a === b || !pos.has(a) || !pos.has(b)) return
+      const key = [a, b].sort().join('|') + ':' + kind
+      if (seen.has(key)) return
+      seen.add(key); edges.push({ a, b, kind })
+    }
+    for (const r of data.routines || []) { const ids = r.habitIds || []; for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'rutin') }
+    for (const z of data.zincirs || []) { const ids = (z.steps || []).map(s => s.habitId); for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'zincir') }
+    const byCat = new Map<string, string[]>()
+    for (const id of pos.keys()) { const c = catOf.get(id) || 'other'; const arr = byCat.get(c) || []; arr.push(id); byCat.set(c, arr) }
+    for (const ids of byCat.values()) { for (let i = 0; i < ids.length - 1; i++) add(ids[i], ids[i + 1], 'kategori') }
+    return { pos, edges }
+  }, [layout, data.routines, data.zincirs, data.habits])
+
+  const nameOf = (id: string) => structs.find(s => s.habitId === id)?.name ?? id
+  const connOf = (id: string) => graph.edges.filter(e => e.a === id || e.b === id).map(e => ({ other: e.a === id ? e.b : e.a, kind: e.kind }))
+
   const worldRef = useRef<HTMLDivElement>(null)
   const charRef = useRef<HTMLDivElement>(null)
   const keys = useRef<Set<string>>(new Set())
@@ -40,7 +63,10 @@ export default function DiyarOyunPage() {
   const openRef = useRef<string | null>(null)
   const [nearId, setNearId] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [showLinks, setShowLinks] = useState(true)
+  const [reduce, setReduce] = useState(false)
   useEffect(() => { openRef.current = openId }, [openId])
+  useEffect(() => { setReduce(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false) }, [])
 
   // hareket + kamera döngüsü
   useEffect(() => {
@@ -90,6 +116,7 @@ export default function DiyarOyunPage() {
       if (dir) { keys.current.add(dir); if (e.key.startsWith('Arrow')) e.preventDefault() }
       if ((e.key === 'Enter' || e.key === ' ') && nearRef.current && !openRef.current) { e.preventDefault(); setOpenId(nearRef.current) }
       if (e.key === 'Escape' && openRef.current) setOpenId(null)
+      if (e.key === 'l' || e.key === 'L') setShowLinks(v => !v)
     }
     const up = (e: KeyboardEvent) => { const dir = map[e.key]; if (dir) keys.current.delete(dir) }
     window.addEventListener('keydown', down)
@@ -116,6 +143,40 @@ export default function DiyarOyunPage() {
             background: 'repeating-linear-gradient(0deg, rgb(var(--c-border) / 0.16) 0 1px, transparent 1px 44px), repeating-linear-gradient(90deg, rgb(var(--c-border) / 0.16) 0 1px, transparent 1px 44px), radial-gradient(circle at 50% 35%, rgb(var(--c-primary) / 0.10), transparent 60%), rgb(var(--c-surface2))',
           }}
         >
+          {/* nöral-ağ bağlantı katmanı (oklar + sinyal nabızları) */}
+          {showLinks && graph.edges.length > 0 && (
+            <svg className="pointer-events-none absolute left-0 top-0" width={layout.W} height={layout.H} style={{ zIndex: 0 }} aria-hidden="true">
+              <defs>
+                <marker id="ar-rutin" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7b95ff" /></marker>
+                <marker id="ar-zincir" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ffa447" /></marker>
+              </defs>
+              {graph.edges.map((e, i) => {
+                const A = graph.pos.get(e.a)!, B = graph.pos.get(e.b)!
+                const ay = A.y - 44, by = B.y - 44
+                const hot = nearId === e.a || nearId === e.b
+                const directed = e.kind !== 'kategori'
+                const col = e.kind === 'rutin' ? '#7b95ff' : e.kind === 'zincir' ? '#ffa447' : 'rgb(var(--c-muted))'
+                return (
+                  <g key={i}>
+                    <line
+                      x1={A.x} y1={ay} x2={B.x} y2={by} stroke={col}
+                      strokeWidth={hot ? 4.5 : directed ? 3 : 1.5}
+                      strokeOpacity={nearId ? (hot ? 0.98 : 0.32) : (directed ? 0.62 : 0.3)}
+                      strokeDasharray={directed ? undefined : '4 6'} strokeLinecap="round"
+                      markerEnd={directed ? `url(#ar-${e.kind})` : undefined}
+                    />
+                    {directed && !reduce && (
+                      <circle r={hot ? 3.5 : 2.4} fill={col} opacity={nearId && !hot ? 0.32 : 0.9}>
+                        <animate attributeName="cx" values={`${A.x};${B.x}`} dur="2.4s" repeatCount="indefinite" />
+                        <animate attributeName="cy" values={`${ay};${by}`} dur="2.4s" repeatCount="indefinite" />
+                      </circle>
+                    )}
+                  </g>
+                )
+              })}
+            </svg>
+          )}
+
           {/* binalar (kuleler) */}
           {layout.items.map(({ s, x, y }) => {
             const near = s.habitId === nearId
@@ -126,7 +187,7 @@ export default function DiyarOyunPage() {
                   <div className="mb-1 animate-bob rounded border-2 border-border bg-surface px-2 py-0.5 font-display text-[11px] font-bold text-fg" style={{ boxShadow: '2px 2px 0 0 rgb(var(--c-primary))' }}>⏎ Gir</div>
                 )}
                 {/* tabela */}
-                <div className={near ? 'scale-110 transition-transform' : 'transition-transform'} style={{ filter: near ? 'drop-shadow(0 0 6px rgb(var(--c-primary)/0.8))' : undefined }}>
+                <div className={near ? 'scale-110 transition-transform' : 'transition-transform'} style={{ filter: near ? `drop-shadow(0 0 9px ${s.color})` : showLinks ? `drop-shadow(0 0 5px ${s.color}aa)` : undefined }}>
                   <span className="text-3xl leading-none">{s.emoji}</span>
                 </div>
                 {/* kule blokları */}
@@ -177,6 +238,7 @@ export default function DiyarOyunPage() {
             <p className="text-[11px] text-muted">{world.phase.label} · {world.population.toLocaleString('tr-TR')} nüfus · {SEASON_EMOJI[world.season]} {WEATHER_EMOJI[world.weather]}</p>
           </div>
           <div className="pointer-events-auto flex items-center gap-1.5">
+            <button onClick={() => setShowLinks(v => !v)} title="Bağlantılar (L)" className={`inline-flex items-center gap-1 rounded border-2 border-border px-2.5 py-1.5 font-display text-xs font-bold hover:-translate-y-px ${showLinks ? 'bg-primary text-bg' : 'bg-surface text-fg'}`}>🔗 Ağ</button>
             <Link href="/diyar" className="inline-flex items-center gap-1 rounded border-2 border-border bg-surface px-2.5 py-1.5 font-display text-xs font-bold text-fg hover:-translate-y-px"><ArrowLeft size={13} /> Diyar</Link>
             <button onClick={() => window.close()} title="Sekmeyi kapat" className="inline-flex items-center justify-center rounded border-2 border-border bg-surface p-1.5 text-fg hover:-translate-y-px"><X size={14} /></button>
           </div>
@@ -186,6 +248,15 @@ export default function DiyarOyunPage() {
         <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2">
           <span className="inline-flex items-center gap-1.5 rounded border-2 border-border bg-primary/15 px-2.5 py-1 font-display text-xs font-bold text-fg"><Gamepad2 size={13} className="text-primary" /> Diyar Keşif</span>
         </div>
+
+        {/* nöral-ağ efsanesi */}
+        {showLinks && graph.edges.length > 0 && (
+          <div className="pointer-events-none absolute left-1/2 top-12 z-20 flex -translate-x-1/2 items-center gap-3 rounded border-2 border-border bg-surface/85 px-2.5 py-1 font-display text-[10px] text-muted">
+            <span className="flex items-center gap-1"><span className="inline-block h-[3px] w-4 rounded" style={{ background: '#7b95ff' }} /> Rutin</span>
+            <span className="flex items-center gap-1"><span className="inline-block h-[3px] w-4 rounded" style={{ background: '#ffa447' }} /> Zincir</span>
+            <span className="flex items-center gap-1"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-muted" /> Kategori</span>
+          </div>
+        )}
 
         {/* kontrol ipucu */}
         <p className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 text-center font-display text-[11px] text-muted">WASD / oklarla gez · binaya yaklaş · <span className="text-fg">⏎ Enter</span> ile gir</p>
@@ -244,6 +315,25 @@ export default function DiyarOyunPage() {
                 <p className="text-xs text-muted">
                   {open.doneToday ? <span className="font-medium text-success">Bugün tamamlandı — yapı parlıyor! ✨</span> : 'Bugün bu yapıyı tamamla, seviye atlasın.'}
                 </p>
+                {(() => {
+                  const cs = connOf(open.habitId)
+                  return (
+                    <div className="border-t border-border/60 pt-2.5">
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-2">🔗 Bağlantılar</p>
+                      {cs.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {cs.map((c, i) => (
+                            <span key={i} className="rounded border-2 border-border bg-surface-2 px-2 py-0.5 text-[11px] text-fg">
+                              {nameOf(c.other)} <span className="text-muted-2">· {c.kind}</span>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-2">Bağlantı yok — Rutin veya Zincir&apos;e ekleyerek bu yapıyı başkalarına bağla.</p>
+                      )}
+                    </div>
+                  )
+                })()}
                 <div className="flex gap-2">
                   <Link href={`/diyar/${open.habitId}`} className="flex-1 rounded px-3 py-2 text-center text-sm font-bold text-bg brix-bevel-sm font-display" style={{ background: open.color }}>Detay sayfası</Link>
                   <button onClick={() => setOpenId(null)} className="rounded border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg font-display hover:-translate-y-px">Devam</button>
