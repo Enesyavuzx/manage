@@ -2,13 +2,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ZoomIn, ZoomOut, Crosshair, Search } from 'lucide-react'
 
-export interface GNode { id: string; type: 'habit' | 'note' | 'rutin' | 'zincir' | 'wonder'; label: string; emoji: string; color: string; stage?: number }
-export interface GEdge { a: string; b: string; kind: 'rutin' | 'zincir' | 'kategori' | 'istif' | 'not' | 'wonder' }
+export type GNodeType = 'habit' | 'note' | 'rutin' | 'zincir' | 'wonder' | 'hero' | 'kategori' | 'basari' | 'mektup' | 'soz'
+export interface GNode { id: string; type: GNodeType; label: string; emoji: string; color: string; stage?: number }
+export interface GEdge { a: string; b: string; kind: 'rutin' | 'zincir' | 'kategori' | 'istif' | 'not' | 'wonder' | 'kok' }
 
 const EDGE_COL: Record<GEdge['kind'], string> = {
-  rutin: '#7b95ff', zincir: '#ffa447', kategori: 'rgb(var(--c-muted))', istif: '#b482ff', not: '#3caa6e', wonder: '#e0b341',
+  rutin: '#7b95ff', zincir: '#ffa447', kategori: 'rgb(var(--c-muted))', istif: '#b482ff', not: '#3caa6e', wonder: '#e0b341', kok: 'rgb(var(--c-muted))',
 }
 const DIRECTED = new Set(['rutin', 'zincir', 'istif', 'not', 'wonder'])
+const BOXY = new Set(['rutin', 'zincir', 'wonder', 'hero', 'kategori'])
 const POS_KEY = 'manage_mind_pos'
 
 export function RealmGraph({ nodes, edges, onOpen }: { nodes: GNode[]; edges: GEdge[]; onOpen: (n: GNode) => void }) {
@@ -36,8 +38,8 @@ export function RealmGraph({ nodes, edges, onOpen }: { nodes: GNode[]; edges: GE
     const deg = new Map<string, number>()
     for (const e of edges) { deg.set(e.a, (deg.get(e.a) || 0) + 1); deg.set(e.b, (deg.get(e.b) || 0) + 1) }
     return (n: GNode) => {
-      const base = n.type === 'note' ? 16 : (n.type === 'habit' ? 22 : 28)
-      return Math.round(base + Math.min((deg.get(n.id) || 0) * 3, 16))
+      const base = n.type === 'hero' ? 54 : n.type === 'kategori' ? 38 : BOXY.has(n.type) ? 44 : n.type === 'habit' ? 34 : 26
+      return Math.round(base + Math.min((deg.get(n.id) || 0) * 2.5, 18))
     }
   }, [edges])
 
@@ -75,14 +77,14 @@ export function RealmGraph({ nodes, edges, onOpen }: { nodes: GNode[]; edges: GE
             const B = m.get(ids[j]); if (!B) continue
             let dx = A.x - B.x, dy = A.y - B.y, d2 = dx * dx + dy * dy
             if (d2 < 1) { d2 = 1; dx = Math.random(); dy = Math.random() }
-            const d = Math.sqrt(d2), f = 4600 / d2
+            const d = Math.sqrt(d2), f = 5400 / d2
             A.vx += (dx / d) * f; A.vy += (dy / d) * f; B.vx -= (dx / d) * f; B.vy -= (dy / d) * f
           }
         }
         for (const e of edges) {
           const A = m.get(e.a), B = m.get(e.b); if (!A || !B) continue
           const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1
-          const f = (d - 140) * 0.016
+          const f = (d - 158) * 0.016
           A.vx += (dx / d) * f; A.vy += (dy / d) * f; B.vx -= (dx / d) * f; B.vy -= (dy / d) * f
         }
         for (const id of ids) {
@@ -166,6 +168,7 @@ export function RealmGraph({ nodes, edges, onOpen }: { nodes: GNode[]; edges: GE
         </svg>
         {nodes.map(n => {
           const r = sizeOf(n)
+          const hub = BOXY.has(n.type)
           return (
             <button
               key={n.id}
@@ -173,14 +176,24 @@ export function RealmGraph({ nodes, edges, onOpen }: { nodes: GNode[]; edges: GE
               onPointerDown={(e) => { e.stopPropagation(); drag.current = { id: n.id, moved: false, px: e.clientX, py: e.clientY } }}
               onPointerEnter={() => { hovered.current = n.id }}
               onPointerLeave={() => { if (hovered.current === n.id) hovered.current = null }}
-              className="absolute left-0 top-0 flex cursor-pointer flex-col items-center gap-0.5"
+              className="absolute left-0 top-0 flex cursor-pointer flex-col items-center gap-1"
               style={{ touchAction: 'none' }}
             >
-              <span className="flex items-center justify-center rounded-full border-2 border-border"
-                style={{ width: r, height: r, background: `${n.color}33`, boxShadow: `0 0 12px ${n.color}99`, fontSize: Math.round(r * 0.5) }}>
-                {n.emoji}
-              </span>
-              <span className="max-w-[100px] truncate rounded border border-border bg-surface/90 px-1 font-display text-[10px] text-fg">{n.label}</span>
+              <span
+                className={`flex items-center justify-center border-[3px] ${hub ? 'rounded-xl' : 'rounded-full'}`}
+                style={{
+                  width: r, height: r,
+                  background: 'rgb(var(--c-surface))',
+                  borderColor: n.color,
+                  borderStyle: n.type === 'note' ? 'dashed' : 'solid',
+                  boxShadow: `0 0 0 4px ${n.color}22, 0 0 12px ${n.color}88, 0 2px 5px rgb(0 0 0 / 0.25)`,
+                  fontSize: Math.round(r * 0.52),
+                }}
+              >{n.emoji}</span>
+              <span
+                className="line-clamp-2 max-w-[140px] rounded border-2 border-border bg-surface px-1.5 py-0.5 text-center font-display text-[11px] font-semibold leading-tight text-fg"
+                style={{ boxShadow: `0 2px 0 0 ${n.color}` }}
+              >{n.label}</span>
             </button>
           )
         })}

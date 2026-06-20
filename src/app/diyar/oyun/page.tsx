@@ -4,7 +4,14 @@ import Link from 'next/link'
 import { ArrowLeft, X, Gamepad2 } from 'lucide-react'
 import { useStore } from '@/hooks/useStore'
 import { buildRealm } from '@/lib/realm'
+import { getLevelInfo } from '@/lib/gamification'
+import { ACHIEVEMENTS } from '@/lib/achievements'
 import { RealmGraph, type GNode, type GEdge } from '@/components/realm/realm-graph'
+
+const CAT_LABEL: Record<string, string> = { health: 'Sağlık', productivity: 'Üretkenlik', mindfulness: 'Zihin', learning: 'Öğrenme', fitness: 'Spor', social: 'Sosyal', creativity: 'Yaratıcılık', other: 'Diğer' }
+const CAT_EMOJI: Record<string, string> = { health: '🩺', productivity: '⚡', mindfulness: '🧠', learning: '📖', fitness: '💪', social: '🤝', creativity: '🎨', other: '📦' }
+const INFO_HREF: Record<string, string> = { hero: '/profile', kategori: '/habits', rutin: '/routines', zincir: '/zincir', wonder: '/seferler', basari: '/achievements', mektup: '/gelecek', soz: '/diyar' }
+const TYPE_LABEL: Record<string, string> = { hero: 'Kahraman', kategori: 'Kategori', rutin: 'Rutin', zincir: 'Zincir', wonder: 'Harika', basari: 'Başarım', mektup: 'Gelecek mektubu', soz: 'Söz' }
 
 const STAGE_LABEL: Record<number, string> = { 0: 'Boş arsa', 1: 'Kulübe', 2: 'Küçük ev', 3: 'Ev', 4: 'Kule', 5: 'Kale' }
 const STAGE_NEXT = [5, 15, 40, 100]
@@ -32,12 +39,10 @@ export default function DiyarOyunPage() {
     return { items, W, H }
   }, [structs])
 
-  // "Second mind" grafı: alışkanlık + not + rutin/zincir/harika hub düğümleri
+  // "Second mind" grafı = uygulamanın tamamı: merkezde Kahraman; kategori kümeleri;
+  // habit/rutin/zincir/harika/not/başarım/mektup/söz düğümleri — hepsi birbirine bağlı
   const mind = useMemo(() => {
-    const habitNodes: GNode[] = structs.map(s => ({ id: s.habitId, type: 'habit', label: s.name, emoji: s.emoji, color: s.color, stage: s.stage }))
-    const habitSet = new Set(habitNodes.map(n => n.id))
-    const habitList = (data.habits || []).filter(h => habitSet.has(h.id)).map(h => ({ id: h.id, name: h.name, nl: h.name.toLowerCase(), cue: (h.cue || '').toLowerCase(), cat: h.category }))
-    const nodes: GNode[] = [...habitNodes]
+    const nodes: GNode[] = []
     const edges: GEdge[] = []
     const seen = new Set<string>()
     const add = (a: string | null, b: string | null, kind: GEdge['kind']) => {
@@ -46,45 +51,72 @@ export default function DiyarOyunPage() {
       if (seen.has(key)) return
       seen.add(key); edges.push({ a, b, kind })
     }
-    // Rutin hub düğümleri
-    for (const r of data.routines || []) {
-      const ids = (r.habitIds || []).filter(id => habitSet.has(id))
-      if (ids.length === 0) continue
-      const nid = 'rt:' + r.id
-      nodes.push({ id: nid, type: 'rutin', label: r.name, emoji: r.emoji || '📋', color: '#7b95ff' })
-      for (const id of ids) add(nid, id, 'rutin')
-    }
-    // Zincir hub düğümleri
-    for (const z of data.zincirs || []) {
-      const ids = (z.steps || []).map(s => s.habitId).filter((id): id is string => !!id && habitSet.has(id))
-      if (ids.length === 0) continue
-      const nid = 'zn:' + z.id
-      nodes.push({ id: nid, type: 'zincir', label: z.name, emoji: z.emoji || '🔗', color: '#ffa447' })
-      for (const id of ids) add(nid, id, 'zincir')
-    }
-    // Harika (Wonder) hub düğümleri
-    for (const w of data.wonders || []) {
-      const nid = 'wd:' + w.id
-      nodes.push({ id: nid, type: 'wonder', label: w.name, emoji: w.emoji || '🏛️', color: '#e0b341' })
-      if (w.habitId && habitSet.has(w.habitId)) add(nid, w.habitId, 'wonder')
-    }
-    // Kategori
+    // Merkez: Kahraman
+    const HERO = 'hero'
+    const lvl = getLevelInfo(data.profile.totalXP).level
+    nodes.push({ id: HERO, type: 'hero', label: `${data.profile.name || 'Kahraman'} · Lv${lvl}`, emoji: '👤', color: '#7b5cff' })
+
+    // Alışkanlıklar
+    const habitNodes: GNode[] = structs.map(s => ({ id: s.habitId, type: 'habit', label: s.name, emoji: s.emoji, color: s.color, stage: s.stage }))
+    const habitSet = new Set(habitNodes.map(n => n.id))
+    nodes.push(...habitNodes)
+    const habitList = (data.habits || []).filter(h => habitSet.has(h.id)).map(h => ({ id: h.id, name: h.name, nl: h.name.toLowerCase(), cue: (h.cue || '').toLowerCase(), cat: h.category }))
+
+    // Kategori kümeleri: Kahraman -> Kategori -> Alışkanlıklar
     const byCat = new Map<string, string[]>()
     for (const h of habitList) { const a = byCat.get(h.cat) || []; a.push(h.id); byCat.set(h.cat, a) }
-    for (const arr of byCat.values()) for (let i = 0; i < arr.length - 1; i++) add(arr[i], arr[i + 1], 'kategori')
+    for (const [cat, ids] of byCat) {
+      const cid = 'cat:' + cat
+      nodes.push({ id: cid, type: 'kategori', label: CAT_LABEL[cat] || cat, emoji: CAT_EMOJI[cat] || '📦', color: '#8a8f98' })
+      add(HERO, cid, 'kok')
+      for (const id of ids) add(cid, id, 'kategori')
+    }
+
+    // Rutin / Zincir / Harika hub'ları (Kahraman'a ve üyelerine bağlı)
+    for (const r of data.routines || []) {
+      const ids = (r.habitIds || []).filter(id => habitSet.has(id)); if (!ids.length) continue
+      const nid = 'rt:' + r.id; nodes.push({ id: nid, type: 'rutin', label: r.name, emoji: r.emoji || '📋', color: '#7b95ff' })
+      add(HERO, nid, 'kok'); for (const id of ids) add(nid, id, 'rutin')
+    }
+    for (const z of data.zincirs || []) {
+      const ids = (z.steps || []).map(s => s.habitId).filter((id): id is string => !!id && habitSet.has(id)); if (!ids.length) continue
+      const nid = 'zn:' + z.id; nodes.push({ id: nid, type: 'zincir', label: z.name, emoji: z.emoji || '🔗', color: '#ffa447' })
+      add(HERO, nid, 'kok'); for (const id of ids) add(nid, id, 'zincir')
+    }
+    for (const w of data.wonders || []) {
+      const nid = 'wd:' + w.id; nodes.push({ id: nid, type: 'wonder', label: w.name, emoji: w.emoji || '🏛️', color: '#e0b341' })
+      add(HERO, nid, 'kok'); if (w.habitId && habitSet.has(w.habitId)) add(nid, w.habitId, 'wonder')
+    }
+
     // Habit stacking (cue)
     for (const h of habitList) { if (!h.cue) continue; for (const o of habitList) { if (o.id === h.id || o.name.length < 3) continue; if (h.cue.includes(o.nl)) add(o.id, h.id, 'istif') } }
-    // Beyin-boşalt notları
+
+    // Beyin-boşalt notları (alışkanlığa bağlı)
     for (const it of [...(data.brainDump || [])].slice(-24).reverse()) {
       const t = (it.text || '').toLowerCase()
       const links = habitList.filter(o => o.name.length >= 3 && t.includes(o.nl))
-      if (links.length === 0) continue
-      const nid = 'note:' + it.id
-      nodes.push({ id: nid, type: 'note', label: (it.text || '').slice(0, 22), emoji: '📝', color: '#3caa6e' })
+      if (!links.length) continue
+      const nid = 'note:' + it.id; nodes.push({ id: nid, type: 'note', label: (it.text || '').slice(0, 22), emoji: '📝', color: '#3caa6e' })
       for (const o of links) add(nid, o.id, 'not')
     }
+
+    // Başarımlar (son açılanlar) -> Kahraman
+    const unlocked = Object.entries(data.unlockedAchievements || {}).sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, 10)
+    for (const [aid] of unlocked) {
+      const def = ACHIEVEMENTS.find(a => a.id === aid); if (!def) continue
+      const nid = 'ach:' + aid; nodes.push({ id: nid, type: 'basari', label: def.name, emoji: def.emoji || '🏆', color: '#e0b341' }); add(HERO, nid, 'kok')
+    }
+    // Gelecek mektupları -> Kahraman
+    for (const lt of [...(data.futureLetters || [])].slice(-6).reverse()) {
+      const nid = 'lt:' + lt.id; nodes.push({ id: nid, type: 'mektup', label: lt.context || 'Gelecek mektubu', emoji: '✉️', color: '#62c0f5' }); add(HERO, nid, 'kok')
+    }
+    // Kayıtlı sözler -> Kahraman
+    ;[...(data.savedQuotes || [])].slice(-8).forEach((qt, i) => {
+      const nid = 'qt:' + i; nodes.push({ id: nid, type: 'soz', label: qt.slice(0, 24), emoji: '📜', color: '#2d8b8b' }); add(HERO, nid, 'kok')
+    })
+
     return { nodes, edges }
-  }, [structs, data.routines, data.zincirs, data.wonders, data.habits, data.brainDump])
+  }, [structs, data.profile.name, data.profile.totalXP, data.routines, data.zincirs, data.wonders, data.habits, data.brainDump, data.unlockedAchievements, data.futureLetters, data.savedQuotes])
 
   // Keşif (yürüme) görünümü için habit-habit kenarları (zincir/rutin sıralı + istif + kategori)
   const explorerEdges = useMemo(() => {
@@ -121,6 +153,7 @@ export default function DiyarOyunPage() {
   const [reduce, setReduce] = useState(false)
   const [mode, setMode] = useState<'explore' | 'graph'>('explore')
   const [openNote, setOpenNote] = useState<string | null>(null)
+  const [openInfo, setOpenInfo] = useState<{ label: string; type: string } | null>(null)
   useEffect(() => { openRef.current = openId }, [openId])
   useEffect(() => { setReduce(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false) }, [])
 
@@ -297,7 +330,8 @@ export default function DiyarOyunPage() {
             edges={mind.edges}
             onOpen={(n) => {
               if (n.type === 'habit') setOpenId(n.id)
-              else { const it = (data.brainDump || []).find(x => 'note:' + x.id === n.id); setOpenNote(it?.text || n.label) }
+              else if (n.type === 'note') { const it = (data.brainDump || []).find(x => 'note:' + x.id === n.id); setOpenNote(it?.text || n.label) }
+              else setOpenInfo({ label: n.label, type: n.type })
             }}
           />
         )}
@@ -436,6 +470,26 @@ export default function DiyarOyunPage() {
                 <div className="flex gap-2">
                   <Link href="/braindump" className="flex-1 rounded bg-primary px-3 py-2 text-center text-sm font-bold text-bg brix-bevel-sm font-display">Beyin Boşalt&apos;ta aç</Link>
                   <button onClick={() => setOpenNote(null)} className="rounded border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg font-display hover:-translate-y-px">Kapat</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* GENEL BİLGİ PANELİ (hero/kategori/başarım/mektup/söz) */}
+        {openInfo && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => setOpenInfo(null)} />
+            <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-lg border-2 border-border bg-surface brix-bevel" style={{ animation: 'brixEnter .3s cubic-bezier(.16,1,.3,1) both' }}>
+              <div className="flex items-center gap-2 border-b-2 border-border bg-surface-2 px-4 py-2.5">
+                <span className="font-display text-sm font-bold text-fg">{TYPE_LABEL[openInfo.type] || 'Düğüm'}</span>
+                <button onClick={() => setOpenInfo(null)} className="ml-auto flex h-7 w-7 items-center justify-center rounded border-2 border-border bg-surface text-fg hover:-translate-y-px"><X size={14} /></button>
+              </div>
+              <div className="space-y-3 p-4">
+                <p className="text-base font-semibold text-fg">{openInfo.label}</p>
+                <div className="flex gap-2">
+                  <Link href={INFO_HREF[openInfo.type] || '/'} className="flex-1 rounded bg-primary px-3 py-2 text-center text-sm font-bold text-bg brix-bevel-sm font-display">Aç</Link>
+                  <button onClick={() => setOpenInfo(null)} className="rounded border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg font-display hover:-translate-y-px">Kapat</button>
                 </div>
               </div>
             </div>
